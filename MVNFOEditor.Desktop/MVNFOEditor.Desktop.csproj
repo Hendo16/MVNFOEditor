@@ -8,6 +8,12 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="11.0.6" />

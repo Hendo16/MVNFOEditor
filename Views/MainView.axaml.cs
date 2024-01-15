@@ -11,10 +11,12 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MVNFOEditor.DB;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
 using MVNFOEditor.ViewModels;
+using Newtonsoft.Json.Linq;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace MVNFOEditor.Views;
@@ -39,7 +41,6 @@ public partial class MainView : UserControl
             musicVideoList = new List<MusicVideo>();
         }
         ytMusicHelper = new YTMusicHelper();
-        ytMusicHelper.get_artist("Bring Me The Horizon");
         DataContextChanged += CheckIfPathExists;
     }
 
@@ -81,12 +82,18 @@ public partial class MainView : UserControl
 
         int row = 0;
         int column = 0;
+
         foreach (string artist in artistList)
         {
-            Button newArtistButt = new Button() {Content = artist };
-            newArtistButt.Click += (o, eventArgs) => { GetVideoList(artist); };
-            Grid.SetColumn(newArtistButt, column);
-            Grid.SetRow(newArtistButt, row);
+            //Button newArtistButt = new Button() {Content = artist };
+            Card newArtistCard = new Card();
+            CardViewModel artistCardVM = new CardViewModel();
+
+            artistCardVM.ArtistName = artist;
+
+            newArtistCard.ArtistBtn.Click += (o, eventArgs) => { GetVideoList(artist); };
+            Grid.SetColumn(newArtistCard, column);
+            Grid.SetRow(newArtistCard, row);
 
             column++;
             if (column >= ArtistGrid.ColumnDefinitions.Count)
@@ -97,11 +104,9 @@ public partial class MainView : UserControl
                 // Add a new row definition if needed
                 ArtistGrid.RowDefinitions.Add(new RowDefinition());
             }
-            ArtistGrid.Children.Add(newArtistButt);
+            newArtistCard.DataContext = artistCardVM;
+            ArtistGrid.Children.Add(newArtistCard);
         }
-        ArtistCard testCard = new ArtistCard();
-        testCard.ArtistName = "TTTTTTTTTTTTTTEST";
-        ArtistGrid.Children.Add(testCard);
     }
 
     public void GetVideoList(string artist)
@@ -114,20 +119,55 @@ public partial class MainView : UserControl
 
         foreach (var album in albums)
         {
-            Button albumButton = new Button();
+            //Button albumButton = new Button();
+
+            Card albumCard = new Card();
+            CardViewModel albumCardViewModel = new CardViewModel();
 
             if (album == "null")
             {
-                albumButton.Background = Brush.Parse("Orange");
-                albumButton.Content = "Singles";
+                //albumButton.Background = Brush.Parse("Orange");
+                albumCardViewModel.ArtistName = "Singles";
             }
             else
             {
-                albumButton.Content = album;
+                albumCardViewModel.ArtistName = album;
             }
-            albumButton.Click += (sender, args) => { GetSongsByAlbum(album, artist); };
-            AlbumList.Children.Add(albumButton);
+            //albumButton.Click += (sender, args) => { GetSongsByAlbum(album, artist); };
+            albumCard.DataContext = albumCardViewModel;
+            AlbumList.Children.Add(albumCard);
         }
+
+        Button btnSyncTest = new Button();
+        btnSyncTest.Content = "Sync Videos Test";
+        btnSyncTest.Click += (sender, args) => { GetVideosByArtist(artist); };
+        btnSyncTest.Background = Brush.Parse("Aqua");
+        AlbumList.Children.Add(btnSyncTest);
+
+    }
+
+    public void GetVideosByArtist(string artist)
+    {
+        SongList.Children.Clear();
+        SongInfo.Children.Clear();
+        string artistID = ytMusicHelper.get_artistID(artist);
+        JArray result = ytMusicHelper.get_videos(artistID);
+        List<MusicVideo> artistCollection = musicVideoList.FindAll(e => e.artist == artist);
+        foreach (JToken vid in result)
+        {
+            Label videoLabel = new Label();
+            videoLabel.Content = $"{CleanYTName(vid["title"].ToString())} Link: https://www.youtube.com/watch?v={vid["videoId"]}";
+            if (artistCollection.Exists(e => e.title.ToLower() == CleanYTName(vid["title"].ToString()).ToLower()))
+            {
+                videoLabel.Background = Brush.Parse("Green");
+            }
+            else
+            {
+                videoLabel.Background = Brush.Parse("Red");
+            }
+            SongList.Children.Add(videoLabel);
+        }
+
     }
 
     public void GetSongsByAlbum(string album, string artist)
@@ -249,6 +289,9 @@ public partial class MainView : UserControl
         video.album = album;
         video.source = source;
         video.musicBrainzArtistID = mbID;
+
+        video.videoID = "";
+
         //Generate Genre and link to MusicVideo object
         for (int i = 0; i < genreNodes.Count; i++)
         {
@@ -278,5 +321,12 @@ public partial class MainView : UserControl
     private List<MusicVideo> GetVideosByAlbum(string album, string artist)
     {
         return musicVideoList.FindAll(e => e.album == album && e.artist == artist);
+    }
+
+    private string CleanYTName(string name)
+    {
+        return name.Replace(" (Official Video)", "")
+            .Replace(" (Official Music Video)", "")
+            .Replace(" (Official HD Video)", "");
     }
 }

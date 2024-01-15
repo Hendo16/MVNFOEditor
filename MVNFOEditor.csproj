@@ -5,6 +5,14 @@
     <LangVersion>latest</LangVersion>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+	<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>    
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+	<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>    
+  </PropertyGroup>
 
   
   <ItemGroup>

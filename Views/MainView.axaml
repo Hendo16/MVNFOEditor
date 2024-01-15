@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:MVNFOEditor.ViewModels"
-             xmlns:local="clr-namespace:MVNFOEditor"
              mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.MainView"
              x:DataType="vm:MainViewModel">
@@ -13,13 +12,9 @@
     <vm:MainViewModel />
   </Design.DataContext>
     <StackPanel>
-      <StackPanel>
-        <!-- Assuming ArtistName and Image are set in your ViewModel -->
-        <local:ArtistCard ArtistName="AAAAAAHHHH" />
-      </StackPanel>
       <Grid ColumnDefinitions="Auto,Auto,Auto,Auto">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" MaxWidth="700">
-                <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto" Name="ArtistGrid">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" MaxWidth="700" MaxHeight="500">
+                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" RowDefinitions="Auto" Name="ArtistGrid">
                 </Grid>
             </ScrollViewer>
             <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" MaxHeight="500">

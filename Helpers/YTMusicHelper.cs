@@ -20,7 +20,7 @@ namespace MVNFOEditor.Helpers
             PythonEngine.Initialize();
         }
 
-        public string get_artist(string artist)
+        public string get_artistID(string artist)
         {
             string result = "";
             dynamic search_results;
@@ -47,8 +47,9 @@ namespace MVNFOEditor.Helpers
                 {
                     if (curr_result["category"].ToString() == "Top result")
                     {
-                        Debug.WriteLine(curr_result["title"]);
-
+                        var artistObj = ((JArray)curr_result["artists"])[0];
+                        result = artistObj["id"].ToString();
+                        break;
                     }
                 }
             }
@@ -56,23 +57,52 @@ namespace MVNFOEditor.Helpers
             return result;
         }
 
-        public string get_videos(string artistId)
+        public JArray get_videos(string artistId)
         {
-            string result = "";
+            JArray result;
+            string browseId;
+            string parsedResult;
+            dynamic search_results;
+
+            dynamic ytmusicapi;
+            dynamic ytmusic;
+
             using (Py.GIL())
             {
-                dynamic ytmusicapi = Py.Import("ytmusicapi");
+                ytmusicapi = Py.Import("ytmusicapi");
 
-                // Now, you can use ytmusicapi as if you were writing Python code
-                dynamic ytmusic = ytmusicapi.YTMusic();
+                ytmusic = ytmusicapi.YTMusic();
 
-                // Call methods, access properties, etc.
-                dynamic search_results = ytmusic.get_artist(artistId);
-
-                // Process the search results using .NET code
-                result = search_results.ToString();
+                search_results = ytmusic.get_artist(artistId);
             }
-            return result;
+            parsedResult = search_results.ToString()
+                .Replace("None", "null")
+                .Replace("True", "true")
+                .Replace("False", "false");
+
+            dynamic artistObj = JObject.Parse(parsedResult);
+
+            dynamic initVideos = artistObj.videos;
+            browseId = initVideos.browseId;
+            if (browseId != null)
+            {
+                using (Py.GIL())
+                {
+                    search_results = ytmusic.get_playlist(browseId);
+                }
+                parsedResult = search_results.ToString()
+                    .Replace("None", "null")
+                    .Replace("True", "true")
+                    .Replace("False", "false");
+
+                dynamic playlistObj = JObject.Parse(parsedResult);
+
+                return playlistObj.tracks;
+            }
+            else
+            {
+                return (JArray)initVideos.results;
+            }
         }
     }
 }
