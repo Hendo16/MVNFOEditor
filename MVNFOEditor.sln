@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MVNFOEditor", "MVNFOEditor.csproj", "{BACB8A15-AE06-45B8-8117-A6661A441CB0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MVNFOEditor.Desktop", "..\MVNFOEditor.Desktop\MVNFOEditor.Desktop.csproj", "{361B71E5-0E3C-42D3-BEFF-789A19F8C702}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BACB8A15-AE06-45B8-8117-A6661A441CB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BACB8A15-AE06-45B8-8117-A6661A441CB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BACB8A15-AE06-45B8-8117-A6661A441CB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BACB8A15-AE06-45B8-8117-A6661A441CB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{361B71E5-0E3C-42D3-BEFF-789A19F8C702}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{361B71E5-0E3C-42D3-BEFF-789A19F8C702}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{361B71E5-0E3C-42D3-BEFF-789A19F8C702}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{361B71E5-0E3C-42D3-BEFF-789A19F8C702}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3E0A4731-43B3-41B1-AD6E-BA105185454E}
+	EndGlobalSection
+EndGlobal

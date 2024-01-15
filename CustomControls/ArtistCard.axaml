@@ -1,0 +1,15 @@
+<!-- ArtistCard.axaml -->
+<ControlTemplate xmlns="https://github.com/avaloniaui"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:local="clr-namespace:MVNFOEditor"
+                 TargetType="local:ArtistCard">
+  <Border Background="{TemplateBinding Background}"
+          BorderBrush="{TemplateBinding BorderBrush}"
+          BorderThickness="{TemplateBinding BorderThickness}">
+    <!-- Your content here -->
+    <Button x:Name="PART_Button"
+            Content="{TemplateBinding ArtistName}">
+      <!-- Additional content -->
+    </Button>
+  </Border>
+</ControlTemplate>

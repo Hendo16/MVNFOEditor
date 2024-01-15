@@ -1,0 +1,28 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:MVNFOEditor.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="350"
+        x:Class="MVNFOEditor.Settings"
+        Title="Settings">
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:SettingsViewModel />
+  </Design.DataContext>
+  <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,Auto">
+    <ScrollViewer  MaxHeight="450" VerticalScrollBarVisibility="Auto"  Grid.Column="0" Grid.Row="0">
+      <StackPanel>
+        <Button>Main</Button>
+        <Button>Style</Button>
+        <Button>A Third Thing</Button>
+      </StackPanel>
+    </ScrollViewer>
+    <StackPanel Name="MainContent" Grid.Column="1" Grid.Row="0">
+      <Label>Path:</Label> 
+      <TextBox Width="150" Name="PathInput"></TextBox>
+      <Button Background="Aqua" Click="SaveNewPath">Save</Button>
+    </StackPanel>
+  </Grid>
+</Window>

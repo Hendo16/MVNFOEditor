@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MVNFOEditor.ViewModels"
+             xmlns:local="clr-namespace:MVNFOEditor"
+             mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="450"
+             x:Class="MVNFOEditor.Views.MainView"
+             x:DataType="vm:MainViewModel">
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:MainViewModel />
+  </Design.DataContext>
+    <StackPanel>
+      <StackPanel>
+        <!-- Assuming ArtistName and Image are set in your ViewModel -->
+        <local:ArtistCard ArtistName="AAAAAAHHHH" />
+      </StackPanel>
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" MaxWidth="700">
+                <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto" Name="ArtistGrid">
+                </Grid>
+            </ScrollViewer>
+            <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" MaxHeight="500">
+                <StackPanel Name="AlbumList">
+                </StackPanel>
+            </ScrollViewer>
+            <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" MaxHeight="500">
+              <StackPanel Name="SongList"></StackPanel>
+            </ScrollViewer>
+            <ScrollViewer Grid.Column="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" MaxHeight="500">
+                <StackPanel Name="SongInfo"></StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </StackPanel>
+</UserControl>
