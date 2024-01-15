@@ -15,6 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MVNFOEditor\MVNFOEditor.csproj" />
+    <ProjectReference Include="..\MVNFOEditor.csproj" />
   </ItemGroup>
 </Project>
