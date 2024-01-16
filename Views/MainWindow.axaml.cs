@@ -12,8 +12,8 @@ public partial class MainWindow : Window
     }
     private void OpenSettings(object sender, RoutedEventArgs e)
     {
-        var mainView = this.FindControl<MainView>("MainView");
-        var settingsViewModel = new SettingsViewModel((MainViewModel)mainView.DataContext);
+        var mainViewContext = (MainViewModel)this.DataContext;
+        var settingsViewModel = new SettingsViewModel(mainViewContext);
         Settings setPanel = new Settings
         {
             DataContext = settingsViewModel

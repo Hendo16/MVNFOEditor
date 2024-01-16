@@ -1,10 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using MVNFOEditor.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MVNFOEditor.ViewModels;
 
 namespace MVNFOEditor.DB
 {
@@ -12,6 +9,7 @@ namespace MVNFOEditor.DB
     {
         public DbSet<MusicVideo> MusicVideos { get; set; }
         public DbSet<Genre> Genres { get; set; }
+        public DbSet<SettingsData> SettingsData { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,10 +26,11 @@ namespace MVNFOEditor.DB
                 .WithMany(g => g.MusicVideoGenres)
                 .HasForeignKey(mvg => mvg.GenreID);
         }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=MVNFOEditor.db");
+            // Other configurations if needed
+            optionsBuilder.UseSqlite("Data Source=MVNFOEditor.db;");
+            base.OnConfiguring(optionsBuilder);
         }
     }
 }

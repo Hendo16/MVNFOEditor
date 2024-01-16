@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 
 namespace MVNFOEditor.Models
 {
@@ -19,5 +18,6 @@ namespace MVNFOEditor.Models
         public string source { get; set; }
         public string musicBrainzArtistID { get; set; }
         public string videoID { get; set; }
+        public string filePath { get; set; }
     }
 }

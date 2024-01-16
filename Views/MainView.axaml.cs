@@ -3,21 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Mime;
-using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.Linq;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
-using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using MVNFOEditor.DB;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
 using MVNFOEditor.ViewModels;
 using Newtonsoft.Json.Linq;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace MVNFOEditor.Views;
 
@@ -25,30 +19,23 @@ public partial class MainView : UserControl
 {
     private List<MusicVideo> musicVideoList;
     private MainViewModel mainViewModel;
-    private MusicDbContext db;
     private YTMusicHelper ytMusicHelper;
+    private YTDLHelper ytDLHelper;
+    private SettingsData settingsData;
     public MainView()
     {
         InitializeComponent();
-        db = new MusicDbContext();
-        db.Database.EnsureCreated();
-        if (db.MusicVideos != null)
-        {
-            musicVideoList = db.MusicVideos.ToList();
-        }
-        else
-        {
-            musicVideoList = new List<MusicVideo>();
-        }
         ytMusicHelper = new YTMusicHelper();
+        ytDLHelper = new YTDLHelper();
         DataContextChanged += CheckIfPathExists;
     }
 
     private void HandleRootFolderChanged(object sender, string folder)
     {
+        settingsData = mainViewModel.MVDBContext.SettingsData.SingleOrDefault();
         //RootFolder changed in MainViewModel so we come here to load the info (events need a secondary args so I just made it the folder)
         GenerateMVList(mainViewModel.RootFolder);
-        musicVideoList = db.MusicVideos.ToList();
+        musicVideoList = mainViewModel.MVDBContext.MusicVideos.ToList();
         ArtistLoadHandler();
     }
 
@@ -56,10 +43,20 @@ public partial class MainView : UserControl
     {
         //DataContextChanged triggered so we can now safely access the ViewModel
         mainViewModel = (MainViewModel)DataContext;
+
+        mainViewModel.MVDBContext.Database.EnsureCreated();
+        settingsData = mainViewModel.MVDBContext.SettingsData.SingleOrDefault();
         //Assign RootFolderChaned event to MainViewModel so we can come back and re-load Artists
         mainViewModel.RootFolderChanged += HandleRootFolderChanged;
+        if (mainViewModel.MVDBContext.MusicVideos != null)
+        {
+            musicVideoList = mainViewModel.MVDBContext.MusicVideos.ToList();
+        }
+        else
+        {
+            musicVideoList = new List<MusicVideo>();
+        }
 
-        //if (mainViewModel.RootFolder == null)
         if (musicVideoList.Count == 0)
         {
             var settingsViewModel = new SettingsViewModel(mainViewModel);
@@ -134,6 +131,7 @@ public partial class MainView : UserControl
                 albumCardViewModel.ArtistName = album;
             }
             //albumButton.Click += (sender, args) => { GetSongsByAlbum(album, artist); };
+            albumCard.ArtistBtn.Click += (sender, args) => { GetSongsByAlbum(album, artist); };
             albumCard.DataContext = albumCardViewModel;
             AlbumList.Children.Add(albumCard);
         }
@@ -156,7 +154,8 @@ public partial class MainView : UserControl
         foreach (JToken vid in result)
         {
             Label videoLabel = new Label();
-            videoLabel.Content = $"{CleanYTName(vid["title"].ToString())} Link: https://www.youtube.com/watch?v={vid["videoId"]}";
+            Button vidDown = new Button();
+            videoLabel.Content = $"{CleanYTName(vid["title"].ToString())}";
             if (artistCollection.Exists(e => e.title.ToLower() == CleanYTName(vid["title"].ToString()).ToLower()))
             {
                 videoLabel.Background = Brush.Parse("Green");
@@ -165,9 +164,12 @@ public partial class MainView : UserControl
             {
                 videoLabel.Background = Brush.Parse("Red");
             }
-            SongList.Children.Add(videoLabel);
-        }
 
+            vidDown.Content = "Download";
+            vidDown.Click += (sender, args) => { ytDLHelper.DownloadVideo(vid["videoId"].ToString()); };
+            SongList.Children.Add(videoLabel);
+            SongList.Children.Add(vidDown);
+        }
     }
 
     public void GetSongsByAlbum(string album, string artist)
@@ -194,33 +196,87 @@ public partial class MainView : UserControl
     public void GetSongInfo(MusicVideo video)
     {
         SongInfo.Children.Clear();
-        Label albumLabel = new Label();
-        albumLabel.Content = $"Album: {video.album}";
 
-        Label sourceLabel = new Label();
-        sourceLabel.Content = $"Source: {video.source}";
+        Grid SongInfoGrid = new Grid();
+        SongInfoGrid.ColumnDefinitions = ColumnDefinitions.Parse("Auto,Auto,Auto");
+        SongInfoGrid.RowDefinitions = RowDefinitions.Parse("Auto,Auto,Auto,Auto,Auto");
 
+        #region title
+        Label titleLabel = new Label();
+        titleLabel.Content = "Title: ";
+        Grid.SetRow(titleLabel, 0);
+        Grid.SetColumn(titleLabel, 0);
+
+        TextBox titleBox = new TextBox();
+        titleBox.Name = "titleBox";
+        titleBox.Text = video.title;
+        Grid.SetRow(titleBox, 0);
+        Grid.SetColumn(titleBox, 1);
+        SongInfo.Children.Add(titleLabel);
+        SongInfo.Children.Add(titleBox);
+        #endregion
+
+        #region year
         Label yearLabel = new Label();
-        yearLabel.Content = $"Year: {video.year}";
+        yearLabel.Content = "Year: ";
+        Grid.SetRow(yearLabel, 1);
+        Grid.SetColumn(yearLabel, 0);
 
-        Label genreHeading = new Label();
-        genreHeading.Content = "Genres:";
-        
-        SongInfo.Children.Add(albumLabel);
-        SongInfo.Children.Add(sourceLabel);
+        TextBox yearBox = new TextBox();
+        yearBox.Name = "yearBox";
+        yearBox.Text = video.year;
+        Grid.SetRow(yearBox, 1);
+        Grid.SetColumn(yearBox, 1);
         SongInfo.Children.Add(yearLabel);
-        SongInfo.Children.Add(genreHeading);
-        foreach (var genre in video.MusicVideoGenres)
+        SongInfo.Children.Add(yearBox);
+        #endregion
+
+        #region album
+        Label albumLabel = new Label();
+        albumLabel.Content = "Album: ";
+        Grid.SetRow(albumLabel, 2);
+        Grid.SetColumn(albumLabel, 0);
+
+        TextBox albumBox = new TextBox();
+        albumBox.Name = "albumBox";
+        albumBox.Text = video.album;
+        Grid.SetRow(yearBox, 2);
+        Grid.SetColumn(yearBox, 1);
+        SongInfo.Children.Add(albumLabel);
+        SongInfo.Children.Add(albumBox);
+        #endregion
+
+        Button saveBtn = new Button(){Content = "Save", Background = Brush.Parse("Green")};
+        saveBtn.Click += (sender, args) => { SaveNFO(video); };
+        
+        if (video.MusicVideoGenres != null)
         {
-            Label currGenre = new Label();
-            currGenre.Content = $"\t{genre.Genre.Name}";
-            SongInfo.Children.Add(currGenre);
+            Label genreHeading = new Label();
+            genreHeading.Content = "Genres:";
+            SongInfo.Children.Add(genreHeading);
+            foreach (var genre in video.MusicVideoGenres)
+            {
+                Label currGenre = new Label();
+                currGenre.Content = $"\t{genre.Genre.Name}";
+                SongInfo.Children.Add(currGenre);
+            }
         }
+        SongInfo.Children.Add(saveBtn);
+    }
+
+    private void SaveNFO(MusicVideo vid)
+    {
+        vid.title = ((TextBox)SongInfo.Children[1]).Text;
+        vid.year = ((TextBox)SongInfo.Children[3]).Text;
+        vid.album = ((TextBox)SongInfo.Children[5]).Text;
+        //Refresh data
+        UpdateMV(vid);
     }
 
     private void GenerateMVList(string rootFolder)
     {
         string[] nfoList = Directory.GetFiles(rootFolder, "*.nfo", SearchOption.AllDirectories);
+        settingsData.RootFolder = rootFolder;
         for (int i = 0; i < nfoList.Length; i++)
         {
             string currNFO = nfoList[i];
@@ -230,18 +286,18 @@ public partial class MainView : UserControl
                 StreamReader reader = new StreamReader(currNFO);
                 
                 nfoDoc.Load(reader);
-                MusicVideo newVid = MapNfoToMusicVideo(nfoDoc);
+                MusicVideo newVid = MapNfoToMusicVideo(nfoDoc, currNFO);
                 
                 reader.Close();
                 //musicVideoList.Add(newVid);
-                db.MusicVideos.Add(newVid);
+                mainViewModel.MVDBContext.MusicVideos.Add(newVid);
             }
         }
 
-        db.SaveChanges();
+        mainViewModel.MVDBContext.SaveChanges();
     }
 
-    private MusicVideo MapNfoToMusicVideo(XmlDocument songDoc)
+    private MusicVideo MapNfoToMusicVideo(XmlDocument songDoc, string origPath)
     {
         MusicVideo video = new MusicVideo();
 
@@ -289,7 +345,7 @@ public partial class MainView : UserControl
         video.album = album;
         video.source = source;
         video.musicBrainzArtistID = mbID;
-
+        video.filePath = origPath;
         video.videoID = "";
 
         //Generate Genre and link to MusicVideo object
@@ -297,13 +353,13 @@ public partial class MainView : UserControl
         {
             MusicVideoGenre mvGenre = new MusicVideoGenre();
             
-            Genre? storedGenre = db.Genres.Count() != 0 ? db.Genres.First(e => e.Name == genreNodes[i].InnerText) : null;
+            Genre? storedGenre = mainViewModel.MVDBContext.Genres.Count() != 0 ? mainViewModel.MVDBContext.Genres.First(e => e.Name == genreNodes[i].InnerText) : null;
             if (storedGenre == null)
             {
                 Genre currGenre = new Genre();
                 currGenre.Name = genreNodes[i].InnerText;
                 mvGenre.Genre = currGenre;
-                db.Genres.Add(currGenre);
+                mainViewModel.MVDBContext.Genres.Add(currGenre);
             }
             else
             {
@@ -321,6 +377,35 @@ public partial class MainView : UserControl
     private List<MusicVideo> GetVideosByAlbum(string album, string artist)
     {
         return musicVideoList.FindAll(e => e.album == album && e.artist == artist);
+    }
+
+    private void UpdateMV(MusicVideo vid)
+    {
+        var path = $"{vid.filePath}";
+        XDocument x = XDocument.Load(path);
+
+        foreach (XElement el in x.Descendants())
+        {
+            if (el.Name == "title")
+            {
+                el.Value = vid.title;
+            }
+            else if (el.Name == "year")
+            {
+                el.Value = vid.year;
+            }
+            else if (el.Name == "album")
+            {
+                el.Value = vid.album;
+            }
+        }
+        x.Save(path);
+        
+        var updatedVid = mainViewModel.MVDBContext.MusicVideos.SingleOrDefault(e => e.Id == vid.Id);
+        updatedVid.studio = vid.studio;
+        mainViewModel.MVDBContext.SaveChanges();
+
+        Debug.WriteLine("DONE!");
     }
 
     private string CleanYTName(string name)

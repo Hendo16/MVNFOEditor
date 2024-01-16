@@ -19,10 +19,18 @@
         <Button>A Third Thing</Button>
       </StackPanel>
     </ScrollViewer>
-    <StackPanel Name="MainContent" Grid.Column="1" Grid.Row="0">
+    <StackPanel Grid.Column="1" Grid.Row="0">
       <Label>Path:</Label> 
       <TextBox Width="150" Name="PathInput"></TextBox>
-      <Button Background="Aqua" Click="SaveNewPath">Save</Button>
     </StackPanel>
+      <StackPanel Grid.Column="1" Grid.Row="1">
+          <Label>FFMPEG Path:</Label>
+          <TextBox Width="150" Name="FFMPEGPath"></TextBox>
+      </StackPanel>
+      <StackPanel Grid.Column="1" Grid.Row="2">
+          <Label>YTDL Path:</Label>
+          <TextBox Width="150" Name="YTDLPath"></TextBox>
+      </StackPanel>
+    <Button Grid.Column="2" Grid.Row="3" Background="Aqua" Click="SaveSettings">Save</Button>
   </Grid>
 </Window>

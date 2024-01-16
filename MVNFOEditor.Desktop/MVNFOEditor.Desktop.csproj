@@ -17,7 +17,9 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="11.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="pythonnet" Version="3.0.3" />
+    <PackageReference Include="SimpleInjector" Version="5.4.4" />
   </ItemGroup>
 
   <ItemGroup>

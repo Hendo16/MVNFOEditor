@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MVNFOEditor.DB;
 using MVNFOEditor.Models;
 
 namespace MVNFOEditor.ViewModels;
@@ -8,6 +9,7 @@ public partial class MainViewModel : ViewModelBase
 {
     public event EventHandler<string> RootFolderChanged;
     private string _rootFolder;
+    public MusicDbContext MVDBContext { get; set; }
 
     public string RootFolder
     {
@@ -25,6 +27,12 @@ public partial class MainViewModel : ViewModelBase
             }
         }
     }
+    
+    public MainViewModel(MusicDbContext dbContext)
+    {
+        MVDBContext = dbContext;
+    }
+
     protected virtual void OnRootFolderChanged(string folder)
     {
         RootFolderChanged?.Invoke(this, folder);
