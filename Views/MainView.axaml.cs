@@ -25,8 +25,6 @@ public partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
-        ytMusicHelper = new YTMusicHelper();
-        ytDLHelper = new YTDLHelper();
         DataContextChanged += CheckIfPathExists;
     }
 
@@ -38,14 +36,17 @@ public partial class MainView : UserControl
         musicVideoList = mainViewModel.MVDBContext.MusicVideos.ToList();
         ArtistLoadHandler();
     }
-
+    
     public void CheckIfPathExists(object sender, EventArgs args)
     {
         //DataContextChanged triggered so we can now safely access the ViewModel
         mainViewModel = (MainViewModel)DataContext;
-
-        mainViewModel.MVDBContext.Database.EnsureCreated();
         settingsData = mainViewModel.MVDBContext.SettingsData.SingleOrDefault();
+
+
+        ytMusicHelper = App.GetYTMusicHelper();
+        ytDLHelper = App.GetYTDLHelper();
+
         //Assign RootFolderChaned event to MainViewModel so we can come back and re-load Artists
         mainViewModel.RootFolderChanged += HandleRootFolderChanged;
         if (mainViewModel.MVDBContext.MusicVideos != null)
@@ -112,7 +113,7 @@ public partial class MainView : UserControl
         SongList.Children.Clear();
         SongInfo.Children.Clear();
         List<MusicVideo> currVideos = musicVideoList.FindAll(e => e.artist == artist);
-        List<string> albums = currVideos.Select(e => e.album).Distinct().ToList();
+        List<string> albums = currVideos.Select(e => e.album.title).Distinct().ToList();
 
         foreach (var album in albums)
         {
@@ -150,6 +151,7 @@ public partial class MainView : UserControl
         SongInfo.Children.Clear();
         string artistID = ytMusicHelper.get_artistID(artist);
         JArray result = ytMusicHelper.get_videos(artistID);
+        GenerateNFOFromYT(result);
         List<MusicVideo> artistCollection = musicVideoList.FindAll(e => e.artist == artist);
         foreach (JToken vid in result)
         {
@@ -182,7 +184,7 @@ public partial class MainView : UserControl
         {
             Button songButton = new Button();
 
-            if (vid.album == "null")
+            if (vid.album.title == "null")
             {
                 songButton.Background = Brush.Parse("Orange");
             }
@@ -239,12 +241,15 @@ public partial class MainView : UserControl
 
         TextBox albumBox = new TextBox();
         albumBox.Name = "albumBox";
-        albumBox.Text = video.album;
+        albumBox.Text = video.album.title;
         Grid.SetRow(yearBox, 2);
         Grid.SetColumn(yearBox, 1);
         SongInfo.Children.Add(albumLabel);
         SongInfo.Children.Add(albumBox);
         #endregion
+
+        Button testingBtn = new Button(){Content = "Sync Info Test", Background = Brush.Parse("Yellow")};
+        testingBtn.Click += (sender, args) => { ytMusicHelper.GetInfoFromVideo(video); };
 
         Button saveBtn = new Button(){Content = "Save", Background = Brush.Parse("Green")};
         saveBtn.Click += (sender, args) => { SaveNFO(video); };
@@ -261,6 +266,7 @@ public partial class MainView : UserControl
                 SongInfo.Children.Add(currGenre);
             }
         }
+        SongInfo.Children.Add(testingBtn);
         SongInfo.Children.Add(saveBtn);
     }
 
@@ -268,7 +274,7 @@ public partial class MainView : UserControl
     {
         vid.title = ((TextBox)SongInfo.Children[1]).Text;
         vid.year = ((TextBox)SongInfo.Children[3]).Text;
-        vid.album = ((TextBox)SongInfo.Children[5]).Text;
+        vid.album.title = ((TextBox)SongInfo.Children[5]).Text;
         //Refresh data
         UpdateMV(vid);
     }
@@ -297,10 +303,18 @@ public partial class MainView : UserControl
         mainViewModel.MVDBContext.SaveChanges();
     }
 
+    private void GenerateNFOFromYT(JArray result)
+    {
+        //New MusicVideo for testing
+        MusicVideo testmv = new MusicVideo();
+        testmv.title = CleanYTName(result["title"].ToString());
+    }
+
     private MusicVideo MapNfoToMusicVideo(XmlDocument songDoc, string origPath)
     {
         MusicVideo video = new MusicVideo();
 
+        Album albumObj = new Album();
         #region XmlNodes
 
         XmlNode titleNode = songDoc.SelectSingleNode("//title");
@@ -327,9 +341,13 @@ public partial class MainView : UserControl
         string year = yearNode != null ? yearNode.InnerText : "null";
         string artist = artistNode != null ? artistNode.InnerText : "null";
         string thumb = thumbNode != null ? thumbNode.InnerText : "null";
-        string album = albumNode != null ? albumNode.InnerText : "null";
         string source = sourceNode != null ? sourceNode.InnerText : "null";
         string mbID = mbIDNode != null ? mbIDNode.InnerText : "null";
+
+        albumObj.title = albumNode != null ? albumNode.InnerText : "null";
+        albumObj.artURL = "";
+        albumObj.year = year;
+
         List<MusicVideoGenre> mvGenres = new List<MusicVideoGenre>();
         #endregion
 
@@ -342,7 +360,7 @@ public partial class MainView : UserControl
         video.year = year;
         video.artist = artist;
         video.thumb = thumb;
-        video.album = album;
+        video.album = albumObj;
         video.source = source;
         video.musicBrainzArtistID = mbID;
         video.filePath = origPath;
@@ -376,7 +394,7 @@ public partial class MainView : UserControl
 
     private List<MusicVideo> GetVideosByAlbum(string album, string artist)
     {
-        return musicVideoList.FindAll(e => e.album == album && e.artist == artist);
+        return musicVideoList.FindAll(e => e.album.title == album && e.artist == artist);
     }
 
     private void UpdateMV(MusicVideo vid)
@@ -396,7 +414,7 @@ public partial class MainView : UserControl
             }
             else if (el.Name == "album")
             {
-                el.Value = vid.album;
+                el.Value = vid.album.title;
             }
         }
         x.Save(path);

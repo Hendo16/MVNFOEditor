@@ -7,6 +7,7 @@ using System.Diagnostics;
 using MVNFOEditor.Models;
 using System;
 using System.Linq;
+using MVNFOEditor.Helpers;
 
 namespace MVNFOEditor;
 
@@ -35,6 +36,7 @@ public partial class Settings : Window
         PathInput.Text = setData.RootFolder;
         FFMPEGPath.Text = setData.FFMPEGPath;
         YTDLPath.Text = setData.YTDLPath;
+        OutputFolder.Text = setData.OutputFolder;
     }
 
     private void SaveSettings(object sender, RoutedEventArgs e)
@@ -44,6 +46,11 @@ public partial class Settings : Window
         setData.RootFolder = (PathInput.Text != null) ? PathInput.Text : "";
         setData.FFMPEGPath = (FFMPEGPath.Text != null) ? FFMPEGPath.Text : "";
         setData.YTDLPath = (YTDLPath.Text != null) ? YTDLPath.Text : "";
+        setData.OutputFolder = (OutputFolder.Text != null) ? OutputFolder.Text : "";
+        
+        //Update YTDL Settings
+        YTDLHelper ytdlHelper = App.GetYTDLHelper();
+        ytdlHelper.UpdateSettings(setData);
 
         _settingsViewModel.SettingsData = setData;
     }

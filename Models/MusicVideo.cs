@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace MVNFOEditor.Models
 {
@@ -13,7 +15,7 @@ namespace MVNFOEditor.Models
         public string premiered { get; set; }
         public string year { get; set; }
         public string artist { get; set; }
-        public string album { get; set; }
+        public Album album { get; set; }
         public string thumb { get; set; }
         public string source { get; set; }
         public string musicBrainzArtistID { get; set; }

@@ -1,16 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.DB;
 using MVNFOEditor.Models;
+using MVNFOEditor.Views;
 
 namespace MVNFOEditor.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    public event EventHandler<string> RootFolderChanged;
     private string _rootFolder;
+    private ObservableCollection<MusicVideo> _musicVideos;
+    public ObservableCollection<MusicVideo> MusicVideos
+    {
+        get { return _musicVideos; }
+        set { SetProperty(ref _musicVideos, value); }
+    }
+    public event EventHandler<string> RootFolderChanged;
     public MusicDbContext MVDBContext { get; set; }
-
     public string RootFolder
     {
         get => _rootFolder;
@@ -28,9 +37,13 @@ public partial class MainViewModel : ViewModelBase
         }
     }
     
-    public MainViewModel(MusicDbContext dbContext)
+    public MainViewModel()
     {
-        MVDBContext = dbContext;
+        MVDBContext = App.GetDBContext();
+        if (MVDBContext.MusicVideos.Count() != 0)
+        {
+            ObservableCollection<MusicVideo> cards = new ObservableCollection<MusicVideo>(MVDBContext.MusicVideos.ToList());
+        }
     }
 
     protected virtual void OnRootFolderChanged(string folder)

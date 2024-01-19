@@ -10,6 +10,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using MVNFOEditor.Models;
 
 namespace MVNFOEditor.Helpers
 {
@@ -84,6 +86,61 @@ namespace MVNFOEditor.Helpers
 
             dynamic initVideos = artistObj.videos;
             browseId = initVideos.browseId;
+            if (browseId != null)
+            {
+                using (Py.GIL())
+                {
+                    search_results = ytmusic.get_playlist(browseId);
+                }
+                parsedResult = search_results.ToString()
+                    .Replace("None", "null")
+                    .Replace("True", "true")
+                    .Replace("False", "false");
+
+                dynamic playlistObj = JObject.Parse(parsedResult);
+
+                return playlistObj.tracks;
+            }
+            else
+            {
+                return (JArray)initVideos.results;
+            }
+        }
+
+        public void GetInfoFromVideo(MusicVideo mv)
+        {
+
+        }
+
+        public JArray get_album_artists(string artistId)
+        {
+            JArray result;
+            string browseId;
+            string paramsId;
+            string parsedResult;
+            dynamic search_results;
+
+            dynamic ytmusicapi;
+            dynamic ytmusic;
+
+            using (Py.GIL())
+            {
+                ytmusicapi = Py.Import("ytmusicapi");
+
+                ytmusic = ytmusicapi.YTMusic();
+
+                search_results = ytmusic.get_artist(artistId);
+            }
+            parsedResult = search_results.ToString()
+                .Replace("None", "null")
+                .Replace("True", "true")
+                .Replace("False", "false");
+
+            dynamic artistObj = JObject.Parse(parsedResult);
+
+            dynamic initAlbums = artistObj.albums;
+            browseId = initAlbums.browseId;
+            paramsId = initAlbums.params;
             if (browseId != null)
             {
                 using (Py.GIL())

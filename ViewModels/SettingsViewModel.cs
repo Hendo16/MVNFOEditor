@@ -1,4 +1,6 @@
 ﻿
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using MVNFOEditor.DB;
 using MVNFOEditor.Models;
 
@@ -16,7 +18,12 @@ public partial class SettingsViewModel : ViewModelBase
             if (_settingsData != value)
             {
                 _settingsData = value;
-
+                //Remove previous data
+                SettingsData preData = MVDBContext.SettingsData.SingleOrDefault();
+                if (preData != null)
+                {
+                    MVDBContext.SettingsData.Remove(preData);
+                }
                 MVDBContext.SettingsData.Add(value);
                 MVDBContext.SaveChanges();
 

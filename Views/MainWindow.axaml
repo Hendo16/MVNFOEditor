@@ -2,11 +2,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:MVNFOEditor.ViewModels"
         xmlns:views="clr-namespace:MVNFOEditor.Views"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
         x:Class="MVNFOEditor.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         Title="MVNFOEditor">
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -35,6 +39,8 @@
                   <MenuItem Header="Settings" Click="OpenSettings"/>
                 </MenuItem>
             </Menu>
-            <views:MainView />
+            <ScrollViewer>
+                <views:MainView/>
+            </ScrollViewer>
         </DockPanel>
 </Window>
