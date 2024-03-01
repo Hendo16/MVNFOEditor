@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sukiContent="clr-namespace:SukiUI.Content;assembly=SukiUI"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MVNFOEditor.Views.AlbumView"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             x:DataType="vm:AlbumViewModel"
+             Width="400">
+    <StackPanel Spacing="5" Width="400">
+        <StackPanel.ContextMenu>
+            <ContextMenu>
+                <MenuItem Command="{Binding EditAlbum}" Header="Edit Album">
+                    <MenuItem.Icon>
+                        <PathIcon Width="15"
+                                  Height="15"
+                                  Data="{x:Static sukiContent:Icons.CircleOutline}" />                    
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem IsVisible="{Binding ShowVideoDownload}" Command="{Binding SyncAlbum}"
+                          Header="Check Missing Songs on YouTube Music">
+                    <MenuItem.Icon>
+                        <PathIcon Width="15"
+                                  Height="15"
+                                  Data="{x:Static sukiContent:Icons.CircleInformation}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </ContextMenu>
+        </StackPanel.ContextMenu>
+        <Border CornerRadius="10" ClipToBounds="True">
+            <Panel Background="#7FFF22DD" PointerPressed="TriggerSongList">
+                <Image Width="400" Stretch="Uniform" Source="{Binding Cover}"/>
+                <Panel Height="400" IsVisible="{Binding Cover, Converter={x:Static ObjectConverters.IsNull}}">
+                    <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
+                </Panel>
+            </Panel>
+        </Border>
+        <TextBlock HorizontalAlignment="Center" Text="{Binding Title}"/>
+        <TextBlock HorizontalAlignment="Center" Text="{Binding Year}"/>
+        <StackPanel  x:Name="songList" IsVisible="False">
+            <ItemsControl ItemsSource="{Binding Songs}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Classes="Basic" Content="{Binding title}" Click="SongClick" CommandParameter="{Binding Id}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

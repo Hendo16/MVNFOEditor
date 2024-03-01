@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MVNFOEditor.Views.SyncResultView"
+             x:DataType="vm:SyncResultViewModel"
+             Width="400">
+  <Border BorderBrush="{Binding BorderColor}" BorderThickness="1" CornerRadius="10" ClipToBounds="True">
+    <StackPanel Spacing="5" Width="350">
+      <Panel>
+        <Image Margin="0 10 0 0" Width="225" Stretch="Uniform" Source="{Binding Thumbnail}"/>
+      </Panel>
+        <Panel>
+        <StackPanel>
+          <TextBlock Margin="10 10 0 0" Classes="h4" VerticalAlignment="Top" Text="{Binding Title}"/>
+          <TextBlock Margin="10 10 0 0" Classes="Accent" VerticalAlignment="Bottom" Text="{Binding Duration}"/>
+          <Button IsEnabled="{Binding DownloadEnabled}" Margin="0 0 20 20" HorizontalAlignment="Right" Classes="Accent" Content="{Binding DownloadBtnText}" Click="OpenResult"/>
+        </StackPanel>
+        </Panel>
+    </StackPanel>
+  </Border>
+</UserControl>

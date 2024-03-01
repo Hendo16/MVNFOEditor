@@ -1,41 +1,49 @@
-﻿
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using MVNFOEditor.DB;
-using MVNFOEditor.Models;
+﻿using Avalonia.Collections;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Material.Icons;
+using MVNFOEditor.Features;
+using SukiUI.Models;
+using SukiUI;
+using Avalonia.Styling;
+using CommunityToolkit.Mvvm.Input;
 
-namespace MVNFOEditor.ViewModels;
-public partial class SettingsViewModel : ViewModelBase
+namespace MVNFOEditor.ViewModels
 {
-    private MainViewModel _mainViewModel;
-    private SettingsData _settingsData;
-    public MusicDbContext MVDBContext { get; set; }
-    public SettingsData SettingsData
+    public partial class SettingsViewModel : PageBase
     {
-        get => _settingsData;
-        set
-        {
-            if (_settingsData != value)
-            {
-                _settingsData = value;
-                //Remove previous data
-                SettingsData preData = MVDBContext.SettingsData.SingleOrDefault();
-                if (preData != null)
-                {
-                    MVDBContext.SettingsData.Remove(preData);
-                }
-                MVDBContext.SettingsData.Add(value);
-                MVDBContext.SaveChanges();
+        public IAvaloniaReadOnlyList<SukiColorTheme> AvailableColors { get; }
 
-                // Pass the updated RootFolder value to MainViewModel
-                _mainViewModel.RootFolder = value.RootFolder;
-            }
+        private readonly SukiTheme _theme = SukiTheme.GetInstance();
+
+        [ObservableProperty] private bool _isBackgroundAnimated;
+        [ObservableProperty] private bool _isLightTheme;
+
+        [ObservableProperty] private SettingsItemViewModel _activeVm;
+        [ObservableProperty] private int _limit = 5;
+        public SettingsViewModel() : base("Settings", MaterialIconKind.Layers, 2)
+        {
+            _activeVm = new SettingsItemViewModel(1, OnRecurseClicked);
+            AvailableColors = _theme.ColorThemes;
+            IsLightTheme = _theme.ActiveBaseTheme == ThemeVariant.Light;
+            IsBackgroundAnimated = _theme.IsBackgroundAnimated;
+            _theme.OnBaseThemeChanged += variant =>
+                IsLightTheme = variant == ThemeVariant.Light;
+            _theme.OnBackgroundAnimationChanged += value =>
+                IsBackgroundAnimated = value;
         }
-    }
-    
-    public SettingsViewModel(MainViewModel mainViewModel)
-    {
-        _mainViewModel = mainViewModel;
-        MVDBContext = _mainViewModel.MVDBContext;
+
+        private void OnRecurseClicked(SettingsItemViewModel newRecursiveVm)
+        {
+            ActiveVm = newRecursiveVm;
+        }
+        partial void OnIsLightThemeChanged(bool value) =>
+            _theme.ChangeBaseTheme(value ? ThemeVariant.Light : ThemeVariant.Dark);
+
+        partial void OnIsBackgroundAnimatedChanged(bool value) =>
+            _theme.SetBackgroundAnimationsEnabled(value);
+
+        [RelayCommand]
+        public void SwitchToColorTheme(SukiColorTheme colorTheme) =>
+            _theme.ChangeColorTheme(colorTheme);
     }
 }

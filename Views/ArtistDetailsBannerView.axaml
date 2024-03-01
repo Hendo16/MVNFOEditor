@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MVNFOEditor.Views.ArtistDetailsBannerView"
+             x:DataType="vm:ArtistDetailsBannerViewModel">
+  <Grid>
+    <controls:GlassCard Margin="0,0,0,15">
+        <controls:GlassCard.Resources>
+            <system:Double x:Key="GlassOpacity">0.2</system:Double>
+        </controls:GlassCard.Resources>
+        <StackPanel>
+            <Border CornerRadius="10" ClipToBounds="True">
+                <Image Height="800" Stretch="Uniform" Source="{Binding ArtistBanner}"/>
+            </Border>
+        </StackPanel>
+    </controls:GlassCard>
+      <Button Width="160"
+              Height="40"
+              Margin="0,7,0,0"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Bottom"
+              Classes="Flat Rounded"
+              Command="{Binding NavigateBack}"
+              Content="Back"
+              FontWeight="DemiBold"/>
+  </Grid>
+</UserControl>

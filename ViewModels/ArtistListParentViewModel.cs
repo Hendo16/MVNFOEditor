@@ -1,0 +1,64 @@
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.EntityFrameworkCore;
+using MVNFOEditor.Helpers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Avalonia.Controls;
+using MVNFOEditor.Features;
+using Material.Icons;
+
+namespace MVNFOEditor.ViewModels
+{
+    public class ArtistListParentViewModel : PageBase
+    {
+        private ArtistListViewModel _listVM;
+        private ArtistDetailsViewModel _detailsVM;
+        private object _currentContent;
+        public object CurrentContent
+        {
+            get { return _currentContent; }
+            set
+            {
+                _currentContent = value;
+                OnPropertyChanged(nameof(CurrentContent));
+            }
+        }
+
+        public ArtistListParentViewModel() : base("Artist List", MaterialIconKind.AccountMusic, 1)
+        {
+            ArtistListViewModel currView = new ArtistListViewModel();
+            CurrentContent = currView;
+            _listVM = currView;
+        }
+
+        public void SetDetailsVM(ArtistDetailsViewModel vm)
+        {
+            _detailsVM = vm;
+        }
+
+        public void RefreshDetails()
+        {
+            _detailsVM.LoadAlbums();;
+        }
+
+        public void RefreshList()
+        {
+            _listVM.LoadArtists();
+        }
+
+        public void BackToDetails(bool reload = false)
+        {
+            if (reload) { _detailsVM.LoadAlbums(); }
+            CurrentContent = _detailsVM;
+        }
+
+        public void BackToList(bool reload = false)
+        {
+            if (reload){_listVM.LoadArtists();}
+            CurrentContent = _listVM;
+        }
+    }
+}

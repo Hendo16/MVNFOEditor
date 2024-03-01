@@ -2,12 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using MVNFOEditor.Models;
 using MVNFOEditor.ViewModels;
+using Newtonsoft.Json.Linq;
 
 namespace MVNFOEditor.DB
 {
     public class MusicDbContext : DbContext
     {
         public DbSet<MusicVideo> MusicVideos { get; set; }
+        public DbSet<Artist> Artist { get; set; }
+        public DbSet<Album> Album { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<SettingsData> SettingsData { get; set; }
 
@@ -25,6 +28,16 @@ namespace MVNFOEditor.DB
                 .HasOne(mvg => mvg.Genre)
                 .WithMany(g => g.MusicVideoGenres)
                 .HasForeignKey(mvg => mvg.GenreID);
+
+            modelBuilder.Entity<Artist>()
+                .Property(a => a.YTMusicAlbumResults)
+                .HasColumnType("jsonb");
+
+            modelBuilder.Entity<Artist>()
+                .Property(a => a.YTMusicAlbumResults)
+                .HasConversion(
+                    a => a.ToString(),
+                    a => JArray.Parse(a));
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

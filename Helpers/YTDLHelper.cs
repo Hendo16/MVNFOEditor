@@ -1,41 +1,50 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using MVNFOEditor.DB;
 using MVNFOEditor.Models;
 using YoutubeDLSharp;
+using YoutubeDLSharp.Metadata;
+using YoutubeDLSharp.Options;
 
 namespace MVNFOEditor.Helpers
 {
     public class YTDLHelper
     {
         private YoutubeDL ytdl;
+        private OptionSet _settings;
         public YTDLHelper()
         {
             ytdl = new YoutubeDL();
+            _settings = new OptionSet();
             MusicDbContext db = App.GetDBContext();
             SettingsData setData = db.SettingsData.SingleOrDefault();
             if (setData != null)
             {
                 ytdl.FFmpegPath = setData.FFMPEGPath;
                 ytdl.YoutubeDLPath = setData.YTDLPath;
-                ytdl.OutputFolder = setData.OutputFolder;
             }
         }
 
-        public async void DownloadVideo(string id)
+        public async Task<RunResult<string>> DownloadVideo(string id, string outputFolder, string outputName, Progress<DownloadProgress> progress)
         {
-            var res = await ytdl.RunVideoDownload($"https://www.youtube.com/watch?v={id}");
-            string path = res.Data;
+            _settings.Paths = outputFolder;
+            _settings.Output = outputName + "-video.%(ext)s";
+            _settings.RestrictFilenames = true;
+            _settings.Format = "bestvideo[height <=? 1440][vcodec !*= av01]+bestaudio[ext=m4a]";
+
+            return await ytdl.RunVideoDownload($"https://www.youtube.com/watch?v={id}", overrideOptions: _settings, progress:progress);
         }
 
-        public void UpdateSettings(SettingsData setData)
+        public async Task<VideoData> GetVideoInfo(string URL)
         {
-            ytdl.FFmpegPath = setData.FFMPEGPath;
-            ytdl.YoutubeDLPath = setData.YTDLPath;
-            ytdl.OutputFolder = setData.OutputFolder;
+            var result = await ytdl.RunVideoDataFetch(URL);
+            return result.Data;
         }
+        
     }
 }

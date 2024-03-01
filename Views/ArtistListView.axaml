@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             xmlns:sukiControls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             xmlns:views="clr-namespace:MVNFOEditor.Views"
+             xmlns:sukiContent="clr-namespace:SukiUI.Content;assembly=SukiUI"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MVNFOEditor.Views.ArtistListView"
+             x:DataType="vm:ArtistListViewModel">
+    <sukiControls:BusyArea BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <sukiControls:GlassCard>
+              <sukiControls:GlassCard.Resources>
+                <system:Double x:Key="GlassOpacity">0.2</system:Double>
+              </sukiControls:GlassCard.Resources>
+                <sukiControls:GlassCard.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Command="{Binding AddArtist}"
+                                  Header="Add Artist">
+                            <MenuItem.Icon>
+                                <PathIcon Width="15"
+                                          Height="15"
+                                          Data="{x:Static sukiContent:Icons.Plus}" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </sukiControls:GlassCard.ContextMenu>
+                <sukiControls:GroupBox Header="Artists">
+                    <ItemsControl ItemsSource="{Binding ArtistCards}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <views:ArtistView Margin="0 0 20 20" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </sukiControls:GroupBox>
+            
+            </sukiControls:GlassCard>
+        </ScrollViewer>
+    </sukiControls:BusyArea>
+  </UserControl>

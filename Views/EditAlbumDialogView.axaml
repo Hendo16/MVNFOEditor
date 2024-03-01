@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MVNFOEditor.Views.EditAlbumDialogView"
+             x:DataType="vm:EditAlbumDialogViewModel">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*" RowDefinitions="Auto,Auto,*">
+            <Panel Height="200" Grid.Column="0" Grid.Row="0">
+                <TextBox VerticalAlignment="Top" HorizontalAlignment="Left" Text="{Binding Title}" Watermark="Title" />
+                <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" Text="{Binding Year}" Watermark="Video Year" />
+            </Panel>
+            <Border Grid.Column="1" Grid.Row="0" CornerRadius="10" ClipToBounds="True">
+                <Panel Width="200">
+                    <Image Width="200" Stretch="Uniform" Source="{Binding Cover}"/>
+                </Panel>
+            </Border>
+        </Grid>
+        <Grid Grid.Row="1" VerticalAlignment="Center">
+            <Button VerticalAlignment="Center" HorizontalAlignment="Left" Classes="Flat Accent" Content="Delete" Click="DeleteAlbum"/>
+            <Button VerticalAlignment="Center" HorizontalAlignment="Right" Classes="Flat Accent" Content="Save" Click="UpdateAlbum"/>
+        </Grid>
+    </Grid>
+</UserControl>

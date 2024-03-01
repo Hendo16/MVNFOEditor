@@ -1,62 +1,92 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Templates;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MVNFOEditor.DB;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.ViewModels;
 using MVNFOEditor.Views;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
+using System;
 using System.ComponentModel;
+using System.Linq;
+using MVNFOEditor.Common;
+using MVNFOEditor.Features;
+using MVNFOEditor.Services;
+using Microsoft.Extensions.Hosting.Internal;
 
 namespace MVNFOEditor;
 
 public partial class App : Application
 {
     private static MusicDbContext _dbContext;
+    private static MusicDBHelper _dbHelper;
     private static YTDLHelper _ytdlHelper;
     private static YTMusicHelper _ytmHelper;
+    private static DefaultViewModel _mainViewModel;
+    private static IDataTemplate _viewLocater;
+    private IServiceProvider? _provider;
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        _provider = ConfigureServices();
         _dbContext = new MusicDbContext();
         _dbContext.Database.EnsureCreated();
-        _ytdlHelper = new YTDLHelper();
         _ytmHelper = new YTMusicHelper();
+        _dbHelper = new MusicDBHelper(_dbContext);
+        _ytdlHelper = new YTDLHelper();
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var viewLocator = _provider?.GetRequiredService<IDataTemplate>();
+            _viewLocater = viewLocator;
+            var mainVm = _provider?.GetRequiredService<DefaultViewModel>();
+            _mainViewModel = mainVm;
+            desktop.MainWindow = viewLocator?.Build(mainVm) as Window;
+        }
+
         // Line below is needed to remove Avalonia data validation.
         // Without this line you will get duplicate validations from both Avalonia and CT
         base.OnFrameworkInitializationCompleted();
+    }
+    
 
+    private static ServiceProvider ConfigureServices()
+    {
+        var viewlocator = Current?.DataTemplates.First(x => x is ViewLocator);
+        var services = new ServiceCollection();
 
-        BindingPlugins.DataValidators.RemoveAt(0);
+        if (viewlocator is not null)
+            services.AddSingleton(viewlocator);
+        services.AddSingleton<PageNavigationService>();
 
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new MainViewModel()
-            };
-        }
-        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
-        {
-            singleViewPlatform.MainView = new MainView
-            {
-                DataContext = new MainViewModel()
-            };
-        }
+        // Viewmodels
+        services.AddSingleton<DefaultViewModel>();
+        var types = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(s => s.GetTypes())
+            .Where(p => !p.IsAbstract && typeof(PageBase).IsAssignableFrom(p));
+        foreach (var type in types)
+            services.AddSingleton(typeof(PageBase), type);
 
-        base.OnFrameworkInitializationCompleted();
+        return services.BuildServiceProvider();
     }
 
     public static MusicDbContext GetDBContext()
     {
         return _dbContext;
+    }
+
+    public static MusicDBHelper GetDBHelper()
+    {
+        return _dbHelper;
     }
 
     public static YTDLHelper GetYTDLHelper()
@@ -67,5 +97,10 @@ public partial class App : Application
     public static YTMusicHelper GetYTMusicHelper()
     {
         return _ytmHelper;
+    }
+
+    public static DefaultViewModel GetVM()
+    {
+        return _mainViewModel;
     }
 }

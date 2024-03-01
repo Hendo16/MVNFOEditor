@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:objectModel="clr-namespace:System.Collections.ObjectModel;assembly=System.ObjectModel"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="vm:SettingsViewModel"
+             x:Class="MVNFOEditor.Views.SettingsView">
+    <controls:SettingsLayout>
+        <controls:SettingsLayout.Items>
+            <objectModel:ObservableCollection x:TypeArguments="controls:SettingsLayoutItem">
+                <controls:SettingsLayoutItem Header="Folder/App Locations">
+                    <controls:SettingsLayoutItem.Content>
+                        <UniformGrid Rows="6" Columns="2">
+                            <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="Music Video Folder" Name="MVInput" />
+                            <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseMVFolder" />
+                            <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="FFMPEG Path" Name="FFMPEGInput" />
+                            <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseFFMPEGPath" />
+                            <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="YTDL Path" Name="YTDLInput" />
+                            <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseYTDLPath" />
+                        </UniformGrid>
+                    </controls:SettingsLayoutItem.Content>
+                </controls:SettingsLayoutItem>
+                <controls:SettingsLayoutItem Header="Theme Options">
+                    <controls:SettingsLayoutItem.Content>
+                        <DockPanel>
+                            <ToggleButton VerticalAlignment="Top"
+                                          Classes="Switch"
+                                          DockPanel.Dock="Right"
+                                          IsChecked="{Binding IsBackgroundAnimated}" />
+                            <StackPanel HorizontalAlignment="Left">
+                                <TextBlock FontSize="16"
+                                           FontWeight="DemiBold"
+                                           Text="Animated Background" />
+                                <TextBlock Margin="0,12,70,0"
+                                           Foreground="{DynamicResource SukiLowText}"
+                                           Text="Enable a 'cloud' effect in the background. The background will be dynamic and the colors spaces will change over time."
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                    </controls:SettingsLayoutItem.Content>
+                </controls:SettingsLayoutItem>
+                <controls:SettingsLayoutItem Header="Save">
+                    <controls:SettingsLayoutItem.Content>
+                        <Button Grid.Row="2" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" Content="Save" Click="SaveSettings" />
+                    </controls:SettingsLayoutItem.Content>
+                </controls:SettingsLayoutItem>
+            </objectModel:ObservableCollection>
+        </controls:SettingsLayout.Items>
+    </controls:SettingsLayout>
+</UserControl>

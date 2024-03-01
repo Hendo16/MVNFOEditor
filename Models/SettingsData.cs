@@ -12,6 +12,5 @@ namespace MVNFOEditor.Models
         public string RootFolder { get; set; }
         public string FFMPEGPath { get; set; }
         public string YTDLPath { get; set; }
-        public string OutputFolder { get; set; }
     }
 }
