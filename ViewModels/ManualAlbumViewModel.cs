@@ -8,47 +8,64 @@ using System.Text;
 using System.Threading.Tasks;
 using MVNFOEditor.Models;
 using Avalonia.Controls.Shapes;
+using CommunityToolkit.Mvvm.ComponentModel;
+using System.Net.Http;
 
 namespace MVNFOEditor.ViewModels
 {
-    public class ManualAlbumViewModel : ReactiveObject
+    public partial class ManualAlbumViewModel : ObservableObject
     {
-        private Artist _artist;
-        private string _albumNameText;
+        private static HttpClient s_httpClient = new();
         private string CachePath => $"./Cache/{_artist.Name}";
-        public string AlbumNameText
-        {
-            get => _albumNameText;
-            set => this.RaiseAndSetIfChanged(ref _albumNameText, value);
-        }
-        private string _albumYear;
-        public string AlbumYear
-        {
-            get => _albumYear;
-            set => this.RaiseAndSetIfChanged(ref _albumYear, value);
-        }
 
-        private Bitmap? _cover;
+        [ObservableProperty] private string _coverURL;
+        [ObservableProperty] private Artist _artist;
+        [ObservableProperty] private Bitmap? _cover;
+        [ObservableProperty] private string _albumNameText;
+        [ObservableProperty] private bool _uRLRadio;
+        [ObservableProperty] private bool _localRadio;
+        [ObservableProperty] private string _albumYear;
+        
         private string _coverPath;
-        public Bitmap? AlbumCover
-        {
-            get => _cover;
-            set => this.RaiseAndSetIfChanged(ref _cover, value);
-        }
         public string CoverPath
         {
-            get => _coverPath;
-            set => this.RaiseAndSetIfChanged(ref _coverPath, value);
+            get { return _coverPath; }
+            set
+            {
+                _coverPath = value;
+                OnPropertyChanged(nameof(CoverPath));
+            }
+        }
+
+        public async void GrabURL()
+        {
+            var data = await s_httpClient.GetByteArrayAsync(CoverURL);
+            var ms = new MemoryStream(data);
+            Cover = await Task.Run(() => Bitmap.DecodeToWidth(ms, 200));
         }
 
         public async void LoadCover(string path)
         {
             CoverPath = path;
-            AlbumCover = await Task.Run(() => Bitmap.DecodeToWidth(File.OpenRead(path), 200));
+            Cover = await Task.Run(() => Bitmap.DecodeToWidth(File.OpenRead(path), 200));
         }
         public async Task SaveCoverAsync(string folderPath)
         {
-            var bitmap = Bitmap.DecodeToWidth(File.OpenRead(CoverPath), 400);
+            Stream ms;
+            if (CoverURL != null)
+            {
+                var data = await s_httpClient.GetByteArrayAsync(CoverURL);
+                ms = new MemoryStream(data);
+            }
+            else if (CoverPath != null)
+            {
+                ms = File.OpenRead(CoverPath);
+            }
+            else
+            {
+                return;
+            }
+            Bitmap? bitmap = new Bitmap(ms);
             await Task.Run(() =>
             {
                 using (var fs = SaveCoverBitmapStream(folderPath))
@@ -70,6 +87,7 @@ namespace MVNFOEditor.ViewModels
         public ManualAlbumViewModel(Artist art)
         {
             _artist = art;
+            URLRadio = true;
         }
 
         public async Task<Album> SaveAlbum()

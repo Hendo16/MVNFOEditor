@@ -44,6 +44,10 @@ namespace MVNFOEditor.ViewModels
             {
                 ProgressValue = newValue;
             }
+            else if (value == 0)
+            {
+                ProgressValue = 0;
+            }
         }
     }
 }

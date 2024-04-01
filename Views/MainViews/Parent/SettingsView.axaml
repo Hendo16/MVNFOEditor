@@ -1,0 +1,124 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:objectModel="clr-namespace:System.Collections.ObjectModel;assembly=System.ObjectModel"
+             xmlns:views="clr-namespace:MVNFOEditor.Views"
+             xmlns:models="clr-namespace:SukiUI.Models;assembly=SukiUI"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="vm:SettingsViewModel"
+             x:Class="MVNFOEditor.Views.SettingsView">
+    <controls:SettingsLayout>
+        <controls:SettingsLayout.Items>
+            <objectModel:ObservableCollection x:TypeArguments="controls:SettingsLayoutItem">
+                <controls:SettingsLayoutItem Header="Folder/App Locations">
+                    <controls:SettingsLayoutItem.Content>
+                        <UniformGrid Rows="6" Columns="2">
+                            <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="Music Video Folder" Name="MVInput" Text="{Binding MvText}" />
+                            <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseMVFolder" />
+                            <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="FFMPEG Path" Name="FFMPEGInput" Text="{Binding FfmpegText}"  />
+                            <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseFFMPEGPath" />
+                            <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="YTDL Path" Name="YTDLInput" Text="{Binding YtdlText}"  />
+                            <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseYTDLPath" />
+                        </UniformGrid>
+                    </controls:SettingsLayoutItem.Content>
+                </controls:SettingsLayoutItem>
+                <controls:SettingsLayoutItem Header="Theme Options">
+                    <controls:SettingsLayoutItem.Content>
+                        <StackPanel>
+                          <StackPanel HorizontalAlignment="Center"
+                                      Orientation="Horizontal"
+                                      Spacing="20">
+                            <RadioButton Width="180"
+                                         Height="160"
+                                         Padding="0"
+                                         Classes="GigaChips"
+                                         GroupName="RadioBaseTheme"
+                                         IsChecked="{Binding IsLightTheme}">
+                              <Border Margin="-50"
+                                      Background="#fafafa"
+                                      CornerRadius="{DynamicResource MediumCornerRadius}">
+                                <Grid>
+                                  <TextBlock Margin="42"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Bottom"
+                                             FontWeight="DemiBold"
+                                             Foreground="#555555"
+                                             Text="Light Mode" />
+                                </Grid>
+                              </Border>
+                            </RadioButton>
+                            <RadioButton Width="180"
+                                         Height="160"
+                                         Classes="GigaChips"
+                                         GroupName="RadioBaseTheme"
+                                         IsChecked="{Binding !IsLightTheme}">
+                              <Border Margin="-50"
+                                      Background="#222222"
+                                      CornerRadius="{DynamicResource MediumCornerRadius}">
+                                <Grid>
+                                  <TextBlock Margin="42"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Bottom"
+                                             FontWeight="DemiBold"
+                                             Foreground="#fafafa"
+                                             Text="Dark Mode" />
+                                </Grid>
+                              </Border>
+                            </RadioButton>
+                          </StackPanel>
+                            <ItemsControl HorizontalAlignment="Center" ItemsSource="{Binding AvailableColors}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel HorizontalAlignment="Center"
+                                                    Orientation="Horizontal"
+                                                    Spacing="10" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:SukiColorTheme">
+
+                                        <RadioButton Width="50"
+                                                     Height="50"
+                                                     Classes="GigaChips"
+                                                     Command="{Binding ((vm:SettingsViewModel)DataContext).SwitchToColorThemeCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type views:SettingsView}}}"
+                                                     CommandParameter="{Binding}"
+                                                     CornerRadius="50"
+                                                     GroupName="RadioColorTheme">
+                                            <Border Margin="-30"
+                                                    Background="{Binding PrimaryBrush}"
+                                                    CornerRadius="50" />
+                                        </RadioButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <DockPanel>
+                                <ToggleButton VerticalAlignment="Top"
+                                              Classes="Switch"
+                                              DockPanel.Dock="Right"
+                                              IsChecked="{Binding IsBackgroundAnimated}" />
+                                <StackPanel HorizontalAlignment="Left">
+                                    <TextBlock FontSize="16"
+                                               FontWeight="DemiBold"
+                                               Text="Animated Background" />
+                                    <TextBlock Margin="0,12,70,0"
+                                               Foreground="{DynamicResource SukiLowText}"
+                                               Text="Enable a 'cloud' effect in the background. The background will be dynamic and the colors spaces will change over time."
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </DockPanel>
+                        </StackPanel>
+                    </controls:SettingsLayoutItem.Content>
+                </controls:SettingsLayoutItem>
+                <controls:SettingsLayoutItem Header="Save">
+                    <controls:SettingsLayoutItem.Content>
+                        <Button Grid.Row="2" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" Content="Save" Click="SaveSettings" />
+                    </controls:SettingsLayoutItem.Content>
+                </controls:SettingsLayoutItem>
+            </objectModel:ObservableCollection>
+        </controls:SettingsLayout.Items>
+    </controls:SettingsLayout>
+</UserControl>

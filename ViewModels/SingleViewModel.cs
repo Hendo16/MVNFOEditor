@@ -8,6 +8,7 @@ using SukiUI.Controls;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +17,6 @@ namespace MVNFOEditor.ViewModels
 {
     public class SingleViewModel : ReactiveObject
     {
-        private ArtistListParentViewModel _parentVM;
         private readonly MusicVideo _video;
         private YTMusicHelper ytMusicHelper;
         public string Title => _video.title;
@@ -34,7 +34,6 @@ namespace MVNFOEditor.ViewModels
         public SingleViewModel(MusicVideo video)
         {
             _video = video;
-            _parentVM = App.GetVM().GetParentView();
             ytMusicHelper = App.GetYTMusicHelper();
         }
 
@@ -44,16 +43,25 @@ namespace MVNFOEditor.ViewModels
             {
                 if (imageStream != null)
                 {
-                    try {Thumbnail = new Bitmap(imageStream);} catch (ArgumentException e){}
+                    try
+                    {
+                        Thumbnail = Bitmap.DecodeToWidth(imageStream, 240);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine($"Couldn't find {_video.thumb}");
+                    };
                 }
             }
         }
 
-        public void EditVideo()
+        public async void EditVideo()
         {
             MusicVideoDetailsViewModel vidDetailsVM = new MusicVideoDetailsViewModel();
             vidDetailsVM.SetVideo(_video);
-            _parentVM.CurrentContent = vidDetailsVM;
+            vidDetailsVM.AnalyzeVideo();
+            await vidDetailsVM.LoadThumbnail();
+            App.GetVM().GetParentView().CurrentContent = vidDetailsVM;
         }
     }
 }

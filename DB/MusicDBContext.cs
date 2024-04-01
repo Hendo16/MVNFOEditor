@@ -1,8 +1,11 @@
 ﻿using System.Linq;
+using Avalonia.Styling;
 using Microsoft.EntityFrameworkCore;
 using MVNFOEditor.Models;
 using MVNFOEditor.ViewModels;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SukiUI.Models;
 
 namespace MVNFOEditor.DB
 {
@@ -38,6 +41,18 @@ namespace MVNFOEditor.DB
                 .HasConversion(
                     a => a.ToString(),
                     a => JArray.Parse(a));
+
+            modelBuilder.Entity<SettingsData>()
+                .Property(t => t.Theme)
+                .HasConversion(
+                    a => JsonConvert.SerializeObject(a),
+                    a => JsonConvert.DeserializeObject<SukiColorTheme>(a));
+
+            modelBuilder.Entity<SettingsData>()
+                .Property(t => t.LightOrDark)
+                .HasConversion(
+                    a => JsonConvert.SerializeObject(a),
+                    a => JsonConvert.DeserializeObject<ThemeVariant>(a));
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

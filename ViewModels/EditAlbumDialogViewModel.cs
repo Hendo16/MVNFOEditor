@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
@@ -16,31 +17,17 @@ namespace MVNFOEditor.ViewModels
     public partial class EditAlbumDialogViewModel : ObservableObject
     {
         private ArtistListParentViewModel _parentVM;
-        private Album _album;
-        private string _title;
-        private string _year;
         public Artist Artist => _album.Artist;
-        public Bitmap? Cover { get; set; }
         private MusicDBHelper DBHelper;
-        public string Title
-        {
-            get { return _title; }
-            set
-            {
-                _title = value;
-                OnPropertyChanged(nameof(Title));
-            }
-        }
+        private static HttpClient s_httpClient = new();
 
-        public string Year
-        {
-            get { return _year; }
-            set
-            {
-                _year = value;
-                OnPropertyChanged(nameof(Year));
-            }
-        }
+        [ObservableProperty] private string _coverURL;
+        [ObservableProperty] private Album _album;
+        [ObservableProperty] private Bitmap? _cover;
+        [ObservableProperty] private string _title;
+        [ObservableProperty] private string _year;
+        [ObservableProperty] private bool _uRLRadio;
+        [ObservableProperty] private bool _localRadio;
 
         public EditAlbumDialogViewModel(Album album, Bitmap? coverInstance)
         {
@@ -62,6 +49,12 @@ namespace MVNFOEditor.ViewModels
             }
             //Refresh View
             RefreshView();
+        }
+        public async void GrabURL()
+        {
+            var data = await s_httpClient.GetByteArrayAsync(CoverURL);
+            var ms = new MemoryStream(data);
+            Cover = await Task.Run(() => Bitmap.DecodeToWidth(ms, 200));
         }
 
         public void DeleteAlbum()

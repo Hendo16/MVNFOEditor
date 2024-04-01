@@ -58,6 +58,11 @@ namespace MVNFOEditor.ViewModels
             SelectBtnText = _dbContext.Album.Any(a => a.ytMusicBrowseID == result.browseId) ? "Open" : "Select";
         }
 
+        public AlbumResult GetResult()
+        {
+            return _result;
+        }
+
         public void GrabAlbum()
         {
             SelectBtnText = "Open";

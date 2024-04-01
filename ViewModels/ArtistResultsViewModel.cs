@@ -17,6 +17,7 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private bool _isBusy;
         [ObservableProperty] private string _busyText;
         [ObservableProperty] private string _searchInput;
+        [ObservableProperty] private ArtistResultViewModel _selectedArtist;
         private YTMusicHelper ytMusicHelper;
 
         public event EventHandler<ArtistResult> NextPage;

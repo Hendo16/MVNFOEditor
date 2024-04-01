@@ -60,6 +60,11 @@ namespace MVNFOEditor.ViewModels
             TriggerNextPage();
         }
 
+        public ArtistResult GetResult()
+        {
+            return _result;
+        }
+
         public async Task LoadThumbnail()
         {
             await using (var imageStream = await _result.LoadCoverBitmapAsync())

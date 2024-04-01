@@ -16,6 +16,7 @@ namespace MVNFOEditor.ViewModels
     {
         private ArtistListViewModel _listVM;
         private ArtistDetailsViewModel _detailsVM;
+        private MusicDBHelper _dbHelper;
         private object _currentContent;
         public object CurrentContent
         {
@@ -32,6 +33,7 @@ namespace MVNFOEditor.ViewModels
             ArtistListViewModel currView = new ArtistListViewModel();
             CurrentContent = currView;
             _listVM = currView;
+            _dbHelper = App.GetDBHelper();
         }
 
         public void SetDetailsVM(ArtistDetailsViewModel vm)
@@ -55,9 +57,19 @@ namespace MVNFOEditor.ViewModels
             CurrentContent = _detailsVM;
         }
 
-        public void BackToList(bool reload = false)
+        public void InitList()
         {
-            if (reload){_listVM.LoadArtists();}
+            _listVM.InitData();
+        }
+
+        public async void BackToList(bool reload = false)
+        {
+            if (reload){ await _listVM.LoadArtists();}
+
+            if (_detailsVM != null)
+            {
+                _detailsVM.ClearImages();
+            }
             CurrentContent = _listVM;
         }
     }

@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Threading;
 
 namespace MVNFOEditor.ViewModels
 {
@@ -40,10 +41,7 @@ namespace MVNFOEditor.ViewModels
             {
                 LoadArtists();
             }
-            else
-            {
-                App.GetVM().InitilizeSettings();
-            }
+            
         }
 
         public void AddArtist()
@@ -52,12 +50,32 @@ namespace MVNFOEditor.ViewModels
             SukiHost.ShowDialog(newVM);
         }
 
-        public async void LoadArtists()
+        public async void InitData()
+        {
+            BusyText = "Building Database...";
+            IsBusy = true;
+            DBHelper.ProgressUpdate += UpdateInitProgressText;
+            await DBHelper.InitilizeData();
+            bool textTest = false;
+            await LoadArtists();
+        }
+
+        public async Task<bool> LoadArtists()
         {
             BusyText = "Loading Artists...";
             IsBusy = true;
+            if (ArtistCards != null)
+            {
+                ArtistCards.Clear();
+            }
             ArtistCards = await DBHelper.GenerateArtists();
             IsBusy = false;
+            return true;
+        }
+
+        public void UpdateInitProgressText(int progress)
+        {
+            BusyText = $"Building Database...\n\t\t  {progress}/100";
         }
 
         [RelayCommand]

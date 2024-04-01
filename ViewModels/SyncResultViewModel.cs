@@ -1,63 +1,36 @@
 ﻿using Avalonia.Media.Imaging;
 using MVNFOEditor.Models;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using MVNFOEditor.Helpers;
 using ReactiveUI;
-using Avalonia.Interactivity;
 using MVNFOEditor.DB;
-using System.Xml.Linq;
-using SkiaSharp;
-using Avalonia.Controls;
-using YoutubeDLSharp;
 using YoutubeDLSharp.Metadata;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.IO;
 
 namespace MVNFOEditor.ViewModels
 {
-    public class SyncResultViewModel : ReactiveObject
+    public partial class SyncResultViewModel : ObservableObject
     {
         private readonly SyncResult _result;
-        private Bitmap? _thumbnail;
-        private string _borderColor;
-        private string _downloadBtnText;
-        private string _downloadEnabled;
         private MusicDbContext _dbContext;
         private YTMusicHelper _musicHelper;
         private YTDLHelper _ytDLHelper;
-
-        public event EventHandler<SyncResult> ProgressStarted;
-
         private Album? _album;
+
+        [ObservableProperty] private string _borderColor;
+        [ObservableProperty] private string _downloadBtnText;
+        [ObservableProperty] private string _downloadEnabled;
+        [ObservableProperty] private Bitmap? _thumbnail;
+
+        public event EventHandler<SyncResultViewModel> ProgressStarted;
 
         public string Title => _result.Title;
         public Artist Artist => _result.Artist;
         public string Duration => _result.Duration;
-        public string DownloadBtnText
-        {
-            get => _downloadBtnText;
-            set => this.RaiseAndSetIfChanged(ref _downloadBtnText, value);
-        }
-        public string DownloadEnabled
-        {
-            get => _downloadEnabled;
-            set => this.RaiseAndSetIfChanged(ref _downloadEnabled, value);
-        }
-        public string BorderColor
-        {
-            get => _borderColor;
-            set => this.RaiseAndSetIfChanged(ref _borderColor, value);
-        }
-        public Bitmap? Thumbnail
-        {
-            get => _thumbnail;
-            private set => this.RaiseAndSetIfChanged(ref _thumbnail, value);
-        }
 
         public SyncResultViewModel(SyncResult result)
         {
@@ -77,13 +50,25 @@ namespace MVNFOEditor.ViewModels
             _album = album;
         }
 
-        public void OpenResult()
+        public SyncResult HandleDownload()
         {
-            GenerateNFO();
-            OnProgressTrigger();
             BorderColor = "Green";
             DownloadEnabled = "False";
             DownloadBtnText = "Downloaded";
+            return _result;
+        }
+
+        public void OpenResult()
+        {
+            BorderColor = "Green";
+            DownloadEnabled = "False";
+            DownloadBtnText = "Downloaded";
+            OnProgressTrigger();
+        }
+
+        public SyncResult GetResult()
+        {
+            return _result;
         }
 
         public async Task LoadThumbnail()
@@ -106,7 +91,7 @@ namespace MVNFOEditor.ViewModels
             });
         }
         
-        private async void GenerateNFO()
+        public async Task<int> GenerateNFO(string filePath)
         {
             MusicVideo newMV = new MusicVideo();
             SettingsData localData = _dbContext.SettingsData.First();
@@ -132,19 +117,21 @@ namespace MVNFOEditor.ViewModels
                 }
             }
             newMV.source = "youtube";
-            newMV.filePath = $"{localData.RootFolder}/{newMV.artist.Name}/{newMV.title}-video.nfo";
+            newMV.nfoPath = $"{localData.RootFolder}/{newMV.artist.Name}/{newMV.title}-video.nfo";
 
             await SaveThumbnailAsync($"{localData.RootFolder}/{newMV.artist.Name}");
             newMV.thumb = $"{newMV.title}-video.jpg";
 
+            newMV.vidPath = filePath;
+
             newMV.SaveToNFO();
             _dbContext.MusicVideos.Add(newMV);
-            _dbContext.SaveChanges();
+            return await _dbContext.SaveChangesAsync();
         }
 
         protected virtual void OnProgressTrigger()
         {
-            ProgressStarted?.Invoke(this, _result);
+            ProgressStarted?.Invoke(this, this);
         }
     }
 }

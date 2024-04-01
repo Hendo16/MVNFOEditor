@@ -1,4 +1,5 @@
-﻿using Avalonia.Collections;
+﻿using System;
+using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Material.Icons;
 using MVNFOEditor.Features;
@@ -18,18 +19,26 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private bool _isBackgroundAnimated;
         [ObservableProperty] private bool _isLightTheme;
 
+        [ObservableProperty] private string _mvText;
+        [ObservableProperty] private string _ffmpegText;
+        [ObservableProperty] private string _ytdlText;
+
         [ObservableProperty] private SettingsItemViewModel _activeVm;
         [ObservableProperty] private int _limit = 5;
         public SettingsViewModel() : base("Settings", MaterialIconKind.Layers, 2)
         {
             _activeVm = new SettingsItemViewModel(1, OnRecurseClicked);
             AvailableColors = _theme.ColorThemes;
-            IsLightTheme = _theme.ActiveBaseTheme == ThemeVariant.Light;
-            IsBackgroundAnimated = _theme.IsBackgroundAnimated;
             _theme.OnBaseThemeChanged += variant =>
                 IsLightTheme = variant == ThemeVariant.Light;
             _theme.OnBackgroundAnimationChanged += value =>
                 IsBackgroundAnimated = value;
+
+            MvText = App.GetSettings().RootFolder;
+            FfmpegText = App.GetSettings().FFMPEGPath;
+            YtdlText = App.GetSettings().YTDLPath;
+            IsBackgroundAnimated = App.GetSettings().AnimatedBackground;
+            IsLightTheme = App.GetSettings().LightOrDark == ThemeVariant.Light;
         }
 
         private void OnRecurseClicked(SettingsItemViewModel newRecursiveVm)

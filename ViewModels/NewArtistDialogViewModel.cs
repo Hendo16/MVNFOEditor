@@ -24,7 +24,7 @@ namespace MVNFOEditor.ViewModels
         private ArtistListParentViewModel _parentVM;
         private ArtistResultsViewModel _resultVM;
         private AlbumResultsViewModel? _albumResultsVM;
-        private AddMusicVideoParentViewModel? _syncDialogParentVM;
+        private SyncDialogViewModel? _syncDialogParentVM;
 
         private ManualArtistViewModel? _manualArtVM;
         private ManualAlbumViewModel? _manualAlbumVM;
@@ -36,92 +36,17 @@ namespace MVNFOEditor.ViewModels
         private SettingsData localData;
         private Artist _artist;
 
-
-        public IEnumerable<string> Steps { get; } = [
-        "Select Artist",
-        "Select Albums",
-        "Select Videos"
-        ];
-
-        private bool _toggleEnable;
-
-        public bool ToggleEnable
-        {
-            get { return _toggleEnable; }
-            set
-            {
-                _toggleEnable = value;
-                OnPropertyChanged(nameof(ToggleEnable));
-            }
-        }
-
-        private bool _toggleValue;
-
-        public bool ToggleValue
-        {
-            get { return _toggleValue; }
-            set
-            {
-                _toggleValue = value;
-                OnPropertyChanged(nameof(ToggleValue));
-            }
-        }
-
-        private bool _isAlbumView;
-
-        public bool IsAlbumView
-        {
-            get {return _isAlbumView;}
-            set
-            {
-                _isAlbumView = value;
-                OnPropertyChanged(nameof(IsAlbumView));
-            }
-        }
-
-        private bool _nextEnabled;
-
-        public bool NextEnabled
-        {
-            get { return _nextEnabled; }
-            set
-            {
-                _nextEnabled = value;
-                OnPropertyChanged(nameof(NextEnabled));
-            }
-        }
-
-        private string _backButtonText;
-        public string BackButtonText
-        {
-            get { return _backButtonText; }
-            set
-            {
-                _backButtonText = value;
-                OnPropertyChanged(nameof(BackButtonText));
-            }
-        }
-
-        private object _currentContent;
-        public object CurrentContent
-        {
-            get { return _currentContent; }
-            set
-            {
-                _currentContent = value;
-                OnPropertyChanged(nameof(CurrentContent));
-            }
-        }
-        private int _stepIndex = 0;
-        public int StepIndex
-        {
-            get { return _stepIndex; }
-            set
-            {
-                _stepIndex = value;
-                OnPropertyChanged(nameof(StepIndex));
-            }
-        }
+        [ObservableProperty] private int _stepIndex;
+        [ObservableProperty] private bool _toggleEnable;
+        [ObservableProperty] private bool _toggleVisible;
+        [ObservableProperty] private bool _toggleValue;
+        [ObservableProperty] private bool _isAlbumView;
+        [ObservableProperty] private bool _isBusy;
+        [ObservableProperty] private string _busyText;
+        [ObservableProperty] private string _skipText;
+        [ObservableProperty] private string _backButtonText;
+        [ObservableProperty] private object _currentContent;
+        [ObservableProperty] private ObservableCollection<string> _steps;
 
         public NewArtistDialogViewModel()
         {
@@ -134,31 +59,41 @@ namespace MVNFOEditor.ViewModels
             _dbContext = App.GetDBContext();
             _parentVM = App.GetVM().GetParentView();
             localData = _dbContext.SettingsData.First();
+            Steps = ["Select Artist", "Select Album", "Select Videos"];
+            SkipText = "Skip";
             BackButtonText = "Exit";
             ToggleEnable = true;
+            ToggleVisible = true;
             ToggleValue = true;
             IsAlbumView = false;
-            NextEnabled = false;
             CurrentContent = _resultVM;
         }
 
         public async void NextStep(object? sender, ArtistResult newArtist)
         {
-            HandleNavigation(true);
-
-            _artist = new Artist();
-            _artist.Name = newArtist.Name;
-            _artist.YTMusicId = newArtist.browseId;
-            _artist.CardBannerURL = ytMusicHelper.GetArtistBanner(_artist.YTMusicId, 540);
-            _artist.LargeBannerURL = ytMusicHelper.GetArtistBanner(_artist.YTMusicId, 1080);
-            _artist.YTMusicAlbumResults = ytMusicHelper.GetAlbums(_artist.YTMusicId);
-            _dbContext.Artist.Add(_artist);
-            _dbContext.SaveChanges();
-
+            BusyText = "Getting Albums...";
+            IsBusy = true;
+            //Prevent duplicates being stored
+            if (!_dbContext.Artist.Any(a => a.YTMusicId == newArtist.browseId))
+            {
+                _artist = new Artist();
+                _artist.Name = newArtist.Name;
+                _artist.YTMusicId = newArtist.browseId;
+                _artist.CardBannerURL = ytMusicHelper.GetArtistBanner(_artist.YTMusicId, 540);
+                _artist.LargeBannerURL = ytMusicHelper.GetArtistBanner(_artist.YTMusicId, 1080);
+                _artist.YTMusicAlbumResults = ytMusicHelper.GetAlbums(_artist.YTMusicId);
+                _dbContext.Artist.Add(_artist);
+                _dbContext.SaveChanges();
+            }
+            else
+            {
+                _artist = _dbContext.Artist.First(a => a.YTMusicId == newArtist.browseId);
+            }
+            
             //Refresh list to display the new artist
             _parentVM.RefreshList();
 
-            if(_artist.YTMusicAlbumResults == null){ToSingles();}
+            if(_artist.YTMusicAlbumResults == null){ToSingles();return;}
 
             JArray AlbumList = _artist.YTMusicAlbumResults;
             ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>();
@@ -184,33 +119,46 @@ namespace MVNFOEditor.ViewModels
                 var result = results[i];
                 result.NextPage += ToVideos;
             }
+            IsBusy = false;
             CurrentContent = resultsVM;
         }
 
         public async void ToSingles()
         {
+            BusyText = "Getting Videos...";
+            SkipText = "Exit";
             StepIndex++;
+            ToggleVisible = false;
             string artistID = _artist.YTMusicId;
             JArray videoSearch = ytMusicHelper.get_videos(artistID);
             ObservableCollection<SyncResultViewModel> results = await ytMusicHelper.GenerateSyncResultList(videoSearch, _artist);
             SyncDialogViewModel resultsVM = new SyncDialogViewModel(results);
             AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM);
-            _syncDialogParentVM = parentVM;
+            _syncDialogParentVM = resultsVM;
             for (int i = 0; i < results.Count; i++)
             {
                 var result = results[i];
                 result.ProgressStarted += parentVM.BuildProgressVM;
             }
-            CurrentContent = parentVM;
+            IsBusy = false;
+            CurrentContent = resultsVM;
         }
 
         public async void ToVideos(object? sender, AlbumResult newAlbum)
         {
-            HandleNavigation(true);
-
-            Album album = new Album(newAlbum);
-            _dbContext.Album.Add(album);
-            _dbContext.SaveChanges();
+            BusyText = "Getting Videos...";
+            IsBusy = true;
+            Album album = new Album();
+            if (!_dbContext.Album.Any(a => a.ytMusicBrowseID == newAlbum.browseId))
+            {
+                album = new Album(newAlbum);
+                _dbContext.Album.Add(album);
+                _dbContext.SaveChanges();
+            }
+            else
+            {
+                album = _dbContext.Album.First(a => a.ytMusicBrowseID == newAlbum.browseId);
+            }
 
             string artistID = album.Artist.YTMusicId;
             JArray videoSearch = ytMusicHelper.get_videos(artistID);
@@ -218,20 +166,24 @@ namespace MVNFOEditor.ViewModels
             ObservableCollection<SyncResultViewModel> results = await ytMusicHelper.GenerateSyncResultList(videoSearch, fullAlbumDetails, null, album);
             SyncDialogViewModel resultsVM = new SyncDialogViewModel(results);
             AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM);
-            _syncDialogParentVM = parentVM;
+            _syncDialogParentVM = resultsVM;
             for (int i = 0; i < results.Count; i++)
             {
                 var result = results[i];
                 result.ProgressStarted += parentVM.BuildProgressVM;
             }
-            CurrentContent = parentVM;
+            IsBusy = false;
+            CurrentContent = resultsVM;
         }
 
         public void ManualNextStep()
         {
             Artist newArtist = new Artist();
             newArtist.Name = _manualArtVM.ArtistNameText;
-            newArtist.SaveManualBanner(_manualArtVM.BannerPath);
+            if (_manualArtVM.BannerPath != null)
+            {
+                newArtist.SaveManualBanner(_manualArtVM.BannerPath);
+            }
             _artist = newArtist;
             _dbContext.Artist.Add(_artist);
             _dbContext.SaveChanges();
@@ -247,7 +199,10 @@ namespace MVNFOEditor.ViewModels
             newAlbum.Artist = _artist;
             newAlbum.Title = _manualAlbumVM.AlbumNameText;
             newAlbum.Year = _manualAlbumVM.AlbumYear;
-            newAlbum.SaveManualCover(_manualAlbumVM.CoverPath);
+            if (_manualAlbumVM.CoverPath != null)
+            {
+                newAlbum.SaveManualCover(_manualAlbumVM.CoverPath);
+            }
 
             _dbContext.Album.Add(newAlbum);
             _dbContext.SaveChanges();
@@ -259,7 +214,6 @@ namespace MVNFOEditor.ViewModels
 
         public async void ManualSaveVideo()
         {
-            GenerateManualNFO();
             WaveProgressViewModel waveVM = new WaveProgressViewModel();
             waveVM.HeaderText = "Downloading " + _manualMusicVideoVM.Title;
             CurrentContent = waveVM;
@@ -267,6 +221,7 @@ namespace MVNFOEditor.ViewModels
             RunResult<string> downloadResult = await _ytDLHelper.DownloadVideo(_manualMusicVideoVM._vidData.ID, $"{localData.RootFolder}/{_artist.Name}", _manualMusicVideoVM.Title, progress);
             if (downloadResult.Success)
             {
+                GenerateManualNFO(downloadResult.Data);
                 _manualMusicVideoVM.ClearData();
                 CurrentContent = _manualMusicVideoVM;
             }
@@ -280,14 +235,13 @@ namespace MVNFOEditor.ViewModels
         [RelayCommand]
         public void HandleNavigation(bool isIncrement)
         {
-            if (!isIncrement && !NextEnabled){ NextEnabled = true; }
             //Get Current Page
             Type currentType = CurrentContent.GetType();
             switch (isIncrement)
             {
-                case true when StepIndex >= Steps.Count() - 1:
+                case true when StepIndex > Steps.Count() - 1:
                 case false when StepIndex <= 0:
-                    SukiHost.CloseDialog();
+                    if(_artist != null){ HandleExit(); } else{ SukiHost.CloseDialog(); }
                     return;
                 default:
                     StepIndex += isIncrement ? 1 : -1;
@@ -297,7 +251,7 @@ namespace MVNFOEditor.ViewModels
             #region Manual Navigation
             if (currentType == typeof(ManualArtistViewModel))
             {
-                ToggleEnable = false;
+                ToggleVisible = false;
                 IsAlbumView = true;
                 ManualNextStep();
             }
@@ -306,15 +260,17 @@ namespace MVNFOEditor.ViewModels
                 IsAlbumView = false;
                 if (isIncrement)
                 {
-                    //NextEnabled = false;
+                    ToggleVisible = false;
+                    SkipText = "Exit";
                     ManualToVideos();
                 }
                 else
                 {
                     ToggleEnable = true;
-                    CurrentContent = _manualArtVM;
+                    CurrentContent = ToggleVisible ? _resultVM : _manualArtVM;
                 }
             }
+
             if (currentType == typeof(ManualMusicVideoViewModel))
             {
                 if (isIncrement)
@@ -323,7 +279,9 @@ namespace MVNFOEditor.ViewModels
                 }
                 else
                 {
+                    ToggleVisible = true;
                     IsAlbumView = true;
+                    SkipText = "Skip";
                     CurrentContent = _manualAlbumVM;
                 }
             }
@@ -332,42 +290,92 @@ namespace MVNFOEditor.ViewModels
             #region Auto Navigation
             if (currentType == typeof(ArtistResultsViewModel))
             {
-                ToggleEnable = false;
                 IsAlbumView = true;
-                CurrentContent = _albumResultsVM;
+                NextStep(null, _resultVM.SelectedArtist.GetResult());
             }
+
             if (currentType == typeof(AlbumResultsViewModel))
             {
                 IsAlbumView = false;
                 if (isIncrement)
                 {
-                    NextEnabled = false;
-                    CurrentContent = _syncDialogParentVM;
+                    ToggleVisible = false;
+                    SkipText = "Exit";
+                    ToVideos(null, _albumResultsVM.SelectedAlbum.GetResult());
                 }
                 else
                 {
-                    ToggleEnable = true;
                     CurrentContent = _resultVM;
                 }
             }
-            if (currentType == typeof(AddMusicVideoParentViewModel))
+
+            if (currentType == typeof(SyncDialogViewModel))
             {
-                if (_albumResultsVM != null)
+                if (isIncrement)
                 {
-                    IsAlbumView = true;
-                    CurrentContent = _albumResultsVM;
+                    SaveMultipleVideos();
                 }
                 else
                 {
-                    StepIndex--;
-                    CurrentContent = _resultVM;
+                    ToggleVisible = true;
+                    SkipText = "Skip";
+                    CurrentContent = _albumResultsVM;
                 }
             }
             #endregion
         }
+        private async void SaveMultipleVideos()
+        {
+            SettingsData localData = _dbContext.SettingsData.First();
+            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            IsAlbumView = false;
+            CurrentContent = waveVM;
+            for (int i = 0; i < _syncDialogParentVM.SelectedVideos.Count; i++)
+            {
+                if (_syncDialogParentVM.SelectedVideos.Count > 1)
+                {
+                    waveVM.HeaderText = $"Downloading {_syncDialogParentVM.SelectedVideos[i].Title} {i + 1}/{_syncDialogParentVM.SelectedVideos.Count}";
+                }
+                else
+                {
+                    waveVM.HeaderText = $"Downloading {_syncDialogParentVM.SelectedVideos[i].Title}";
+                }
+                var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress));
+                var currResult = _syncDialogParentVM.SelectedVideos[i].HandleDownload();
+                var downResult = await _ytDLHelper.DownloadVideo(currResult.vidID, $"{localData.RootFolder}/{currResult.Artist.Name}", currResult.Title, progress);
+                if (downResult.Success)
+                {
+                    _syncDialogParentVM.SelectedVideos[i].GenerateNFO(downResult.Data).ContinueWith(t =>
+                    {
+                        if (t.IsCompletedSuccessfully)
+                        {
+                            waveVM.UpdateProgress(0);
+                        }
+                        else
+                        {
+                            SukiHost.ShowToast("Error", $"Something went wrong with downloading {_syncDialogParentVM.SelectedVideos[i].Title}");
+                        }
+                    }, TaskScheduler.FromCurrentSynchronizationContext());
+                }
+                else
+                {
+                    SukiHost.ShowToast("Error", $"Something went wrong with downloading {_syncDialogParentVM.SelectedVideos[i].Title}");
+                    break;
+                }
+            }
+
+            HandleExit();
+        }
 
         public async void HandleSkip()
         {
+            if (CurrentContent.GetType() == typeof(ManualMusicVideoViewModel) || CurrentContent.GetType() == typeof(SyncDialogViewModel))
+            {
+                HandleExit();
+            }
+            ToggleVisible = false;
+            StepIndex++;
+
             //Automatic
             if (ToggleValue)
             {
@@ -376,13 +384,13 @@ namespace MVNFOEditor.ViewModels
                 ObservableCollection<SyncResultViewModel> results = await ytMusicHelper.GenerateSyncResultList(videoSearch, _artist);
                 SyncDialogViewModel resultsVM = new SyncDialogViewModel(results);
                 AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM);
-                _syncDialogParentVM = parentVM;
+                _syncDialogParentVM = resultsVM;
                 for (int i = 0; i < results.Count; i++)
                 {
                     var result = results[i];
                     result.ProgressStarted += parentVM.BuildProgressVM;
                 }
-                CurrentContent = parentVM;
+                CurrentContent = resultsVM;
             }
             else
             {
@@ -392,27 +400,60 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
+        public void HandleExit()
+        {
+            var defaultVM = App.GetVM().GetParentView();
+            ArtistDetailsViewModel artDetailsVM = new ArtistDetailsViewModel();
+            artDetailsVM.SetArtist(_artist);
+            defaultVM.SetDetailsVM(artDetailsVM);
+            defaultVM.CurrentContent = artDetailsVM;
+            CloseDialog();
+        }
+
         public void HandleChangedMode(bool? changeValue)
         {
-            if ((bool)!changeValue)
+            Type currentType = CurrentContent.GetType();
+            if (currentType == typeof(ArtistResultsViewModel) || currentType == typeof(ManualArtistViewModel))
             {
-                ManualArtistViewModel newVM = new ManualArtistViewModel();
-                CurrentContent = newVM;
-                _manualArtVM = newVM;
-                NextEnabled = true;
+                if ((bool)!changeValue)
+                {
+                    ManualArtistViewModel newVM = new ManualArtistViewModel();
+                    Steps = ["Create Artist", "Create Album", "Create Video"];
+                    CurrentContent = newVM;
+                    _manualArtVM = newVM;
+                }
+                else
+                {
+                    Steps = ["Select Artist", "Select Album", "Select Videos"];
+                    CurrentContent = _resultVM;
+                }
             }
-            else
+
+            if (currentType == typeof(AlbumResultsViewModel) || currentType == typeof(ManualAlbumViewModel))
             {
-                CurrentContent = _resultVM;
+                if ((bool)!changeValue)
+                {
+                    ManualAlbumViewModel newVM = new ManualAlbumViewModel(_artist);
+                    Steps = ["Create Artist", "Create Album", "Create Video"];
+                    CurrentContent = newVM;
+                    _manualAlbumVM = newVM;
+                }
+                else
+                {
+                    Steps = ["Select Artist", "Select Album", "Select Videos"];
+
+                    CurrentContent = _albumResultsVM;
+                }
             }
         }
 
-        private async void GenerateManualNFO()
+        private async void GenerateManualNFO(string vidPath)
         {
             MusicVideo newMV = new MusicVideo();
             newMV.title = _manualMusicVideoVM.Title;
             newMV.year = _manualMusicVideoVM.Year;
             newMV.artist = _artist;
+            newMV.vidPath = vidPath;
             if (_manualMusicVideoVM.CurrAlbum != null)
             {
                 newMV.album = _manualMusicVideoVM.CurrAlbum;
@@ -431,7 +472,7 @@ namespace MVNFOEditor.ViewModels
             {
                 newMV.source = "local";
             }
-            newMV.filePath = $"{localData.RootFolder}/{newMV.artist.Name}/{newMV.title}-video.nfo";
+            newMV.nfoPath = $"{localData.RootFolder}/{newMV.artist.Name}/{newMV.title}-video.nfo";
 
             await _manualMusicVideoVM.SaveThumbnailAsync($"{localData.RootFolder}/{newMV.artist.Name}");
             newMV.thumb = $"{newMV.title}-video.jpg";

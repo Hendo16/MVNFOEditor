@@ -25,35 +25,15 @@ namespace MVNFOEditor.ViewModels
         private AddMusicVideoParentViewModel _addMVVM;
         private Artist _artist;
         private string _artistName;
-        private ObservableCollection<AlbumViewModel> _albumCards;
-        private ObservableCollection<SingleViewModel> _singleCards;
         private MusicDBHelper DBHelper;
         private YTMusicHelper ytMusicHelper;
         private ArtistDetailsBannerViewModel _bannerVM;
+        private NewAlbumDialogViewModel _currAlbumDialog;
 
         [ObservableProperty] private bool _isBusy;
         [ObservableProperty] private string _busyText;
-
-
-        public ObservableCollection<AlbumViewModel> AlbumCards
-        {
-            get {return _albumCards; }
-            set
-            {
-                _albumCards = value;
-                OnPropertyChanged(nameof(AlbumCards));
-            }
-        }
-        public ObservableCollection<SingleViewModel> SingleCards
-        {
-            get { return _singleCards; }
-            set
-            {
-                _singleCards = value;
-                OnPropertyChanged(nameof(SingleCards));
-            }
-        }
-
+        [ObservableProperty] private ObservableCollection<AlbumViewModel> _albumCards;
+        [ObservableProperty] private ObservableCollection<SingleViewModel> _singleCards;
         public string ArtistName
         {
             get { return _artistName; }
@@ -81,14 +61,14 @@ namespace MVNFOEditor.ViewModels
             {
                 await using (var imageStream = await _artist.LoadLargeBannerBitmapAsync())
                 {
-                    BannerVM = new ArtistDetailsBannerViewModel(new Bitmap(imageStream));
+                    BannerVM = new ArtistDetailsBannerViewModel(Bitmap.DecodeToHeight(imageStream, 800));
                 }
             }
             else
             {
                 await using (var imageStream = await _artist.LoadLocalLargeBannerBitmapAsync())
                 {
-                    BannerVM = new ArtistDetailsBannerViewModel(new Bitmap(imageStream));
+                    BannerVM = new ArtistDetailsBannerViewModel(Bitmap.DecodeToHeight(imageStream, 800));
                 }
             }
         }
@@ -105,8 +85,10 @@ namespace MVNFOEditor.ViewModels
         {
             if (_artist.YTMusicAlbumResults == null)
             {
-                TextBlock errBox = new TextBlock() { Text = "No Albums Available" };
-                SukiHost.ShowDialog(errBox, allowBackgroundClose: true);
+                ManualAlbumViewModel manualVM = new ManualAlbumViewModel(_artist);
+                NewAlbumDialogViewModel newAlbumVM = new NewAlbumDialogViewModel(manualVM, _artist);
+                SukiHost.ShowToast("Error", "No YouTube Music Albums Available");
+                SukiHost.ShowDialog(newAlbumVM);
                 return;
             }
             JArray AlbumList = _artist.YTMusicAlbumResults;
@@ -128,15 +110,21 @@ namespace MVNFOEditor.ViewModels
             }
             AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results);
             NewAlbumDialogViewModel parentVM = new NewAlbumDialogViewModel(resultsVM, _artist);
+            _currAlbumDialog = parentVM;
             for (int i = 0; i < results.Count; i++)
             {
                 var result = results[i];
-                result.NextPage += parentVM.NextStep;
+                result.NextPage += AddAlbumEventHandler;
 
             }
             parentVM.ClosePageEvent += ReturnToPreviousView;
             //Open Dialog
             SukiHost.ShowDialog(parentVM);
+        }
+
+        private async void AddAlbumEventHandler(object? sender, AlbumResult _result)
+        {
+            await _currAlbumDialog.NextStep(null, _result);
         }
 
         public async void AddSingle()
@@ -173,13 +161,14 @@ namespace MVNFOEditor.ViewModels
                 }
                 IsBusy = false;
                 //Open Dialog
-                SukiHost.ShowDialog(parentVM, allowBackgroundClose: true);
+                SukiHost.ShowDialog(parentVM);
             }
         }
 
         private void RefreshDetailsView(object? sender, bool e)
         {
             LoadAlbums();
+            
         }
 
         public async void AddManualSingle()
@@ -203,7 +192,6 @@ namespace MVNFOEditor.ViewModels
             IsBusy = true;
             AlbumCards = await DBHelper.GenerateAlbums(_artist);
             SingleCards = await DBHelper.GenerateSingles(_artist);
-
             for (int i = 0; i < AlbumCards.Count; i++)
             {
                 AlbumCards[i].SyncStarted += LoadingSync;
@@ -217,14 +205,32 @@ namespace MVNFOEditor.ViewModels
             IsBusy = isSyncTriggered;
         }
 
-        public void NavigateBack()
+        public void ClearImages()
         {
-            _parentVM.BackToList();
+            for (int i = 0; i < AlbumCards.Count; i++)
+            {
+                if (AlbumCards[i].Cover != null)
+                {
+                    AlbumCards[i].Cover.Dispose();
+                }
+            }
+            for (int i = 0; i < SingleCards.Count; i++)
+            {
+                if (SingleCards[i].Thumbnail != null)
+                {
+                    SingleCards[i].Thumbnail.Dispose();
+                }
+            }
+            AlbumCards.Clear();
+            SingleCards.Clear();
+            BannerVM.ArtistBanner.Dispose();
         }
-        
+
+
         public void ReturnToPreviousView(object? sender, bool t)
         {
-            _parentVM.BackToList(true);
+            //_parentVM.BackToList(true);
+            LoadAlbums();
         }
     }
 }

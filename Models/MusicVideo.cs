@@ -1,10 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using SukiUI.Controls;
 
 namespace MVNFOEditor.Models
 {
@@ -14,8 +16,9 @@ namespace MVNFOEditor.Models
         public string title { get; set; }
         public Artist artist { get; set; }
         public Album? album { get; set; }
-        public string filePath { get; set; }
-        public string thumb { get; set; }
+        public string? vidPath { get; set; }
+        public string? thumb { get; set; }
+        public string nfoPath { get; set; }
         public string year { get; set; }
         public List<MusicVideoGenre> MusicVideoGenres { get; set; }
         public string? videoID { get; set; }
@@ -28,10 +31,17 @@ namespace MVNFOEditor.Models
 
         public async Task<Stream?> LoadThumbnailBitmapAsync()
         {
-            var RootFolder = Path.GetDirectoryName(filePath);
-            if (thumb != "null")
+            var RootFolder = Path.GetDirectoryName(nfoPath);
+            if (thumb != "null" && thumb != "")
             {
-                return File.OpenRead(RootFolder + $"/{thumb}");
+                try
+                {
+                    return File.OpenRead(RootFolder + $"/{thumb}");
+                }
+                catch (FileNotFoundException e)
+                {
+                    Debug.WriteLine($"Couldn't find {thumb}");
+                }
             }
             return null;
         }
@@ -62,7 +72,7 @@ namespace MVNFOEditor.Models
             parentEl.Add(yearEl);
 
             XElement thumbEl = new XElement("thumb");
-            thumbEl.Value = thumb;
+            thumbEl.Value = thumb != null ? thumb : "null";
             parentEl.Add(thumbEl);
 
             XElement sourceEl = new XElement("source");
@@ -70,11 +80,11 @@ namespace MVNFOEditor.Models
             parentEl.Add(sourceEl);
 
             XElement videoIDEl = new XElement("videoID");
-            videoIDEl.Value = videoID;
+            videoIDEl.Value = videoID != null ? videoID : "null";
             parentEl.Add(videoIDEl);
 
             xDoc.Add(parentEl);
-            xDoc.Save(filePath);
+            xDoc.Save(nfoPath);
         }
     }
 }

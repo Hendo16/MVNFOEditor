@@ -20,6 +20,7 @@ using Newtonsoft.Json.Linq;
 
 namespace MVNFOEditor.Helpers
 {
+    public delegate void ProgressUpdateDelegate(int progress);
     public class MusicDBHelper
     {
         private MusicDbContext _db;
@@ -27,6 +28,7 @@ namespace MVNFOEditor.Helpers
 
         private List<Artist> initArtists = new List<Artist>();
         private List<Album> initAlbums = new List<Album>();
+        public event ProgressUpdateDelegate ProgressUpdate;
         public MusicDBHelper(MusicDbContext db)
         {
             _db = db;
@@ -43,6 +45,7 @@ namespace MVNFOEditor.Helpers
                     setData.RootFolder = "null";
                     setData.FFMPEGPath = "null";
                     setData.YTDLPath = "null";
+                    setData.AnimatedBackground = false;
                     db.SettingsData.Add(setData);
                     db.SaveChanges();
                 }
@@ -51,11 +54,15 @@ namespace MVNFOEditor.Helpers
 
         public bool CheckIfSettingsValid()
         {
-            SettingsData preData = _db.SettingsData.SingleOrDefault();
-            return preData != null;
+            if (_db.SettingsData.Any())
+            {
+                return !_db.SettingsData.FirstOrDefault().RootFolder.Equals("null");
+            }
+
+            return false;
         }
 
-        public void InitilizeData()
+        public async Task<int> InitilizeData()
         {
             SettingsData setData = _db.SettingsData.SingleOrDefault();
             string[] nfoList = Directory.GetFiles(setData.RootFolder, "*.nfo", SearchOption.AllDirectories);
@@ -63,6 +70,8 @@ namespace MVNFOEditor.Helpers
             for (int i = 0; i < nfoList.Length; i++)
             {
                 string currNFO = nfoList[i];
+                int currProgress = (int)Math.Round(((double)i / nfoList.Length) * 100);
+                OnProgressUpdate(currProgress);
                 if (!currNFO.Contains("artist.nfo"))
                 {
                     XmlDocument nfoDoc = new XmlDocument();
@@ -113,20 +122,17 @@ namespace MVNFOEditor.Helpers
                 _db.Album.Add(currAlbum);
             }
 
-            _db.SaveChanges();
+            return await _db.SaveChangesAsync();
         }
 
         public async Task<ObservableCollection<ArtistViewModel>> GenerateArtists()
         {
             List<ArtistViewModel> artists = new List<ArtistViewModel>();
-            //List<Artist> artistList = _db.Artist.GroupBy(artist => artist.Name).Select(group => group.FirstOrDefault()).ToList();
-            List<Artist> artistList = _db.Artist.ToList();
-            foreach (Artist artist in artistList)
+            foreach (Artist artist in _db.Artist.ToList())
             {
                 ArtistViewModel newVM = new ArtistViewModel(artist);
                 artists.Add(newVM);
                 await newVM.LoadCover();
-                await newVM.LoadLargeBanner();
 
                 if (!artist.IsCardSaved())
                 {
@@ -166,6 +172,19 @@ namespace MVNFOEditor.Helpers
                 await newVM.LoadThumbnail();
             }
             return new ObservableCollection<SingleViewModel>(singles.OrderByDescending(a => a.Year));
+        }
+
+        public async Task<ObservableCollection<SingleViewModel>> GenerateAllSingles()
+        {
+            List<SingleViewModel> singles = new List<SingleViewModel>();
+            List<MusicVideo> singleList = _db.MusicVideos.ToList();
+            foreach (MusicVideo single in singleList)
+            {
+                SingleViewModel newVM = new SingleViewModel(single);
+                singles.Add(newVM);
+                await newVM.LoadThumbnail();
+            }
+            return new ObservableCollection<SingleViewModel>(singles.OrderBy(a => a.Title));
         }
 
         public List<Album> GetAlbums(int artistId)
@@ -263,8 +282,17 @@ namespace MVNFOEditor.Helpers
             video.thumb = thumb;
             video.source = source;
             video.musicBrainzArtistID = mbID;
-            video.filePath = origPath;
+            video.nfoPath = origPath;
             video.videoID = "";
+
+            //We can't assume what the video filenames are going to be, so we guess it'll be something with the same name
+            var vidFiles = Directory.GetFiles(Path.GetDirectoryName(origPath) + "/", Path.GetFileNameWithoutExtension(origPath) + ".*");
+            var vidPath = vidFiles.Where(e => (!e.Contains(".jpg") && !e.Contains(".nfo"))).ToList()[0];
+
+            if (vidPath != null)
+            {
+                video.vidPath = vidPath;
+            }
 
             //Generate Genre and link to MusicVideo object
             for (int i = 0; i < genreNodes.Count; i++)
@@ -294,7 +322,7 @@ namespace MVNFOEditor.Helpers
 
         public async Task<int> UpdateMusicVideo(MusicVideo vid)
         {
-            var path = $"{vid.filePath}";
+            var path = $"{vid.nfoPath}";
             XDocument x = XDocument.Load(path);
 
             foreach (XElement el in x.Descendants())
@@ -303,17 +331,25 @@ namespace MVNFOEditor.Helpers
                 {
                     el.Value = vid.title;
                 }
-                else if (el.Name == "year" && vid.year != el.Value)
+                if (el.Name == "year" && vid.year != el.Value)
                 {
                     el.Value = vid.year;
+                }
+                if (el.Name == "artist" && vid.artist.Name != el.Value)
+                {
+                    el.Value = vid.artist.Name;
+                }
+                if (el.Name == "thumb" && vid.thumb != el.Value)
+                {
+                    el.Value = vid.thumb;
+                }
+                if (el.Name == "album" && vid.album == null)
+                {
+                    el.Value = "";
                 }
                 else if (el.Name == "album" && vid.album.Title != el.Value)
                 {
                     el.Value = vid.album.Title;
-                }
-                else if (el.Name == "artist" && vid.artist.Name != el.Value)
-                {
-                    el.Value = vid.artist.Name;
                 }
             }
             x.Save(path);
@@ -327,7 +363,7 @@ namespace MVNFOEditor.Helpers
         {
             //Cycle through and update all videos
             List<MusicVideo> vidList = _db.MusicVideos.Where(mv => mv.album.Id == album.Id).ToList();
-            if (vidList[0].year != album.Year)
+            if (vidList.Count > 0 && vidList[0].year != album.Year)
             {
                 for (int i = 0; i < vidList.Count; i++)
                 {
@@ -341,9 +377,16 @@ namespace MVNFOEditor.Helpers
             return await _db.SaveChangesAsync();
         }
 
+        public async Task<int> UpdateArtist(Artist artist)
+        {
+            //Update Artist
+            _db.Artist.Update(artist);
+            return await _db.SaveChangesAsync();
+        }
+
         public int DeleteVideo(MusicVideo vid)
         {
-            var nfoPath = vid.filePath;
+            var nfoPath = vid.nfoPath;
             if (File.Exists(nfoPath)) { File.Delete(nfoPath); }
             var folderPath = Path.GetDirectoryName(nfoPath);
             var thumbFileName = folderPath + "/" + vid.thumb;
@@ -372,9 +415,28 @@ namespace MVNFOEditor.Helpers
             _db.SaveChanges();
         }
 
+        public void DeleteArtist(Artist artist)
+        {
+            //Remove All Associated Videos
+            List<MusicVideo> vidList = _db.MusicVideos.Where(mv => mv.artist.Id == artist.Id).ToList();
+            for (int i = 0; i < vidList.Count; i++)
+            {
+                MusicVideo currVid = vidList[i];
+                DeleteVideo(currVid);
+            }
+            //Remove Album
+            _db.Artist.Remove(artist);
+            _db.SaveChanges();
+        }
+
         private string CleanseString(string str)
         {
             return str.Replace("&", "&amp;");
+        }
+
+        protected virtual void OnProgressUpdate(int progress)
+        {
+            ProgressUpdate?.Invoke(progress);
         }
     }
 }

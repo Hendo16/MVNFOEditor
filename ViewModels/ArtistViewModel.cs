@@ -4,6 +4,7 @@ using MVNFOEditor.Models;
 using ReactiveUI;
 using System.Threading.Tasks;
 using Bitmap = Avalonia.Media.Imaging.Bitmap;
+using SukiUI.Controls;
 
 namespace MVNFOEditor.ViewModels
 {
@@ -33,20 +34,26 @@ namespace MVNFOEditor.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _largeBanner, value);
         }
 
+        public void EditArtist()
+        {
+            EditArtistDialogViewModel editVM = new EditArtistDialogViewModel(_artist, Cover);
+            SukiHost.ShowDialog(editVM, allowBackgroundClose: true);
+        }
+
         public async Task LoadCover()
         {
             if ( _artist.CardBannerURL != null)
             {
                 await using (var imageStream = await _artist.LoadCardBannerBitmapAsync())
                 {
-                    Cover = new Bitmap(imageStream);
+                    Cover = Bitmap.DecodeToWidth(imageStream, 540);
                 }
             }
             else
             {
                 await using (var imageStream = await _artist.LoadLocalCardBannerBitmapAsync())
                 {
-                    Cover = new Bitmap(imageStream);
+                    Cover = Bitmap.DecodeToWidth(imageStream, 540);
                 }
             }
         }
@@ -57,14 +64,14 @@ namespace MVNFOEditor.ViewModels
             {
                 await using (var imageStream = await _artist.LoadLargeBannerBitmapAsync())
                 {
-                    LargeBanner = new Bitmap(imageStream);
+                    LargeBanner = Bitmap.DecodeToHeight(imageStream, 800);
                 }
             }
             else
             {
                 await using (var imageStream = await _artist.LoadLocalLargeBannerBitmapAsync())
                 {
-                    LargeBanner = new Bitmap(imageStream);
+                    LargeBanner = Bitmap.DecodeToHeight(imageStream, 800);
                 }
             }
         }

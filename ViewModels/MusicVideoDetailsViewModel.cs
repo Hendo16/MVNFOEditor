@@ -1,51 +1,45 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Avalonia.Controls.Shapes;
+using System.Xml.Linq;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using FFMpegCore;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
 using SukiUI.Controls;
 
 namespace MVNFOEditor.ViewModels
 {
-    public class MusicVideoDetailsViewModel : ObservableObject
+    public partial class MusicVideoDetailsViewModel : ObservableObject
     {
         private ArtistListParentViewModel _parentVM;
         private MusicVideo _musicVideo;
-        private List<Album> _albums;
+        private List<Album?> _albums;
         private Album _currAlbum;
-        private string _title;
-        private string _year;
-        private string _source;
         private MusicDBHelper DBHelper;
+        private Bitmap? _thumbnail;
+        
+        [ObservableProperty] private string _codec;
+        [ObservableProperty] private string _duration;
+        [ObservableProperty] private string _resolution;
+        [ObservableProperty] private string _title;
+        [ObservableProperty] private string _year;
+        [ObservableProperty] private string _source;
+        [ObservableProperty] private string _bitrate;
+        [ObservableProperty] private string _aspectRatio;
 
-        public string Title
+        public Bitmap? Thumbnail
         {
-            get { return _title; }
+            get { return _thumbnail; }
             set
             {
-                _title = value;
-                OnPropertyChanged(nameof(Title));
-            }
-        }
-
-        public string Year
-        {
-            get { return _year; }
-            set
-            {
-                _year = value;
-                OnPropertyChanged(nameof(Year));
-            }
-        }
-
-        public string Source
-        {
-            get { return _source; }
-            set
-            {
-                _source = value;
-                OnPropertyChanged(nameof(Source));
+                _thumbnail = value;
+                OnPropertyChanged(nameof(Thumbnail));
             }
         }
 
@@ -68,7 +62,7 @@ namespace MVNFOEditor.ViewModels
                 OnPropertyChanged(nameof(CurrAlbum));
             }
         }
-        
+
         public MusicVideoDetailsViewModel()
         {
             DBHelper = App.GetDBHelper();
@@ -78,39 +72,51 @@ namespace MVNFOEditor.ViewModels
         public async void UpdateMusicVideo()
         {
             string originalTitle = _musicVideo.title;
+
             _musicVideo.title = Title;
             _musicVideo.year = Year;
-            _musicVideo.album = _currAlbum;
+            if (_currAlbum.Title == "") {_musicVideo.album = null;} else{ _musicVideo.album = _currAlbum; }
+
             //Handle title changes
             if (originalTitle != Title)
             {
-                var nfoPath = _musicVideo.filePath;
-                var folderPath = Path.GetDirectoryName(nfoPath);
-                if (File.Exists(nfoPath))
-                {
-                    File.Move(nfoPath, folderPath + $"/{Title}-video.nfo");
-                    _musicVideo.filePath = folderPath + $"/{Title}-video.nfo";
-                }
+                var nfoPath = _musicVideo.nfoPath;
+                var folderPath = System.IO.Path.GetDirectoryName(nfoPath);
                 var thumbFileName = folderPath + "/" + _musicVideo.thumb;
                 if (File.Exists(thumbFileName))
                 {
                     File.Move(thumbFileName, folderPath + $"/{Title}-video.jpg");
+                    _musicVideo.thumb = $"{Title}-video.jpg";
+                }
+
+                if (File.Exists(nfoPath))
+                {
+                    File.Move(nfoPath, folderPath + $"/{Title}-video.nfo");
+                    _musicVideo.nfoPath = folderPath + $"\\{Title}-video.nfo";
                 }
 
                 //Get Video
-                var videoPath = Directory.GetFiles(folderPath + "/", _musicVideo.title + "-video.*");
+                var videoPath = _musicVideo.vidPath;
                 if (videoPath.Length > 0)
                 {
-                    var ext = Path.GetExtension(videoPath[0]);
-                    File.Move(videoPath[0], folderPath + $"/{Title}-video.{ext}");
+                    var ext = System.IO.Path.GetExtension(videoPath);
+                    File.Move(videoPath, folderPath + $"/{Title}-video{ext}");
+                    _musicVideo.vidPath = folderPath + $"\\{Title}-video{ext}";
                 }
             }
+            NavigateBack();
             int success = await DBHelper.UpdateMusicVideo(_musicVideo);
             if (success == 0)
             {
                 Debug.WriteLine(success);
-                _parentVM.BackToDetails(true);
             }
+        }
+
+        public void UpdateVideoSource()
+        {
+            ManualMusicVideoViewModel newVM = new ManualMusicVideoViewModel(_musicVideo);
+            AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(newVM, true);
+            SukiHost.ShowDialog(parentVM, allowBackgroundClose: true);
         }
 
         public void SetVideo(MusicVideo video)
@@ -124,11 +130,33 @@ namespace MVNFOEditor.ViewModels
             {
                 CurrAlbum = Albums.Find(a => a.Id == video.album.Id);
             }
+            Albums.Insert(0, new Album(){Title=""});
+        }
+
+        public async void AnalyzeVideo()
+        {
+            var info = await FFProbe.AnalyseAsync(_musicVideo.vidPath);
+            Codec = $"Codec: {info.PrimaryVideoStream.CodecName}";
+            Duration = $"Duration: {info.PrimaryVideoStream.Duration.TotalMinutes}";
+            Resolution = $"Resolution: {info.PrimaryVideoStream.Width}"+"x"+$"{info.PrimaryVideoStream.Height}";
+            Bitrate = $"Bitrate: {info.PrimaryVideoStream.BitRate}";
+            AspectRatio = $"Aspect Ratio: {info.PrimaryVideoStream.DisplayAspectRatio.Width}:{info.PrimaryVideoStream.DisplayAspectRatio.Height}";
+        }
+
+        public async Task LoadThumbnail()
+        {
+            await using (var imageStream = await _musicVideo.LoadThumbnailBitmapAsync())
+            {
+                if (imageStream != null)
+                {
+                    try { Thumbnail = new Bitmap(imageStream); } catch (ArgumentException e) { }
+                }
+            }
         }
 
         public void NavigateBack()
         {
-            _parentVM.BackToDetails();
+            _parentVM.BackToDetails(true);
         }
 
         public void DeleteVideo()
@@ -137,7 +165,7 @@ namespace MVNFOEditor.ViewModels
             {
                 SukiHost.ShowToast("Error Deleting Video", "Please manually delete the video for " + _musicVideo.title);
             }
-            _parentVM.BackToDetails(true);
+            NavigateBack();
         }
     }
 }

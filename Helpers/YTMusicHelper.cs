@@ -28,6 +28,7 @@ namespace MVNFOEditor.Helpers
         public YTMusicHelper()
         {
             PythonEngine.Initialize();
+            PythonEngine.BeginAllowThreads();
             using (Py.GIL())
             {
                 dynamic ytmusicapi = Py.Import("ytmusicapi");
@@ -58,7 +59,7 @@ namespace MVNFOEditor.Helpers
         public string get_artistID(string artist)
         {
             string result = "";
-            dynamic search_results;
+            dynamic search_results = "";
             using (Py.GIL())
             {
                 // Call methods, access properties, etc.

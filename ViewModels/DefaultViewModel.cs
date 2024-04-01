@@ -29,11 +29,14 @@ namespace MVNFOEditor.ViewModels
             nav.NavigationRequested += t =>
             {
                 var page = Pages.FirstOrDefault(x => x.GetType() == t);
-                if (page is null || ActivePage?.GetType() == t) return;
+                if (page is null || ActivePage?.GetType() == t) return; 
                 ActivePage = page;
             };
             Themes = _theme.ColorThemes;
-            BaseTheme = _theme.ActiveBaseTheme;
+            AnimationsEnabled = App.GetDBContext().SettingsData.Single().AnimatedBackground;
+            if (App.GetDBContext().SettingsData.Single().Theme != null){_theme.ChangeColorTheme(App.GetDBContext().SettingsData.Single().Theme);}
+            if (App.GetDBContext().SettingsData.Single().LightOrDark != null) {BaseTheme = App.GetDBContext().SettingsData.Single().LightOrDark;}
+            else{BaseTheme = ThemeVariant.Default;}
             _theme.OnBaseThemeChanged += async variant =>
             {
                 BaseTheme = variant;
@@ -60,13 +63,6 @@ namespace MVNFOEditor.ViewModels
             var parentVM = Pages.First(x => x.DisplayName == "Artist List");
             return (ArtistListParentViewModel)parentVM;
             //return Pages.First(x => x.DisplayName == displayName);
-        }
-
-        public void InitilizeSettings()
-        {
-            var SettingsVM = Pages.First(x => x.DisplayName == "Settings");
-            SukiHost.ShowToast("Error!", "Database doesn't exist - go to Settings");
-            GetParentView().CurrentContent = SettingsVM;
         }
     }
 }

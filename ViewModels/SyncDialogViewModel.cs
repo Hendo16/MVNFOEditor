@@ -11,19 +11,11 @@ namespace MVNFOEditor.ViewModels
     {
         private ObservableCollection<SyncResultViewModel> _results;
         private ObservableCollection<SyncResultViewModel> _fullResults;
+
+        [ObservableProperty] private ObservableCollection<SyncResultViewModel> _selectedVideos;
         [ObservableProperty] private bool _isBusy;
         [ObservableProperty] private string _busyText;
-
-        private string _searchText;
-        public string SearchText
-        {
-            get => _searchText;
-            set
-            {
-                _searchText = value;
-                FilterResults();
-            }
-        }
+        [ObservableProperty] private string _searchText;
 
         public ObservableCollection<SyncResultViewModel> SearchResults
         {
@@ -51,6 +43,7 @@ namespace MVNFOEditor.ViewModels
         {
             _results = results;
             _fullResults = results;
+            SelectedVideos = new ObservableCollection<SyncResultViewModel>();
         }
 
         [RelayCommand]

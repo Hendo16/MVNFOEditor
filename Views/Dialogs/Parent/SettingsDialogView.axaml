@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             xmlns:objectModel="clr-namespace:System.Collections.ObjectModel;assembly=System.ObjectModel"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             xmlns:views="using:MVNFOEditor.Views"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MVNFOEditor.Views.SettingsDialogView"
+             x:DataType="vm:SettingsDialogViewModel">
+    <Grid MaxWidth="800" RowDefinitions="Auto, Auto, Auto, *">
+        <controls:Stepper  Grid.Row="0" Margin="30,15"  Index="{Binding StepIndex}">
+            <controls:Stepper.Steps>
+                <objectModel:ObservableCollection x:TypeArguments="system:String">
+                    <system:String>Welcome</system:String>
+                    <system:String>Set Folders</system:String>
+                    <system:String>Theme Settings</system:String>
+                    <system:String>Final Check</system:String>
+                </objectModel:ObservableCollection>
+            </controls:Stepper.Steps>
+        </controls:Stepper>
+        <Carousel Width="400" Height="500" Grid.Row="1" Name="settingsPages">
+            <Carousel.PageTransition >
+                <CompositePageTransition>
+                    <PageSlide Duration="0:00:00.500" Orientation="Horizontal" />
+                </CompositePageTransition>
+            </Carousel.PageTransition>
+            <Carousel.Items>
+                <views:SettingsDialogFirstCardView/>
+                <views:SettingsDialogSetFolderCardView/>
+                <views:SettingsDialogThemeCardView/>
+                <Panel Height="100" Width="150">
+                    <TextBlock Width="150">Finished!</TextBlock>
+                    <Button Height="50" Width="150" Background="White" Command="{Binding HandleFinish}">Done</Button>
+                </Panel>
+            </Carousel.Items>
+        </Carousel>
+        <Panel Grid.Row="2" Margin="20">
+            <Button Click="Previous" HorizontalAlignment="Left">
+                <avalonia:MaterialIcon Kind="ArrowLeftThin" />
+            </Button>
+            <Button Click="Next"
+                    HorizontalAlignment="Right">
+                <avalonia:MaterialIcon Kind="ArrowRightThin" />
+            </Button>
+        </Panel>
+    </Grid>
+</UserControl>

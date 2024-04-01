@@ -1,0 +1,90 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             xmlns:views="clr-namespace:MVNFOEditor.Views"
+             xmlns:sukiContent="clr-namespace:SukiUI.Content;assembly=SukiUI"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MVNFOEditor.Views.ArtistDetailsView"
+             x:DataType="vm:ArtistDetailsViewModel">
+    <controls:BusyArea BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <Grid RowDefinitions="Auto, Auto, *">
+                <ContentControl Grid.Row ="0" Content="{Binding BannerVM}"/>
+                <controls:GlassCard Margin="10 10 10 10" Grid.Row="1">
+                    <controls:GlassCard.Resources>
+                        <system:Double x:Key="GlassOpacity">0.2</system:Double>
+                    </controls:GlassCard.Resources>
+                    <controls:GlassCard.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Command="{Binding AddAlbum}"
+                                      Header="Add Album">
+                                <MenuItem.Icon>
+                                    <PathIcon Width="15"
+                                              Height="15"
+                                              Data="{x:Static sukiContent:Icons.Plus}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </controls:GlassCard.ContextMenu>
+                    <controls:GroupBox Header="Albums">
+                        <ItemsControl ItemsSource="{Binding AlbumCards}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <views:AlbumView Margin="0 0 20 20" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </controls:GroupBox>
+                </controls:GlassCard>
+                <controls:GlassCard Margin="10 10 10 10" Grid.Row="2">
+                    <controls:GlassCard.Resources>
+                        <system:Double x:Key="GlassOpacity">0.2</system:Double>
+                    </controls:GlassCard.Resources>
+                    <controls:GlassCard.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Command="{Binding AddSingle}"
+                                      Header="Search YouTube Music">
+                                <MenuItem.Icon>
+                                    <PathIcon Width="15"
+                                              Height="15"
+                                              Data="{x:Static sukiContent:Icons.Plus}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Command="{Binding AddManualSingle}"
+                                      Header="Add Manual Single">
+                                <MenuItem.Icon>
+                                    <PathIcon Width="15"
+                                              Height="15"
+                                              Data="{x:Static sukiContent:Icons.CircleOutlinePlus}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </controls:GlassCard.ContextMenu>
+                    <controls:GroupBox Header="Singles">
+                        <ItemsControl ItemsSource="{Binding SingleCards}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <views:SingleView Margin="0 0 20 20" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </controls:GroupBox>
+                </controls:GlassCard>
+            </Grid>
+        </ScrollViewer>
+    </controls:BusyArea>
+</UserControl>

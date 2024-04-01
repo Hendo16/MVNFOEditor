@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,6 +17,7 @@ namespace MVNFOEditor.ViewModels
         private ObservableCollection<AlbumResultViewModel> _fullResults;
         [ObservableProperty] private bool _isBusy;
         [ObservableProperty] private string _busyText;
+        [ObservableProperty] private AlbumResultViewModel _selectedAlbum;
 
         private string _searchText;
         public string SearchText
@@ -54,6 +56,11 @@ namespace MVNFOEditor.ViewModels
             SearchResults = new ObservableCollection<AlbumResultViewModel>(
                 SearchResults.Where(item => item.Title?.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0)
             );
+        }
+
+        public void HandleSelection()
+        {
+
         }
     }
 }

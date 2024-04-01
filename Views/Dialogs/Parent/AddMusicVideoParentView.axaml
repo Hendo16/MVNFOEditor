@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             x:Class="MVNFOEditor.Views.AddMusicVideoParentView"
+             x:DataType="vm:AddMusicVideoParentViewModel">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <ContentControl Grid.Row="0" Content="{Binding CurrentContent}" />
+        <Border Grid.Row="1">
+            <Grid Margin="0 10 0 10" VerticalAlignment="Center">
+                <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Left" Classes="Flat" Content="Exit" Command="{Binding Close}" IsVisible="{Binding NavVisible}" />
+                <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="Flat Accent" Content="Next" Command="{Binding HandleSave}" IsVisible="{Binding NavVisible}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

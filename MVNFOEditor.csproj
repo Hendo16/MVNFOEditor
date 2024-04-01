@@ -27,6 +27,7 @@
 
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.9" />
+    <PackageReference Include="FFMpegCore" Version="5.1.0" />
     <PackageReference Include="Material.Icons.Avalonia" Version="2.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.15" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.15" />
@@ -45,19 +46,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Views\ArtistListParentView.axaml.cs">
+    <Compile Update="Views\MainViews\Parent\ArtistListParentView.axaml.cs">
       <DependentUpon>ArtistListParentView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\ArtistListView.axaml.cs">
+    <Compile Update="Views\MainViews\Content\ArtistListView.axaml.cs">
       <DependentUpon>ArtistListView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\ArtistResultsView.axaml.cs">
+    <Compile Update="Views\Dialogs\Content\ArtistResultsView.axaml.cs">
       <DependentUpon>ArtistResultsView.axaml</DependentUpon>
     </Compile>
     <Compile Update="Views\SettingsItemView.axaml.cs">
       <DependentUpon>SettingsItemView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\AddMusicVideoParentView.axaml.cs">
+    <Compile Update="Views\Dialogs\Parent\AddMusicVideoParentView.axaml.cs">
       <DependentUpon>AddMusicVideoParentView.axaml</DependentUpon>
     </Compile>
   </ItemGroup>

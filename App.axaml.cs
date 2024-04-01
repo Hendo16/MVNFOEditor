@@ -19,6 +19,8 @@ using MVNFOEditor.Common;
 using MVNFOEditor.Features;
 using MVNFOEditor.Services;
 using Microsoft.Extensions.Hosting.Internal;
+using MVNFOEditor.Models;
+using SukiUI.Controls;
 
 namespace MVNFOEditor;
 
@@ -29,6 +31,7 @@ public partial class App : Application
     private static YTDLHelper _ytdlHelper;
     private static YTMusicHelper _ytmHelper;
     private static DefaultViewModel _mainViewModel;
+    private static SettingsData _settingsData;
     private static IDataTemplate _viewLocater;
     private IServiceProvider? _provider;
     public override void Initialize()
@@ -51,13 +54,23 @@ public partial class App : Application
             var mainVm = _provider?.GetRequiredService<DefaultViewModel>();
             _mainViewModel = mainVm;
             desktop.MainWindow = viewLocator?.Build(mainVm) as Window;
+            desktop.MainWindow.Opened += CheckSettings;
         }
 
         // Line below is needed to remove Avalonia data validation.
         // Without this line you will get duplicate validations from both Avalonia and CT
         base.OnFrameworkInitializationCompleted();
     }
-    
+    private void CheckSettings(object sender, System.EventArgs e)
+    {
+        if (!GetDBHelper().CheckIfSettingsValid())
+        {
+            _settingsData = new SettingsData();
+            SukiHost.ShowToast("Error!", "Database doesn't exist - go to Settings");
+            SettingsDialogViewModel newDialog = new SettingsDialogViewModel();
+            SukiHost.ShowDialog(newDialog);
+        }
+    }
 
     private static ServiceProvider ConfigureServices()
     {
@@ -77,6 +90,11 @@ public partial class App : Application
             services.AddSingleton(typeof(PageBase), type);
 
         return services.BuildServiceProvider();
+    }
+
+    public static SettingsData GetSettings()
+    {
+        return _settingsData != null ? _settingsData : _dbContext.SettingsData.Single();
     }
 
     public static MusicDbContext GetDBContext()

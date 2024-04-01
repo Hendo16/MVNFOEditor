@@ -71,7 +71,7 @@ namespace MVNFOEditor.ViewModels
         {
             await using (var imageStream = await _album.LoadCoverBitmapAsync())
             {
-                Cover = new Bitmap(imageStream);
+                Cover = Bitmap.DecodeToWidth(imageStream, 400);
             }
         }
 
@@ -92,12 +92,14 @@ namespace MVNFOEditor.ViewModels
             var dbContext = App.GetDBContext();
             Songs = dbContext.MusicVideos.Where(mv => mv.album.Title == Title).ToList();
         }
-        public void HandleSongClick(int songID)
+        public async void HandleSongClick(int songID)
         {
             var dbContext = App.GetDBContext();
             MusicVideo songObj = dbContext.MusicVideos.First(mv => mv.Id == songID);
             MusicVideoDetailsViewModel mvVM = new MusicVideoDetailsViewModel();
             mvVM.SetVideo(songObj);
+            mvVM.AnalyzeVideo();
+            await mvVM.LoadThumbnail();
             _parentVM.CurrentContent = mvVM;
         }
 
@@ -136,9 +138,15 @@ namespace MVNFOEditor.ViewModels
 
                 OnSyncTrigger(false);
                 //Open Dialog
-                //SukiHost.ShowDialog(new SyncDialogViewModel(results), allowBackgroundClose: true);
-                SukiHost.ShowDialog(parentVM, allowBackgroundClose: true);
+                SukiHost.ShowDialog(parentVM);
             }
+        }
+
+        public void AddManualSingle()
+        {
+            ManualMusicVideoViewModel newVM = new ManualMusicVideoViewModel(_album);
+            AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(newVM);
+            SukiHost.ShowDialog(parentVM, allowBackgroundClose: true);
         }
 
         public async void EditAlbum()
