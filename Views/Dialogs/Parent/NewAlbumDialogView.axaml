@@ -5,24 +5,31 @@
              xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
              xmlns:vm="using:MVNFOEditor.ViewModels"
              xmlns:theme="clr-namespace:SukiUI.Theme;assembly=SukiUI"
+             xmlns:content="clr-namespace:SukiUI.Content;assembly=SukiUI"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.NewAlbumDialogView"
              x:DataType="vm:NewAlbumDialogViewModel">
-  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
-      <suki:GlassCard Grid.Row="0" IsVisible="{Binding ShowError}">
+  <Grid RowDefinitions="Auto, Auto,Auto,Auto,*,Auto">
+      <Border Grid.Row="0">
+          <Grid IsVisible="{Binding NavVisible}" Margin="0 5 0 0" VerticalAlignment="Center">
+              <Button Command="{Binding CloseDialog}" VerticalAlignment="Center" HorizontalAlignment="Right">
+                  <PathIcon Data="{x:Static content:Icons.Cross}" />
+              </Button>
+          </Grid>
+      </Border>
+      <suki:GlassCard Grid.Row="1" IsVisible="{Binding ShowError}">
         <suki:GroupBox Header="Error">
           <TextBlock Text="{Binding ErrorText}"/>
         </suki:GroupBox>
       </suki:GlassCard>
-      <suki:Stepper Grid.Row="1" VerticalAlignment="Center" AlternativeStyle="True" Index="{Binding StepIndex}" IsVisible="{Binding NotDownload}" Steps="{Binding Steps}" />
-      <ToggleSwitch Grid.Row="2" IsVisible="{Binding ToggleVisible}" IsEnabled="{Binding ToggleEnable}" IsChecked="{Binding ToggleValue}" IsCheckedChanged="ModeToggleChange" Margin="150,0" VerticalAlignment="Center" OffContent="Manual" OnContent="Automatic" />
-      <suki:BusyArea Grid.Row="3" BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
+      <suki:Stepper Grid.Row="2" VerticalAlignment="Center" AlternativeStyle="True" Index="{Binding StepIndex}" IsVisible="{Binding NotDownload}" Steps="{Binding Steps}" />
+      <ToggleSwitch Grid.Row="3" IsVisible="{Binding ToggleVisible}" IsEnabled="{Binding ToggleEnable}" IsChecked="{Binding ToggleValue}" IsCheckedChanged="ModeToggleChange" Margin="150,0" VerticalAlignment="Center" OffContent="Manual" OnContent="Automatic" />
+      <suki:BusyArea Grid.Row="4" BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
           <ContentControl Content="{Binding CurrentContent}" />
       </suki:BusyArea>
-      <Border Grid.Row="4">
-        <Grid VerticalAlignment="Center">
+      <Border Grid.Row="5">
+        <Grid IsVisible="{Binding NavVisible}" Margin="0 10 0 10"  VerticalAlignment="Center">
             <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Left" Classes="Flat" IsVisible="{Binding NotDownload}" Content="{Binding BackButtonText}" Click="NavigateBack" />
-            <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" Classes="Outlined" IsVisible="{Binding SkipVisible}" Content="Skip" Command="{Binding CloseDialog}" />
             <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="Flat Accent" IsVisible="{Binding NotDownload}" Content="Next" Click="NavigateForward" />
         </Grid>
       </Border>

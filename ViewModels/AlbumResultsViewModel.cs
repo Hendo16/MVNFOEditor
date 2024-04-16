@@ -54,7 +54,7 @@ namespace MVNFOEditor.ViewModels
                 return;
             }
             SearchResults = new ObservableCollection<AlbumResultViewModel>(
-                SearchResults.Where(item => item.Title?.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0)
+                _fullResults.Where(item => item.Title?.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0)
             );
         }
 

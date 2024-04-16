@@ -237,25 +237,25 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
-        public async Task SaveThumbnailAsync(string folderPath)
+        public async Task SaveThumbnailAsync(string folderPath, string fileName)
         {
             var bitmap = Thumbnail;
             await Task.Run(() =>
             {
-                using (var fs = SaveThumbnailBitmapStream(folderPath))
+                using (var fs = SaveThumbnailBitmapStream(folderPath, fileName))
                 {
                     bitmap.Save(fs);
                 }
             });
         }
 
-        private Stream SaveThumbnailBitmapStream(string folderPath)
+        private Stream SaveThumbnailBitmapStream(string folderPath, string fileName)
         {
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
             }
-            return File.OpenWrite(folderPath + $"/{Title}-video.jpg");
+            return File.OpenWrite(folderPath + $"/{fileName}-video.jpg");
         }
 
         public void SetLocalVideo(string path)
@@ -296,7 +296,7 @@ namespace MVNFOEditor.ViewModels
             {
                 newMV.videoID = _vidData.ID;
                 newMV.source = "youtube";
-                await SaveThumbnailAsync($"{localData.RootFolder}/{newMV.artist.Name}");
+                await SaveThumbnailAsync($"{localData.RootFolder}/{newMV.artist.Name}",newMV.title);
                 newMV.thumb = $"{newMV.title}-video.jpg";
             }
             else

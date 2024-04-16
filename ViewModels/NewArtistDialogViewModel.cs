@@ -16,6 +16,8 @@ using CommunityToolkit.Mvvm.ComponentModel.__Internals;
 using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 using MVNFOEditor.Views;
 using YoutubeDLSharp;
+using Avalonia.Threading;
+using System.Runtime.CompilerServices;
 
 namespace MVNFOEditor.ViewModels
 {
@@ -42,11 +44,14 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private bool _toggleValue;
         [ObservableProperty] private bool _isAlbumView;
         [ObservableProperty] private bool _isBusy;
+        [ObservableProperty] private bool _navVisible;
+        [ObservableProperty] private bool _showError;
         [ObservableProperty] private string _busyText;
-        [ObservableProperty] private string _skipText;
+        [ObservableProperty] private string _errorText;
         [ObservableProperty] private string _backButtonText;
         [ObservableProperty] private object _currentContent;
         [ObservableProperty] private ObservableCollection<string> _steps;
+        public event EventHandler<bool> ClosePageEvent;
 
         public NewArtistDialogViewModel()
         {
@@ -54,25 +59,33 @@ namespace MVNFOEditor.ViewModels
             _syncDialogParentVM = null;
             _resultVM = new ArtistResultsViewModel();
             _resultVM.NextPage += NextStep;
+            _resultVM.ValidSearch += ValidSearch;
             ytMusicHelper = App.GetYTMusicHelper();
             _ytDLHelper = App.GetYTDLHelper();
             _dbContext = App.GetDBContext();
             _parentVM = App.GetVM().GetParentView();
             localData = _dbContext.SettingsData.First();
             Steps = ["Select Artist", "Select Album", "Select Videos"];
-            SkipText = "Skip";
             BackButtonText = "Exit";
             ToggleEnable = true;
             ToggleVisible = true;
+            NavVisible = true;
             ToggleValue = true;
             IsAlbumView = false;
             CurrentContent = _resultVM;
+        }
+
+        public void ValidSearch(object? sender, bool result)
+        {
+            NavVisible = result;
         }
 
         public async void NextStep(object? sender, ArtistResult newArtist)
         {
             BusyText = "Getting Albums...";
             IsBusy = true;
+            NavVisible = false;
+            ToggleVisible = false;
             //Prevent duplicates being stored
             if (!_dbContext.Artist.Any(a => a.YTMusicId == newArtist.browseId))
             {
@@ -120,14 +133,17 @@ namespace MVNFOEditor.ViewModels
                 result.NextPage += ToVideos;
             }
             IsBusy = false;
+            NavVisible = true;
+            ToggleVisible = true;
             CurrentContent = resultsVM;
         }
 
         public async void ToSingles()
         {
             BusyText = "Getting Videos...";
-            SkipText = "Exit";
             StepIndex++;
+            IsBusy = true;
+            NavVisible = false;
             ToggleVisible = false;
             string artistID = _artist.YTMusicId;
             JArray videoSearch = ytMusicHelper.get_videos(artistID);
@@ -141,6 +157,7 @@ namespace MVNFOEditor.ViewModels
                 result.ProgressStarted += parentVM.BuildProgressVM;
             }
             IsBusy = false;
+            NavVisible = true;
             CurrentContent = resultsVM;
         }
 
@@ -148,6 +165,7 @@ namespace MVNFOEditor.ViewModels
         {
             BusyText = "Getting Videos...";
             IsBusy = true;
+            NavVisible = false;
             Album album = new Album();
             if (!_dbContext.Album.Any(a => a.ytMusicBrowseID == newAlbum.browseId))
             {
@@ -173,6 +191,7 @@ namespace MVNFOEditor.ViewModels
                 result.ProgressStarted += parentVM.BuildProgressVM;
             }
             IsBusy = false;
+            NavVisible = true;
             CurrentContent = resultsVM;
         }
 
@@ -185,8 +204,12 @@ namespace MVNFOEditor.ViewModels
                 newArtist.SaveManualBanner(_manualArtVM.BannerPath);
             }
             _artist = newArtist;
-            _dbContext.Artist.Add(_artist);
-            _dbContext.SaveChanges();
+            //Ensure no duplicates are saved
+            if (!_dbContext.Artist.Any(e => e.Name == newArtist.Name))
+            {
+                _dbContext.Artist.Add(_artist);
+                _dbContext.SaveChanges();
+            }
 
             ManualAlbumViewModel newVM = new ManualAlbumViewModel(newArtist);
             _manualAlbumVM = newVM;
@@ -203,9 +226,13 @@ namespace MVNFOEditor.ViewModels
             {
                 newAlbum.SaveManualCover(_manualAlbumVM.CoverPath);
             }
-
-            _dbContext.Album.Add(newAlbum);
-            _dbContext.SaveChanges();
+            //Ensure no duplicates
+            if (!_dbContext.Album.Any(e =>
+                    e.Title == newAlbum.Title && e.Artist == newAlbum.Artist && e.Year == newAlbum.Year))
+            {
+                _dbContext.Album.Add(newAlbum);
+                _dbContext.SaveChanges();
+            }
 
             ManualMusicVideoViewModel newVM = new ManualMusicVideoViewModel(newAlbum);
             _manualMusicVideoVM = newVM;
@@ -232,9 +259,52 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
+        public bool ValidateManualArtist()
+        {
+            if (_manualArtVM.ArtistNameText == null)
+            {
+                IsBusy = false;
+                NavVisible = true;
+                ShowError = true;
+                ErrorText = "Artist Name cannot be blank!";
+                StepIndex--;
+                BackButtonText = "Exit";
+                return false;
+            }
+            return true;
+        }
+
+        public bool ValidateManualAlbum()
+        {
+            if (_manualAlbumVM.AlbumNameText == null)
+            {
+                IsBusy = false;
+                NavVisible = true;
+                ShowError = true;
+                ErrorText = "Album Name cannot be blank!";
+                StepIndex--;
+                BackButtonText = "Exit";
+                return false;
+            }
+            if (_manualAlbumVM.AlbumYear == null)
+            {
+                IsBusy = false;
+                NavVisible = true;
+                ShowError = true;
+                ErrorText = "Year cannot be blank!";
+                StepIndex--;
+                BackButtonText = "Exit";
+                return false;
+            }
+            return true;
+        }
+
         [RelayCommand]
         public void HandleNavigation(bool isIncrement)
         {
+            //Undo Errors
+            ShowError = false;
+            ErrorText = "";
             //Get Current Page
             Type currentType = CurrentContent.GetType();
             switch (isIncrement)
@@ -251,18 +321,23 @@ namespace MVNFOEditor.ViewModels
             #region Manual Navigation
             if (currentType == typeof(ManualArtistViewModel))
             {
-                ToggleVisible = false;
-                IsAlbumView = true;
-                ManualNextStep();
+                if (ValidateManualArtist())
+                {
+                    ToggleVisible = false;
+                    IsAlbumView = true;
+                    ManualNextStep();
+                }
             }
             if (currentType == typeof(ManualAlbumViewModel))
             {
                 IsAlbumView = false;
                 if (isIncrement)
                 {
-                    ToggleVisible = false;
-                    SkipText = "Exit";
-                    ManualToVideos();
+                    if (ValidateManualAlbum())
+                    {
+                        ToggleVisible = false;
+                        ManualToVideos();
+                    }
                 }
                 else
                 {
@@ -281,7 +356,6 @@ namespace MVNFOEditor.ViewModels
                 {
                     ToggleVisible = true;
                     IsAlbumView = true;
-                    SkipText = "Skip";
                     CurrentContent = _manualAlbumVM;
                 }
             }
@@ -300,7 +374,6 @@ namespace MVNFOEditor.ViewModels
                 if (isIncrement)
                 {
                     ToggleVisible = false;
-                    SkipText = "Exit";
                     ToVideos(null, _albumResultsVM.SelectedAlbum.GetResult());
                 }
                 else
@@ -318,7 +391,6 @@ namespace MVNFOEditor.ViewModels
                 else
                 {
                     ToggleVisible = true;
-                    SkipText = "Skip";
                     CurrentContent = _albumResultsVM;
                 }
             }
@@ -369,19 +441,29 @@ namespace MVNFOEditor.ViewModels
 
         public async void HandleSkip()
         {
-            if (CurrentContent.GetType() == typeof(ManualMusicVideoViewModel) || CurrentContent.GetType() == typeof(SyncDialogViewModel))
-            {
-                HandleExit();
-            }
             ToggleVisible = false;
+            IsAlbumView = false;
             StepIndex++;
-
             //Automatic
             if (ToggleValue)
             {
+                BusyText = "Getting All Videos...";
+                IsBusy = true;
+                NavVisible = false;
                 string artistID = _artist.YTMusicId;
                 JArray videoSearch = ytMusicHelper.get_videos(artistID);
+                //Run this check here because if videoSearch is null, the artist has no videos and the next command will throw an exception, crashing the app
+                if(videoSearch == null)
+                {
+                    HandleNoVideos();
+                    return;
+                }
                 ObservableCollection<SyncResultViewModel> results = await ytMusicHelper.GenerateSyncResultList(videoSearch, _artist);
+                if (results.Count == 0)
+                {
+                    HandleNoVideos();
+                    return;
+                }
                 SyncDialogViewModel resultsVM = new SyncDialogViewModel(results);
                 AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM);
                 _syncDialogParentVM = resultsVM;
@@ -390,6 +472,8 @@ namespace MVNFOEditor.ViewModels
                     var result = results[i];
                     result.ProgressStarted += parentVM.BuildProgressVM;
                 }
+                IsBusy = false;
+                NavVisible = true;
                 CurrentContent = resultsVM;
             }
             else
@@ -398,6 +482,19 @@ namespace MVNFOEditor.ViewModels
                 _manualMusicVideoVM = newVM;
                 CurrentContent = newVM;
             }
+        }
+
+        private async void HandleNoVideos()
+        {
+            IsBusy = false;
+            NavVisible = true;
+            ManualMusicVideoViewModel manualVM = new ManualMusicVideoViewModel(_artist);
+            SukiHost.ShowToast("Error", "No Videos Available");
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                CurrentContent = manualVM;
+            });
+            return;
         }
 
         public void HandleExit()
@@ -474,7 +571,7 @@ namespace MVNFOEditor.ViewModels
             }
             newMV.nfoPath = $"{localData.RootFolder}/{newMV.artist.Name}/{newMV.title}-video.nfo";
 
-            await _manualMusicVideoVM.SaveThumbnailAsync($"{localData.RootFolder}/{newMV.artist.Name}");
+            await _manualMusicVideoVM.SaveThumbnailAsync($"{localData.RootFolder}/{newMV.artist.Name}", newMV.title);
             newMV.thumb = $"{newMV.title}-video.jpg";
 
             newMV.SaveToNFO();
@@ -484,8 +581,12 @@ namespace MVNFOEditor.ViewModels
 
         public void BackTrigger(){HandleNavigation(false);}
         public void NextTrigger(){ HandleNavigation(true); }
-                
+
         [RelayCommand]
-        public void CloseDialog() => SukiHost.CloseDialog();
+        public void CloseDialog()
+        {
+            ClosePageEvent?.Invoke(this, true);
+            SukiHost.CloseDialog();
+        }
     }
 }

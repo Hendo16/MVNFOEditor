@@ -420,7 +420,10 @@ namespace MVNFOEditor.Helpers
                 .Replace(" (official music video)", "", StringComparison.OrdinalIgnoreCase)
                 .Replace(" (official hd video)", "", StringComparison.OrdinalIgnoreCase)
                 .Replace(" [official video]", "", StringComparison.OrdinalIgnoreCase)
-                .Replace(artist.Name + " - ", "", StringComparison.OrdinalIgnoreCase);
+                .Replace(" [official music video]", "", StringComparison.OrdinalIgnoreCase)
+                .Replace($"{artist.Name} - ", "", StringComparison.OrdinalIgnoreCase)
+                .Replace(artist.Name,"", StringComparison.OrdinalIgnoreCase)
+                .Replace("\"","", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

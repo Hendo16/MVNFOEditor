@@ -115,6 +115,11 @@ namespace MVNFOEditor.Models
             {
                 Directory.CreateDirectory(CachePath);
             }
+            //Sometimes banner already exists on disk - usually when single album was deleted and the artist was re-added
+            if (File.Exists(CachePath + "/cardBanner.jpg"))
+            {
+                File.Delete(CachePath + "/cardBanner.jpg");
+            }
             File.Copy(path, CachePath + "/cardBanner.jpg");
         }
 

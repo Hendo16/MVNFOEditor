@@ -18,11 +18,12 @@
                     <system:String>Welcome</system:String>
                     <system:String>Set Folders</system:String>
                     <system:String>Theme Settings</system:String>
+                    <system:String>Advanced Options</system:String>
                     <system:String>Final Check</system:String>
                 </objectModel:ObservableCollection>
             </controls:Stepper.Steps>
         </controls:Stepper>
-        <Carousel Width="400" Height="500" Grid.Row="1" Name="settingsPages">
+        <Carousel Width="600" Height="500" Grid.Row="1" Name="settingsPages">
             <Carousel.PageTransition >
                 <CompositePageTransition>
                     <PageSlide Duration="0:00:00.500" Orientation="Horizontal" />
@@ -32,6 +33,7 @@
                 <views:SettingsDialogFirstCardView/>
                 <views:SettingsDialogSetFolderCardView/>
                 <views:SettingsDialogThemeCardView/>
+                <views:SettingsDialogAdvancedOptionsCardView/>
                 <Panel Height="100" Width="150">
                     <TextBlock Width="150">Finished!</TextBlock>
                     <Button Height="50" Width="150" Background="White" Command="{Binding HandleFinish}">Done</Button>
@@ -39,10 +41,10 @@
             </Carousel.Items>
         </Carousel>
         <Panel Grid.Row="2" Margin="20">
-            <Button Click="Previous" HorizontalAlignment="Left">
+            <Button IsVisible="{Binding BackVisible}" Click="Previous" HorizontalAlignment="Left">
                 <avalonia:MaterialIcon Kind="ArrowLeftThin" />
             </Button>
-            <Button Click="Next"
+            <Button IsVisible="{Binding NextVisible}" Click="Next"
                     HorizontalAlignment="Right">
                 <avalonia:MaterialIcon Kind="ArrowRightThin" />
             </Button>

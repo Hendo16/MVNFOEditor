@@ -35,7 +35,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="pythonnet" Version="3.0.3" />
     <PackageReference Include="SimpleInjector" Version="5.4.4" />
-    <PackageReference Include="SukiUI" Version="6.0.0-beta2" />
+    <PackageReference Include="SukiUI" Version="6.0.0-beta4" />
     <PackageReference Include="YoutubeDLSharp" Version="1.1.0" />
   </ItemGroup>
 

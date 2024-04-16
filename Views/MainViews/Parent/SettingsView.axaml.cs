@@ -72,6 +72,8 @@ namespace MVNFOEditor.Views
         {
             MusicDbContext db = App.GetDBContext();
             SettingsData preData = db.SettingsData.SingleOrDefault();
+            _settings.ScreenshotSecond = int.Parse(ScreenshotSecond.Text);
+            _settings.YTDLFormat = YTDLFormat.Text;
             if (preData != null)
             {
                 db.SettingsData.Remove(preData);

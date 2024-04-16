@@ -31,6 +31,8 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private object _currentContent;
         [ObservableProperty] private bool _navVisible;
         [ObservableProperty] private bool _toggleValue;
+        [ObservableProperty] private bool _showError;
+        [ObservableProperty] private string _errorText;
         private bool _edit;
 
         public AddMusicVideoParentViewModel(ManualMusicVideoViewModel vm, bool edit = false)
@@ -58,7 +60,6 @@ namespace MVNFOEditor.ViewModels
         {
             NavVisible = false;
             SyncResult _result = _resultVM.GetResult();
-            SettingsData localData = _dbContext.SettingsData.First();
             WaveProgressViewModel waveVM = new WaveProgressViewModel();
             waveVM.HeaderText = "Downloading " + _result.Title;
             CurrentContent = waveVM;
@@ -81,6 +82,7 @@ namespace MVNFOEditor.ViewModels
 
         public async void HandleSave()
         {
+            NavVisible = false;
             if (_manualVM == null)
             {
                 await SaveMultipleVideos();
@@ -143,24 +145,24 @@ namespace MVNFOEditor.ViewModels
 
         public async void SaveVideo()
         {
-            NavVisible = false;
             WaveProgressViewModel waveVM = new WaveProgressViewModel();
             waveVM.HeaderText = "Downloading " + _manualVM.Title;
             CurrentContent = waveVM;
             var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress));
             RunResult<string> downloadResult = await _ytDLHelper.DownloadVideo(_manualVM._vidData.ID, $"{localData.RootFolder}/{_manualVM.Artist.Name}", _manualVM.Title, progress);
-            NavVisible = true;
             if (downloadResult.Success)
             {
                 GenerateManualNFO(downloadResult.Data, false);
                 RefreshAlbumEvent?.Invoke(null, true);
                 _manualVM.ClearData();
                 CurrentContent = _manualVM;
+                NavVisible = true;
             }
             else
             {
                 string[] errorContent = downloadResult.ErrorOutput;
                 SukiHost.ShowToast("Download Error", errorContent[0]);
+                NavVisible = true;
             }
         }
 
@@ -171,8 +173,13 @@ namespace MVNFOEditor.ViewModels
             //If the local file already matches the 'expected file naming structure', don't rename it further
             if (Path.GetFileName(_manualVM.VideoPath) !=
                 $"{_manualVM.Title}-video{Path.GetExtension(_manualVM.VideoPath)}")
-            {newPath = $"{localData.RootFolder}\\{_manualVM.Artist.Name}\\{_manualVM.Title}-video{Path.GetExtension(_manualVM.VideoPath)}";}
-            else {newPath = $"{localData.RootFolder}\\{_manualVM.Artist.Name}\\{Path.GetFileName(_manualVM.VideoPath)}";}
+            { newPath = $"{localData.RootFolder}\\{_manualVM.Artist.Name}\\{_manualVM.Title}-video{Path.GetExtension(_manualVM.VideoPath)}"; }
+            else { newPath = $"{localData.RootFolder}\\{_manualVM.Artist.Name}\\{Path.GetFileName(_manualVM.VideoPath)}"; }
+            //If the artist folder doesn't exist yet, create it
+            if (!Directory.Exists($"{localData.RootFolder}\\{_manualVM.Artist.Name}"))
+            {
+                Directory.CreateDirectory($"{localData.RootFolder}\\{_manualVM.Artist.Name}");
+            }
             if (_edit)
             {
                 //Delete the original video and thumbnail
@@ -190,6 +197,7 @@ namespace MVNFOEditor.ViewModels
                 //Generate a new NFO
                 GenerateManualNFO(newPath, false);
             }
+            NavVisible = true;
         }
 
         public void Close()
@@ -223,14 +231,14 @@ namespace MVNFOEditor.ViewModels
             {
                 newMV.videoID = _manualVM._vidData.ID;
                 newMV.source = "youtube";
-                await _manualVM.SaveThumbnailAsync($"{localData.RootFolder}/{newMV.artist.Name}");
+                await _manualVM.SaveThumbnailAsync($"{localData.RootFolder}/{newMV.artist.Name}", newMV.title);
                 newMV.thumb = $"{newMV.title}-video.jpg";
             }
             else
             {
                 newMV.source = "local";
                 var newImagePath = $"{localData.RootFolder}/{newMV.artist.Name}/{newMV.title}-video.png";
-                FFMpeg.Snapshot(vidPath, newImagePath, new System.Drawing.Size(400, 225), TimeSpan.FromSeconds(20));
+                FFMpeg.Snapshot(vidPath, newImagePath, new System.Drawing.Size(400, 225), TimeSpan.FromSeconds(localData.ScreenshotSecond));
                 newMV.thumb = $"{newMV.title}-video.png";
             }
 

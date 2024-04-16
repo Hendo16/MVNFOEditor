@@ -8,6 +8,7 @@
              xmlns:objectModel="clr-namespace:System.Collections.ObjectModel;assembly=System.ObjectModel"
              xmlns:views="clr-namespace:MVNFOEditor.Views"
              xmlns:models="clr-namespace:SukiUI.Models;assembly=SukiUI"
+             xmlns:theme="clr-namespace:SukiUI.Theme;assembly=SukiUI"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="vm:SettingsViewModel"
              x:Class="MVNFOEditor.Views.SettingsView">
@@ -16,12 +17,15 @@
             <objectModel:ObservableCollection x:TypeArguments="controls:SettingsLayoutItem">
                 <controls:SettingsLayoutItem Header="Folder/App Locations">
                     <controls:SettingsLayoutItem.Content>
-                        <UniformGrid Rows="6" Columns="2">
+                        <UniformGrid Rows="3" Columns="3">
                             <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="Music Video Folder" Name="MVInput" Text="{Binding MvText}" />
+                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="Music Video Folder"/>
                             <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseMVFolder" />
                             <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="FFMPEG Path" Name="FFMPEGInput" Text="{Binding FfmpegText}"  />
-                            <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseFFMPEGPath" />
-                            <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="YTDL Path" Name="YTDLInput" Text="{Binding YtdlText}"  />
+                          <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="FFMPEG Path"/>
+                          <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseFFMPEGPath" />
+                          <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="YTDL Path" Name="YTDLInput" Text="{Binding YtdlText}"  />
+                          <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="YTDL Path"/>
                             <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseYTDLPath" />
                         </UniformGrid>
                     </controls:SettingsLayoutItem.Content>
@@ -113,7 +117,15 @@
                         </StackPanel>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>
-                <controls:SettingsLayoutItem Header="Save">
+              <controls:SettingsLayoutItem Header="Advanced Options">
+                <controls:SettingsLayoutItem.Content>
+                  <StackPanel Orientation="Vertical">
+                    <TextBox theme:TextBoxExtensions.Prefix="Screenshot Second:  " Name="ScreenshotSecond" Text="{Binding ScreenshotSecond}"/>
+                    <TextBox theme:TextBoxExtensions.Prefix="YTDL Options:  " Name="YTDLFormat" Text="{Binding YtdlFormat}"/>
+                  </StackPanel>
+                </controls:SettingsLayoutItem.Content>
+              </controls:SettingsLayoutItem>
+              <controls:SettingsLayoutItem Header="Save">
                     <controls:SettingsLayoutItem.Content>
                         <Button Grid.Row="2" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" Content="Save" Click="SaveSettings" />
                     </controls:SettingsLayoutItem.Content>

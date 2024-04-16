@@ -47,6 +47,7 @@ namespace MVNFOEditor.ViewModels
         public void AddArtist()
         {
             NewArtistDialogViewModel newVM = new NewArtistDialogViewModel();
+            newVM.ClosePageEvent += RefreshArtists;
             SukiHost.ShowDialog(newVM);
         }
 
@@ -71,6 +72,10 @@ namespace MVNFOEditor.ViewModels
             ArtistCards = await DBHelper.GenerateArtists();
             IsBusy = false;
             return true;
+        }
+        public void RefreshArtists(object? sender, bool t)
+        {
+            LoadArtists();
         }
 
         public void UpdateInitProgressText(int progress)

@@ -19,8 +19,12 @@ namespace MVNFOEditor.ViewModels
     {
         private readonly SukiTheme _theme = SukiTheme.GetInstance();
         public IAvaloniaReadOnlyList<SukiColorTheme> AvailableColors { get; }
+        [ObservableProperty] private string _screenshotSecond;
+        [ObservableProperty] private string _ytdlFormat;
         [ObservableProperty] private bool _isBackgroundAnimated;
         [ObservableProperty] private bool _isLightTheme;
+        [ObservableProperty] private bool _backVisible;
+        [ObservableProperty] private bool _nextVisible;
         [ObservableProperty] private int _stepIndex;
 
         public SettingsDialogViewModel()
@@ -28,12 +32,17 @@ namespace MVNFOEditor.ViewModels
             AvailableColors = _theme.ColorThemes;
             IsLightTheme = _theme.ActiveBaseTheme == ThemeVariant.Light;
             IsBackgroundAnimated = _theme.IsBackgroundAnimated;
+            BackVisible = false;
+            NextVisible = true;
+            ScreenshotSecond = "20";
         }
 
         public async void HandleFinish()
         {
             var db = App.GetDBContext();
             var localSettings = App.GetSettings();
+            localSettings.ScreenshotSecond = ScreenshotSecond == null ? 20 : int.Parse(ScreenshotSecond);
+            localSettings.YTDLFormat = YtdlFormat == null ? "" : YtdlFormat;
             SettingsData preData = db.SettingsData.SingleOrDefault();
             if (preData != null)
             {
@@ -48,11 +57,29 @@ namespace MVNFOEditor.ViewModels
         public void HandleBackwards()
         {
             StepIndex--;
+            if (!NextVisible)
+            {
+                NextVisible = true;
+
+            }
+            if (StepIndex == 0)
+            {
+                BackVisible = false;
+            }
         }
 
         public void HandleForward()
         {
             StepIndex++;
+            if (!BackVisible)
+            {
+                BackVisible = true;
+
+            }
+            if (StepIndex == 5)
+            {
+                NextVisible = false;
+            }
         }
         public void SetMVFolder(string path)
         {

@@ -104,12 +104,12 @@ namespace MVNFOEditor.ViewModels
                     _musicVideo.vidPath = folderPath + $"\\{Title}-video{ext}";
                 }
             }
-            NavigateBack();
             int success = await DBHelper.UpdateMusicVideo(_musicVideo);
             if (success == 0)
             {
                 Debug.WriteLine(success);
             }
+            NavigateBack();
         }
 
         public void UpdateVideoSource()
@@ -156,6 +156,7 @@ namespace MVNFOEditor.ViewModels
 
         public void NavigateBack()
         {
+
             _parentVM.BackToDetails(true);
         }
 

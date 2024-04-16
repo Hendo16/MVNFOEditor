@@ -57,6 +57,10 @@ namespace MVNFOEditor.Models
             {
                 Directory.CreateDirectory(CachePath);
             }
+            if(File.Exists(CachePath + $"/{CleansedTitle()}.jpg"))
+            {
+                File.Delete(CachePath + $"/{CleansedTitle()}.jpg");
+            }
             File.Copy(path, CachePath + $"/{CleansedTitle()}.jpg");
         }
 

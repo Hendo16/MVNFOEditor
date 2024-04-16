@@ -14,6 +14,8 @@ namespace MVNFOEditor.Models
         public string RootFolder { get; set; }
         public string FFMPEGPath { get; set; }
         public string YTDLPath { get; set; }
+        public string YTDLFormat { get; set; }
+        public int ScreenshotSecond { get; set; }
         public bool AnimatedBackground { get; set; }
         public ThemeVariant? LightOrDark { get; set; }
         public SukiColorTheme? Theme { get; set; }

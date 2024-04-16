@@ -4,19 +4,32 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
              xmlns:vm="using:MVNFOEditor.ViewModels"
+             xmlns:content="clr-namespace:SukiUI.Content;assembly=SukiUI"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.NewArtistDialogView"
              x:DataType="vm:NewArtistDialogViewModel">
-    <Grid RowDefinitions="Auto,Auto,*,Auto">
-        <controls:Stepper Grid.Row="0" VerticalAlignment="Center" AlternativeStyle="True" Index="{Binding StepIndex}" Steps="{Binding Steps}" />
-        <ToggleSwitch Grid.Row="1" IsVisible="{Binding ToggleVisible}" IsEnabled="{Binding ToggleEnable}" IsChecked="{Binding ToggleValue}" IsCheckedChanged="ModeToggleChange" Margin="150,0" VerticalAlignment="Center" OffContent="Manual" OnContent="Automatic" />
-        <controls:BusyArea Grid.Row="2" BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
+    <Grid RowDefinitions="Auto, Auto, Auto,Auto,*,Auto">
+        <Border Grid.Row="0">
+            <Grid IsVisible="{Binding NavVisible}" Margin="0 5 0 0" VerticalAlignment="Center">
+                <Button Command="{Binding CloseDialog}" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <PathIcon Data="{x:Static content:Icons.Cross}" />
+                </Button>
+            </Grid>
+        </Border>
+        <controls:GlassCard Grid.Row="1" IsVisible="{Binding ShowError}">
+            <controls:GroupBox Header="Error">
+                <TextBlock Text="{Binding ErrorText}"/>
+            </controls:GroupBox>
+        </controls:GlassCard>
+        <controls:Stepper Grid.Row="2" VerticalAlignment="Center" AlternativeStyle="True" Index="{Binding StepIndex}" Steps="{Binding Steps}" />
+        <ToggleSwitch Grid.Row="3" IsVisible="{Binding ToggleVisible}" IsEnabled="{Binding ToggleEnable}" IsChecked="{Binding ToggleValue}" IsCheckedChanged="ModeToggleChange" Margin="150,0" VerticalAlignment="Center" OffContent="Manual" OnContent="Automatic" />
+        <controls:BusyArea Grid.Row="4" BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
             <ContentControl Content="{Binding CurrentContent}" />
         </controls:BusyArea>
-        <Border Grid.Row="3">
-            <Grid Margin="0 10 0 10" VerticalAlignment="Center">
+        <Border Grid.Row="5">
+            <Grid IsVisible="{Binding NavVisible}" Margin="0 10 0 10" VerticalAlignment="Center">
                 <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Left" Classes="Flat" Content="{Binding BackButtonText}" Command="{Binding BackTrigger}" />
-                <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" Classes="Outlined" Content="{Binding SkipText}" Command="{Binding HandleSkip}" IsVisible="{Binding IsAlbumView}" />
+                <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" Classes="Outlined" Content="Skip" Command="{Binding HandleSkip}" IsVisible="{Binding IsAlbumView}" />
                 <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="Flat Accent" Content="Next" Command="{Binding NextTrigger}" />
             </Grid>
         </Border>

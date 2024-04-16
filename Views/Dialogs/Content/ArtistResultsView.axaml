@@ -18,7 +18,7 @@
                   </DataTemplate>
               </ListBox.ItemTemplate>
           </ListBox>
-        <Button Grid.Row="2" Content="Search" Click="SearchArtist"/>
+        <Button Grid.Row="2" Command="{Binding SearchArtist}" Content="Search" HotKey="Enter"/>
       </Grid>
     </controls:BusyArea>
 </UserControl>

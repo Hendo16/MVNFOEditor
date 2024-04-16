@@ -35,7 +35,7 @@ namespace MVNFOEditor.ViewModels
         private Artist _artist;
 
         [ObservableProperty] private bool _isBusy;
-        [ObservableProperty] private bool _skipVisible;
+        [ObservableProperty] private bool _navVisible;
         [ObservableProperty] private bool _toggleVisible;
         [ObservableProperty] private bool _toggleValue;
         [ObservableProperty] private bool _toggleEnable;
@@ -71,6 +71,7 @@ namespace MVNFOEditor.ViewModels
             ToggleVisible = false;
             ToggleEnable = false;
             ToggleValue = false;
+            NavVisible = true;
             NotDownload = true;
             _syncVM = null;
             _manualAlbumVM = vm;
@@ -89,6 +90,7 @@ namespace MVNFOEditor.ViewModels
             ToggleEnable = true;
             ToggleVisible = true;
             ToggleValue = true;
+            NavVisible = true;
             NotDownload = true;
             BackButtonText = "Exit";
             _parentVM = App.GetVM().GetParentView();
@@ -119,33 +121,33 @@ namespace MVNFOEditor.ViewModels
             {
                 ManualMusicVideoViewModel manualVM = new ManualMusicVideoViewModel(_artist);
                 SukiHost.ShowToast("Error", "No Videos Available");
+                manualVM.CurrAlbum = album;
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     CurrentContent = manualVM;
                 });
                 return;
             }
-            else
+            SyncDialogViewModel resultsVM = new SyncDialogViewModel(results);
+            AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM);
+
+            _syncVM = resultsVM;
+            _mvParentVM = parentVM;
+            for (int i = 0; i < results.Count; i++)
             {
-                SyncDialogViewModel resultsVM = new SyncDialogViewModel(results);
-                AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM);
-                _syncVM = resultsVM;
-                _mvParentVM = parentVM;
-                for (int i = 0; i < results.Count; i++)
-                {
-                    var result = results[i];
-                    result.ProgressStarted += parentVM.BuildProgressVM;
-                }
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    CurrentContent = resultsVM;
-                });
+                var result = results[i];
+                result.ProgressStarted += parentVM.BuildProgressVM;
             }
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                CurrentContent = resultsVM;
+            });
         }
         
         public async void HandleNavigation(bool isIncrement)
         {
             IsBusy = true;
+            NavVisible = false;
             //Undo Errors
             ShowError = false;
             ErrorText = "";
@@ -158,7 +160,6 @@ namespace MVNFOEditor.ViewModels
                     SukiHost.CloseDialog();
                     return;
                 default:
-                    SkipVisible = isIncrement;
                     StepIndex += isIncrement ? 1 : -1;
                     BackButtonText = StepIndex != 0 ? "Back" : "Exit";
                     break;
@@ -167,14 +168,15 @@ namespace MVNFOEditor.ViewModels
 
             if (currentType == typeof(ManualAlbumViewModel))
             {
-                ToggleVisible = false;
-                ToggleEnable = false;
                 if (ValidateManualAlbum())
                 {
+                    ToggleVisible = false;
+                    ToggleEnable = false;
                     var album = await _manualAlbumVM.SaveAlbum();
                     ManualMusicVideoViewModel newVM = new ManualMusicVideoViewModel(album);
                     _manualMVVM = newVM;
                     CurrentContent = newVM;
+                    NavVisible = true;
                     IsBusy = false;
                 }
             }
@@ -205,6 +207,7 @@ namespace MVNFOEditor.ViewModels
                 BusyText = "Searching YouTube Music...";
                 ToggleVisible = false;
                 await NextStep(null, _resultVM.SelectedAlbum.GetResult());
+                NavVisible = true;
                 IsBusy = false;
             }
 
@@ -222,20 +225,22 @@ namespace MVNFOEditor.ViewModels
         }
         public bool ValidateManualAlbum()
         {
-            if (_manualAlbumVM.AlbumYear == null)
+            if (_manualAlbumVM.AlbumNameText == null)
             {
                 IsBusy = false;
+                NavVisible = true;
                 ShowError = true;
-                ErrorText = "Year cannot be blank!";
+                ErrorText = "Album Name cannot be blank!";
                 StepIndex--;
                 BackButtonText = "Exit";
                 return false;
             }
-            if (_manualAlbumVM.AlbumNameText == null)
+            if (_manualAlbumVM.AlbumYear == null)
             {
                 IsBusy = false;
+                NavVisible = true;
                 ShowError = true;
-                ErrorText = "Album Name cannot be blank!";
+                ErrorText = "Year cannot be blank!";
                 StepIndex--;
                 BackButtonText = "Exit";
                 return false;
@@ -245,6 +250,7 @@ namespace MVNFOEditor.ViewModels
         private async void SaveVideo()
         {
             NotDownload = false;
+            NavVisible = false;
             SettingsData localData = _dbContext.SettingsData.First();
             WaveProgressViewModel waveVM = new WaveProgressViewModel();
             waveVM.HeaderText = "Downloading " + _manualMVVM.Title;
@@ -256,11 +262,13 @@ namespace MVNFOEditor.ViewModels
                 _manualMVVM.GenerateManualNFO(downloadResult.Data);
                 _manualMVVM.ClearData();
                 NotDownload = true;
+                NavVisible = true;
                 CurrentContent = _manualMVVM;
             }
             else
             {
                 NotDownload = true;
+                NavVisible = true;
                 string[] errorContent = downloadResult.ErrorOutput;
                 SukiHost.ShowToast("Download Error", errorContent[0]);
             }
@@ -268,9 +276,9 @@ namespace MVNFOEditor.ViewModels
 
         private async void SaveMultipleVideos()
         {
+            NavVisible = false;
             SettingsData localData = _dbContext.SettingsData.First();
             WaveProgressViewModel waveVM = new WaveProgressViewModel();
-            SkipVisible = false;
             CurrentContent = waveVM;
             for (int i = 0; i < _syncVM.SelectedVideos.Count; i++)
             {
@@ -326,7 +334,7 @@ namespace MVNFOEditor.ViewModels
 
         public void BackTrigger(){HandleNavigation(false); }
         public void NextTrigger() {HandleNavigation(true); }
-        
+
         [RelayCommand]
         public void CloseDialog()
         {

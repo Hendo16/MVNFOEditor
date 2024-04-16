@@ -27,6 +27,7 @@ namespace MVNFOEditor.Helpers
             {
                 ytdl.FFmpegPath = setData.FFMPEGPath;
                 ytdl.YoutubeDLPath = setData.YTDLPath;
+                _settings.Format = setData.YTDLFormat;
             }
         }
 
@@ -35,7 +36,6 @@ namespace MVNFOEditor.Helpers
             _settings.Paths = outputFolder;
             _settings.Output = outputName + "-video.%(ext)s";
             _settings.RestrictFilenames = true;
-            _settings.Format = "bestvideo[height <=? 1440][vcodec !*= av01]+bestaudio[ext=m4a]";
 
             return await ytdl.RunVideoDownload($"https://www.youtube.com/watch?v={id}", overrideOptions: _settings, progress:progress);
         }

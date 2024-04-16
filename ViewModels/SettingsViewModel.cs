@@ -22,6 +22,8 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private string _mvText;
         [ObservableProperty] private string _ffmpegText;
         [ObservableProperty] private string _ytdlText;
+        [ObservableProperty] private string _screenshotSecond;
+        [ObservableProperty] private string _ytdlFormat;
 
         [ObservableProperty] private SettingsItemViewModel _activeVm;
         [ObservableProperty] private int _limit = 5;
@@ -37,6 +39,8 @@ namespace MVNFOEditor.ViewModels
             MvText = App.GetSettings().RootFolder;
             FfmpegText = App.GetSettings().FFMPEGPath;
             YtdlText = App.GetSettings().YTDLPath;
+            ScreenshotSecond = App.GetSettings().ScreenshotSecond.ToString();
+            YtdlFormat = App.GetSettings().YTDLFormat;
             IsBackgroundAnimated = App.GetSettings().AnimatedBackground;
             IsLightTheme = App.GetSettings().LightOrDark == ThemeVariant.Light;
         }

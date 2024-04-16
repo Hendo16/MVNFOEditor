@@ -19,7 +19,6 @@
           </DataTemplate>
         </ComboBox.ItemTemplate>
       </ComboBox>
-      <Button Grid.Row="3" Width="100" Content="Detect Album" Command="{Binding DetectAlbum}"/>
     </Grid>
     <Grid Width="200" Grid.Column="1" RowDefinitions="Auto, Auto">
       <StackPanel Grid.Row="0" IsVisible="{Binding YTVisible}">

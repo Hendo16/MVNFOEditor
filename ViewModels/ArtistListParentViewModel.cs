@@ -56,7 +56,7 @@ namespace MVNFOEditor.ViewModels
             if (reload) { _detailsVM.LoadAlbums(); }
             CurrentContent = _detailsVM;
         }
-
+        
         public void InitList()
         {
             _listVM.InitData();

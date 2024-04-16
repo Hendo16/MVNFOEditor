@@ -10,6 +10,7 @@ using MVNFOEditor.Models;
 using Avalonia.Controls.Shapes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Net.Http;
+using MVNFOEditor.DB;
 
 namespace MVNFOEditor.ViewModels
 {
@@ -93,12 +94,18 @@ namespace MVNFOEditor.ViewModels
         public async Task<Album> SaveAlbum()
         {
             Album newAlbum = new Album();
+            MusicDbContext _dbContext = App.GetDBContext();
             newAlbum.Artist = _artist;
             newAlbum.Year = AlbumYear;
             newAlbum.Title = AlbumNameText;
-            App.GetDBContext().Album.Add(newAlbum);
-            await App.GetDBContext().SaveChangesAsync();
-            await SaveCoverAsync(CachePath);
+            //ensure no duplicates
+            if (!_dbContext.Album.Any(e =>
+                    e.Title == newAlbum.Title && e.Artist == newAlbum.Artist && e.Year == newAlbum.Year))
+            {
+                _dbContext.Album.Add(newAlbum);
+                await _dbContext.SaveChangesAsync();
+                await SaveCoverAsync(CachePath);
+            }
             return newAlbum;
         }
     }

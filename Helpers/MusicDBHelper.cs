@@ -45,6 +45,8 @@ namespace MVNFOEditor.Helpers
                     setData.RootFolder = "null";
                     setData.FFMPEGPath = "null";
                     setData.YTDLPath = "null";
+                    setData.ScreenshotSecond = 20;
+                    setData.YTDLFormat = "null";
                     setData.AnimatedBackground = false;
                     db.SettingsData.Add(setData);
                     db.SaveChanges();
@@ -352,6 +354,13 @@ namespace MVNFOEditor.Helpers
                     el.Value = vid.album.Title;
                 }
             }
+
+            if (!x.Descendants().Any(e => e.Name == "album") && vid.album != null)
+            {
+                string new_node = $"<album>{vid.album.Title}</album>";
+                XElement new_el = new XElement("album", vid.album.Title);
+                x.Root.Add(new_el);
+            }
             x.Save(path);
 
             var updatedVid = _db.MusicVideos.SingleOrDefault(e => e.Id == vid.Id);
@@ -363,7 +372,7 @@ namespace MVNFOEditor.Helpers
         {
             //Cycle through and update all videos
             List<MusicVideo> vidList = _db.MusicVideos.Where(mv => mv.album.Id == album.Id).ToList();
-            if (vidList.Count > 0 && vidList[0].year != album.Year)
+            if (vidList.Count > 0)
             {
                 for (int i = 0; i < vidList.Count; i++)
                 {
