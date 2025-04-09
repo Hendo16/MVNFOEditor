@@ -1,13 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using SukiUI.Controls;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MVNFOEditor.Models;
 
 namespace MVNFOEditor.ViewModels
 {
@@ -18,6 +13,8 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private bool _isBusy;
         [ObservableProperty] private string _busyText;
         [ObservableProperty] private AlbumResultViewModel _selectedAlbum;
+        
+        public SearchSource selectedSource;
 
         private string _searchText;
         public string SearchText

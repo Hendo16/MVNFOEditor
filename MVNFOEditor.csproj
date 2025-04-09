@@ -1,9 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+	<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>    
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
@@ -20,23 +22,32 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.0.9" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.0.9" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.6" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="Avalonia" Version="11.2.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.1" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.2.1" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.1" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="Config.Net" Version="5.2.1" />
 
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.9" />
     <PackageReference Include="FFMpegCore" Version="5.1.0" />
-    <PackageReference Include="Material.Icons.Avalonia" Version="2.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.15" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.15" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Flurl" Version="4.0.0" />
+    <PackageReference Include="Flurl.Http" Version="4.0.2" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
+    <PackageReference Include="log4net" Version="3.0.3" />
+    <PackageReference Include="log4net.Ext.Json" Version="3.0.1" />
+    <PackageReference Include="M3U8Parser" Version="1.0.5" />
+    <PackageReference Include="Material.Icons.Avalonia" Version="2.1.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="pythonnet" Version="3.0.3" />
-    <PackageReference Include="SimpleInjector" Version="5.4.4" />
-    <PackageReference Include="SukiUI" Version="6.0.0-beta4" />
-    <PackageReference Include="YoutubeDLSharp" Version="1.1.0" />
+    <PackageReference Include="NUnit" Version="4.2.2" />
+    <PackageReference Include="pythonnet" Version="3.1.0-preview2024-09-06" />
+    <PackageReference Include="SimpleInjector" Version="5.5.0" />
+    <PackageReference Include="SukiUI" Version="6.0.1" />
+    <PackageReference Include="YoutubeDLSharp" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,5 +72,29 @@
     <Compile Update="Views\Dialogs\Parent\AddMusicVideoParentView.axaml.cs">
       <DependentUpon>AddMusicVideoParentView.axaml</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Styles\CompletionWindowStyles.axaml" />
+    <UpToDateCheckInput Remove="Styles\GlassCardStyles.axaml" />
+    <UpToDateCheckInput Remove="Styles\ShowMeTheXamlStyles.axaml" />
+    <UpToDateCheckInput Remove="Styles\TextStyles.axaml" />
+    <UpToDateCheckInput Remove="Styles\WrapPanelStyles.axaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Assets\FFMPEG\tmp\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="log4net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="WVCore">
+      <HintPath>ThirdPartyLibraries\WVCore.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

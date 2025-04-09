@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:MVNFOEditor.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="MVNFOEditor.Views.SyncResultView"
-             x:DataType="vm:SyncResultViewModel"
+             x:Class="MVNFOEditor.Views.VideoResultView"
+             x:DataType="vm:VideoResultViewModel"
              Width="400">
   <Border BorderBrush="{Binding BorderColor}" BorderThickness="1" CornerRadius="10" ClipToBounds="True">
     <StackPanel Spacing="5" Width="350">
@@ -15,7 +15,8 @@
         <Panel>
         <StackPanel>
           <TextBlock Margin="10 10 0 0" Classes="h4" VerticalAlignment="Top" Text="{Binding Title}"/>
-          <TextBlock Margin="10 10 0 0" Classes="Accent" VerticalAlignment="Bottom" Text="{Binding Duration}"/>
+          <TextBlock Margin="10 10 0 5" Classes="Accent" HorizontalAlignment="Left" VerticalAlignment="Bottom" Text="{Binding Duration}"/>
+          <TextBlock Margin="10 10 0 5" Classes="Primary" HorizontalAlignment="Left" VerticalAlignment="Bottom" Text="{Binding Year}"/>
         </StackPanel>
         </Panel>
     </StackPanel>

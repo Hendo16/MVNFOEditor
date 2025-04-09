@@ -1,40 +1,42 @@
-﻿using MVNFOEditor.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Avalonia.Input;
+using Avalonia.Controls.Notifications;
 using Avalonia.Media.Imaging;
-using ReactiveUI;
-using System.Diagnostics;
-using SukiUI.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.Helpers;
+using MVNFOEditor.Models;
 using Newtonsoft.Json.Linq;
-using SimpleInjector;
-using Avalonia.Controls;
+using SukiUI.Dialogs;
+using SukiUI.Toasts;
 
 namespace MVNFOEditor.ViewModels
 {
-    public class AlbumViewModel : ReactiveObject
+    public partial class AlbumViewModel : ObservableObject
     {
+        //Show/Hide Source Options
+        [ObservableProperty] private bool _isYTMusic;
+        [ObservableProperty] private bool _isAppleMusic;
         private ArtistListParentViewModel _parentVM;
-        private AddMusicVideoParentViewModel _addMVVM;
         private readonly Album _album;
         public event EventHandler<bool> SyncStarted;
         private YTMusicHelper ytMusicHelper;
+        private iTunesAPIHelper _iTunesApiHelper;
+
+        private ISukiToastManager ToastManager;
 
         public AlbumViewModel(Album album)
         {
             _parentVM = App.GetVM().GetParentView();
+            ToastManager = App.GetVM().GetToastManager();
             _album = album;
             ytMusicHelper = App.GetYTMusicHelper();
-            ShowVideoDownload = true;
-            if (album.ytMusicBrowseID == null)
-            {
-                ShowVideoDownload = false;
-            }
+            _iTunesApiHelper = App.GetiTunesHelper();
+            _isYTMusic = _album.Artist.Metadata.Any(am => am.SourceId == SearchSource.YouTubeMusic);
+            _isAppleMusic = _album.Artist.Metadata.Any(am => am.SourceId == SearchSource.AppleMusic);
         }
 
         public Artist Artist => _album.Artist;
@@ -43,28 +45,27 @@ namespace MVNFOEditor.ViewModels
 
         public string Year => _album.Year;
 
-        public bool _showVideoDownload;
-
-        public bool ShowVideoDownload
-        {
-            get => _showVideoDownload;
-            private set => this.RaiseAndSetIfChanged(ref _showVideoDownload, value);
-        }
-
         private List<MusicVideo> _songs;
-
+        
         public List<MusicVideo> Songs
         {
-            get => _songs;
-            private set => this.RaiseAndSetIfChanged(ref _songs, value);
+            get { return _songs; }
+            set
+            {
+                _songs = value;
+                OnPropertyChanged();
+            }
         }
 
         private Bitmap? _cover;
-
         public Bitmap? Cover
         {
-            get => _cover;
-            private set => this.RaiseAndSetIfChanged(ref _cover, value);
+            get { return _cover; }
+            set
+            {
+                _cover = value;
+                OnPropertyChanged();
+            }
         }
 
         public async Task LoadCover()
@@ -96,49 +97,101 @@ namespace MVNFOEditor.ViewModels
         {
             var dbContext = App.GetDBContext();
             MusicVideo songObj = dbContext.MusicVideos.First(mv => mv.Id == songID);
-            MusicVideoDetailsViewModel mvVM = new MusicVideoDetailsViewModel();
-            mvVM.SetVideo(songObj);
-            mvVM.AnalyzeVideo();
-            await mvVM.LoadThumbnail();
-            _parentVM.CurrentContent = mvVM;
+            if (File.Exists(songObj.vidPath))
+            {
+                MusicVideoDetailsViewModel mvVM = new MusicVideoDetailsViewModel();
+                mvVM.SetVideo(songObj);
+                mvVM.AnalyzeVideo();
+                await mvVM.LoadThumbnail();
+                _parentVM.CurrentContent = mvVM;
+            }
+            else
+            {
+                //Handle deleted video
+                ToastManager.CreateToast()
+                    .WithTitle("Error")
+                    .WithContent($"{songObj.title} has been deleted - removing from db...")
+                    .OfType(NotificationType.Error)
+                    .Queue();
+                App.GetDBContext().MusicVideos.Remove(songObj);
+                App.GetDBContext().SaveChanges();
+                _parentVM.RefreshDetails();
+            }
         }
 
-        public async void SyncAlbum()
+        public async void AddAppleMusicVideo()
         {
             OnSyncTrigger(true);
-            string artistID = Artist.YTMusicId;
+            ObservableCollection<VideoResultViewModel> results = await _iTunesApiHelper.GenerateVideoResultList(_album, null);
+            //Sometimes artists won't have any videos listed, so we need to handle this
+            if (results.Count == 0)
+            {
+                OnSyncTrigger(false);
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithContent("No Videos Available")
+                    .Dismiss().ByClickingBackground()
+                    .TryShow();
+                return;
+            }
+            VideoResultsViewModel resultsVM = new VideoResultsViewModel(results);
+            ArtistMetadata artistMetadata = Artist.GetArtistMetadata(SearchSource.AppleMusic);
+            AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM, artistMetadata.SourceId);
+            for (int i = 0; i < results.Count; i++)
+            {
+                var result = results[i];
+                result.ProgressStarted += parentVM.SaveAMVideo;
+            }
+            resultsVM.BusyText = "Searching Apple Music...";
+            OnSyncTrigger(false);
+            //Open Dialog
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => parentVM)
+                .OnDismissed(e => parentVM.HandleDismiss())
+                .TryShow();
+        }
+
+        public async void AddYTMVideo()
+        {
+            OnSyncTrigger(true);
+            ArtistMetadata artistMetadata = Artist.GetArtistMetadata(SearchSource.AppleMusic);
+            string artistID = artistMetadata.BrowseId;
             JArray videoSearch = ytMusicHelper.get_videos(artistID);
             //Sometimes artists won't have any videos listed, so we need to handle this
             if (videoSearch == null)
             {
                 OnSyncTrigger(false);
-                TextBlock errBox = new TextBlock() { Text = "No Videos Available" };
-                SukiHost.ShowDialog(errBox, allowBackgroundClose: true);
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithContent("No Videos Available")
+                    .Dismiss().ByClickingBackground()
+                    .TryShow();
                 return;
             }
-            JObject fullAlbumDetails = ytMusicHelper.get_album(_album.ytMusicBrowseID);
-            ObservableCollection<SyncResultViewModel> results = await ytMusicHelper.GenerateSyncResultList(videoSearch, fullAlbumDetails, Songs, _album);
+            JObject fullAlbumDetails = ytMusicHelper.get_album(_album.AlbumBrowseID);
+            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videoSearch, fullAlbumDetails, Songs, _album);
 
             if (results.Count == 0)
             {
                 OnSyncTrigger(false);
-                TextBlock errBox = new TextBlock() { Text = "No Videos Available" };
-                SukiHost.ShowDialog(errBox, allowBackgroundClose: true);
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithContent("No Videos Available")
+                    .Dismiss().ByClickingBackground()
+                    .TryShow();
             }
             else
             {
-                SyncDialogViewModel resultsVM = new SyncDialogViewModel(results);
-                AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM);
-                _addMVVM = parentVM;
+                VideoResultsViewModel resultsVM = new VideoResultsViewModel(results);
+                AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM, artistMetadata.SourceId);
                 for (int i = 0; i < results.Count; i++)
                 {
                     var result = results[i];
-                    result.ProgressStarted += parentVM.BuildProgressVM;
+                    result.ProgressStarted += parentVM.SaveYTMVideo;
                 }
 
                 OnSyncTrigger(false);
                 //Open Dialog
-                SukiHost.ShowDialog(parentVM);
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithViewModel(dialog => parentVM)
+                    .TryShow();
             }
         }
 
@@ -146,13 +199,18 @@ namespace MVNFOEditor.ViewModels
         {
             ManualMusicVideoViewModel newVM = new ManualMusicVideoViewModel(_album);
             AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(newVM);
-            SukiHost.ShowDialog(parentVM, allowBackgroundClose: true);
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => parentVM)
+                .Dismiss().ByClickingBackground()
+                .TryShow();
         }
 
         public async void EditAlbum()
         {
             EditAlbumDialogViewModel editVM = new EditAlbumDialogViewModel(_album, Cover);
-            SukiHost.ShowDialog(editVM, allowBackgroundClose: true);
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => editVM)
+                .TryShow();
         }
 
         protected virtual void OnSyncTrigger(bool isTaskStarted)

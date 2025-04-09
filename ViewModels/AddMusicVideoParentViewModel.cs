@@ -2,30 +2,32 @@
 using MVNFOEditor.Models;
 using MVNFOEditor.Helpers;
 using System;
-using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia;
-using FFMpegCore;
-using FFMpegCore.Enums;
-using FFMpegCore.Pipes;
+using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using YoutubeDLSharp;
 using MVNFOEditor.DB;
-using SukiUI.Controls;
-using YoutubeDLSharp.Metadata;
-using Size = Avalonia.Size;
+using SukiUI.Dialogs;
+using SukiUI.Toasts;
+using log4net;
+using MVNFOEditor.Settings;
 
 namespace MVNFOEditor.ViewModels
 {
     public partial class AddMusicVideoParentViewModel : ObservableObject
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(AddMusicVideoParentViewModel));
         private ManualMusicVideoViewModel? _manualVM;
-        private SyncDialogViewModel? _resultsVM;
+        private VideoResultsViewModel? _resultsVM;
         private YTDLHelper _ytDLHelper;
+        private AppleMusicDLHelper _amDLHelper;
         private MusicDbContext _dbContext;
-        private SettingsData localData;
+        private static ISettings _settings;
+        private SearchSource _searchSource;
+        private ISukiToastManager ToastManager;
+        private ISukiDialogManager DialogManager;
         public event EventHandler<bool> RefreshAlbumEvent;
 
         [ObservableProperty] private object _currentContent;
@@ -34,37 +36,75 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private bool _showError;
         [ObservableProperty] private string _errorText;
         private bool _edit;
+        private WaveProgressViewModel currentDownload;
 
         public AddMusicVideoParentViewModel(ManualMusicVideoViewModel vm, bool edit = false)
         {
             _ytDLHelper = App.GetYTDLHelper();
             _dbContext = App.GetDBContext();
-            localData = _dbContext.SettingsData.First();
+            _settings = App.GetSettings();
+            ToastManager = App.GetVM().GetToastManager();
+            DialogManager = App.GetVM().GetDialogManager();
+            _searchSource = SearchSource.Manual;
             _manualVM = vm;
             CurrentContent = _manualVM;
             _edit = edit;
             NavVisible = true;
         }
 
-        public AddMusicVideoParentViewModel(SyncDialogViewModel vm)
+        public AddMusicVideoParentViewModel(VideoResultsViewModel vm, SearchSource source)
         {
             _resultsVM = vm;
+            _searchSource = source;
             _ytDLHelper = App.GetYTDLHelper();
+            _amDLHelper = App.GetAppleMusicDLHelper();
             _dbContext = App.GetDBContext();
-            localData = _dbContext.SettingsData.First();
+            _settings = App.GetSettings();
+            ToastManager = App.GetVM().GetToastManager();
+            DialogManager = App.GetVM().GetDialogManager();
             CurrentContent = _resultsVM;
             NavVisible = true;
         }
 
-        public async void BuildProgressVM(object? sender, SyncResultViewModel? _resultVM)
+        public async void SaveAMVideo(object? sender, VideoResultViewModel selectedVideo)
+        {
+            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            currentDownload = waveVM;
+            CurrentContent = waveVM;
+            //If the artist folder doesn't exist yet, create it
+            if (!Directory.Exists($"{_settings.RootFolder}\\{selectedVideo.Artist.Name}"))
+            {
+                Directory.CreateDirectory($"{_settings.RootFolder}\\{selectedVideo.Artist.Name}");
+            }
+            AppleMusicDownloadResponse result = await _amDLHelper.DownloadVideo(selectedVideo, waveVM);
+            if (result == AppleMusicDownloadResponse.Success)
+            {
+                await selectedVideo.GenerateNFO($"{_settings.RootFolder}/{selectedVideo.Artist.Name}/{selectedVideo.Title}.mp4");
+                selectedVideo.HandleDownload();
+                CurrentContent = _resultsVM;
+                NavVisible = true;
+            }
+            else
+            {
+                DialogManager.DismissDialog();
+                ToastManager.CreateToast()
+                    .WithTitle("Download Failed")
+                    .WithContent("Error downloading video, please check logs")
+                    .OfType(NotificationType.Error)
+                    .Queue();
+                Log.Error($"Error in AddMusicVideo->SaveAMVideo: Download failed");
+            }
+        }
+
+        public async void SaveYTMVideo(object? sender, VideoResultViewModel? _resultVM)
         {
             NavVisible = false;
-            SyncResult _result = _resultVM.GetResult();
+            VideoResult _result = _resultVM.GetResult();
             WaveProgressViewModel waveVM = new WaveProgressViewModel();
-            waveVM.HeaderText = "Downloading " + _result.Title;
+            waveVM.HeaderText = $"Downloading {_result.Title} - ";
             CurrentContent = waveVM;
             var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress));
-            RunResult<string> downloadResult = await _ytDLHelper.DownloadVideo(_result.vidID, $"{localData.RootFolder}/{_result.Artist.Name}", _result.Title, progress);
+            RunResult<string> downloadResult = await _ytDLHelper.DownloadVideo(_result.VideoID, $"{_settings.RootFolder}/{_result.Artist.Name}", _result.Title, progress);
             if (downloadResult.Success)
             {
                 await _resultVM.GenerateNFO(downloadResult.Data);
@@ -75,53 +115,207 @@ namespace MVNFOEditor.ViewModels
             else
             {
                 string[] errorContent = downloadResult.ErrorOutput;
-                SukiHost.CloseDialog();
-                SukiHost.ShowToast("Download Error", errorContent[0]);
+                DialogManager.DismissDialog();
+                ToastManager.CreateToast()
+                    .WithTitle("Download Error")
+                    .WithContent(errorContent[0])
+                    .OfType(NotificationType.Error)
+                    .Queue();
+                Log.Error($"Error in AddMusicVideo->SaveYTMVideo: {_result.VideoID} failed");
+                foreach (var err in downloadResult.ErrorOutput)
+                {
+                    Log.Error(err);
+                }
             }
         }
 
         public async void HandleSave()
         {
             NavVisible = false;
-            if (_manualVM == null)
+            switch (_searchSource)
             {
-                await SaveMultipleVideos();
-                CurrentContent = _resultsVM;
+                case SearchSource.YouTubeMusic:
+                    await SaveMultipleVideos();
+                    CurrentContent = _resultsVM;
+                    break;
+                case SearchSource.AppleMusic:
+                    AppleMusicDownloadResponse result = await SaveAppleMusicVideo();
+                    switch (result)
+                    {
+                        case AppleMusicDownloadResponse.Success:
+                            Console.WriteLine("Done!");
+                            break;
+                        case AppleMusicDownloadResponse.Failure:
+                            ToastManager.CreateToast()
+                                .WithTitle("Download Error")
+                                .WithContent("Failure to download. Please check logs")
+                                .OfType(NotificationType.Error)
+                                .Queue();
+                            Log.Error($"Error in AddMusicVideo->HandleSave: {_resultsVM.SelectedVideos[0]} failed");
+                            Console.WriteLine("Failure to download");
+                            break;
+                        case AppleMusicDownloadResponse.InvalidUserToken:
+                            ToastManager.CreateToast()
+                                .WithTitle("Download Error")
+                                .WithContent("Invalid user token provided! Please update token in config")
+                                .OfType(NotificationType.Error)
+                                .Queue();
+                            Log.Error($"Error in AddMusicVideo->HandleSave: Invalid user token");
+                            Console.WriteLine("Invalid user token provided!");
+                            break;
+                    }
+                    break;
+                case SearchSource.Manual:
+                    if (_manualVM.YTVisible)
+                    {
+                        //If only downloading 1 manual YT video, add it to the download list
+                        if (_manualVM.ManualItems.Count == 0)
+                        {
+                            _manualVM.AddSingleToList();
+                        }
+                        //SaveVideo();
+                        SaveMultipleManualVideos();
+                    }
+                    else
+                    {
+                        SaveManualVideo();
+                    }
+
+                    break;
             }
-            else if (_resultsVM == null)
+        }
+
+        public async Task<AppleMusicDownloadResponse> SaveAppleMusicVideo()
+        {
+            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            VideoResultViewModel selectedVideo = _resultsVM.SelectedVideos[0];
+            CurrentContent = waveVM;
+            //If the artist folder doesn't exist yet, create it
+            if (!Directory.Exists($"{_settings.RootFolder}\\{selectedVideo.Artist.Name}"))
             {
-                if (_manualVM.YTVisible)
+                Directory.CreateDirectory($"{_settings.RootFolder}\\{selectedVideo.Artist.Name}");
+            }
+            AppleMusicDownloadResponse result = await _amDLHelper.DownloadVideo(selectedVideo, waveVM);
+            if (result == AppleMusicDownloadResponse.Success)
+            {
+                await selectedVideo.GenerateNFO($"{_settings.RootFolder}/{selectedVideo.Artist.Name}/{selectedVideo.Title}.mp4");
+                selectedVideo.HandleDownload();
+                CurrentContent = _resultsVM;
+                NavVisible = true;
+            }
+            return result;
+        }
+
+        public async Task<bool> SaveMultipleManualVideos()
+        {
+            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            CurrentContent = waveVM;
+            NavVisible = false;
+            for (int i = 0; i < _manualVM.ManualItems.Count; i++)
+            {
+                string headerText = "";
+                if (_manualVM.ManualItems.Count > 1)
                 {
-                    SaveVideo();
+                    headerText = $"Downloading {_manualVM.ManualItems[i].Title} {i + 1}/{_manualVM.ManualItems.Count}";
                 }
                 else
                 {
-                    SaveManualVideo();
+                    headerText = $"Downloading {_manualVM.ManualItems[i].Title}";
+                }
+
+                waveVM.HeaderText = headerText;
+                var progressTest = new ProgressBar() { Value = 0, ShowProgressText = true };
+                var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress, progressTest));
+                var toastTest = App.GetVM().GetToastManager().CreateToast()
+                    .WithTitle(headerText)
+                    .WithContent(progressTest)
+                    .Queue();
+                var downResult = await _ytDLHelper.DownloadVideo(_manualVM.ManualItems[i].VidID, $"{_settings.RootFolder}/{_manualVM.Artist.Name}", _manualVM.ManualItems[i].Title, progress);
+                App.GetVM().GetToastManager().Dismiss(toastTest);
+                if (downResult.Success)
+                {
+                    RefreshAlbumEvent?.Invoke(null, true);
+                    if (_edit)
+                    {
+                        //Special edit method to handle replacing a pre-existing video - still uses the same post download process to reset values
+                        await _manualVM.GenerateManualNFO(downResult.Data, true).ContinueWith(t => PostDownloadProcess(t, waveVM, i, downResult), TaskScheduler.FromCurrentSynchronizationContext());
+                    }
+                    else
+                    {
+                        await _manualVM.GenerateManualNFO(downResult.Data, i).ContinueWith(t => PostDownloadProcess(t, waveVM, i, downResult), TaskScheduler.FromCurrentSynchronizationContext());
+                    }
+                }
+                else
+                {
+                    ToastManager.CreateToast()
+                        .WithTitle("Error")
+                        .WithContent($"Something went wrong with downloading {_manualVM.ManualItems[i].Title}")
+                        .OfType(NotificationType.Error)
+                        .Queue();
+                    Log.Error($"Error in AddMusicVideo->SaveMultipleManualVideos: {_manualVM.ManualItems[i].VidID} failed");
+                    foreach (var err in downResult.ErrorOutput)
+                    {
+                        Log.Error(err);
+                    }
+                    break;
+                }
+            }
+            NavVisible = true;
+            return true;
+        }
+
+        private void PostDownloadProcess(Task<int> t, WaveProgressViewModel waveVM, int i, RunResult<string> downResult)
+        {
+            if (t.IsCompletedSuccessfully)
+            {
+                //Reset wave progress
+                waveVM.UpdateProgress(0);
+            }
+            else
+            {
+                ToastManager.CreateToast()
+                    .WithTitle("Error")
+                    .WithContent($"Something went wrong with downloading {_manualVM.ManualItems[i].Title}")
+                    .OfType(NotificationType.Error)
+                    .Queue();
+                Log.Error($"Error in AddMusicVideo->SaveMultipleManualVideos: {_manualVM.ManualItems[i].VidID} failed");
+                foreach (var err in downResult.ErrorOutput)
+                {
+                    Log.Error(err);
                 }
             }
         }
 
         public async Task<bool> SaveMultipleVideos()
         {
-            SettingsData localData = _dbContext.SettingsData.First();
             WaveProgressViewModel waveVM = new WaveProgressViewModel();
-            bool result = true;
             CurrentContent = waveVM;
+            NavVisible = false;
             for (int i = 0; i < _resultsVM.SelectedVideos.Count; i++)
             {
+                string headerText = "";
                 if (_resultsVM.SelectedVideos.Count > 1)
                 {
-                    waveVM.HeaderText = $"Downloading {_resultsVM.SelectedVideos[i].Title} {i + 1}/{_resultsVM.SelectedVideos.Count}";
+                    headerText = $"Downloading {_resultsVM.SelectedVideos[i].Title} {i + 1}/{_resultsVM.SelectedVideos.Count}";
                 }
                 else
                 {
-                    waveVM.HeaderText = $"Downloading {_resultsVM.SelectedVideos[i].Title}";
+                    headerText = $"Downloading {_resultsVM.SelectedVideos[i].Title}";
                 }
-                var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress));
+
+                waveVM.HeaderText = headerText;
+                var progressTest = new ProgressBar() { Value = 0, ShowProgressText = true };
+                var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress, progressTest));
                 var currResult = _resultsVM.SelectedVideos[i].HandleDownload();
-                var downResult = await _ytDLHelper.DownloadVideo(currResult.vidID, $"{localData.RootFolder}/{currResult.Artist.Name}", currResult.Title, progress);
+                var toastTest = App.GetVM().GetToastManager().CreateToast()
+                    .WithTitle(headerText)
+                    .WithContent(progressTest)
+                    .Queue();
+                var downResult = await _ytDLHelper.DownloadVideo(currResult.VideoID, $"{_settings.RootFolder}\\{currResult.Artist.Name}", currResult.Title, progress);
+                App.GetVM().GetToastManager().Dismiss(toastTest);
                 if (downResult.Success)
                 {
+                    RefreshAlbumEvent?.Invoke(null, true);
                     _resultsVM.SelectedVideos[i].GenerateNFO(downResult.Data).ContinueWith(t =>
                     {
                         if (t.IsCompletedSuccessfully)
@@ -130,124 +324,90 @@ namespace MVNFOEditor.ViewModels
                         }
                         else
                         {
-                            SukiHost.ShowToast("Error", $"Something went wrong with downloading {_resultsVM.SelectedVideos[i].Title}");
+                            ToastManager.CreateToast()
+                                .WithTitle("Error")
+                                .WithContent($"Something went wrong with downloading {_resultsVM.SelectedVideos[i].Title}")
+                                .OfType(NotificationType.Error)
+                                .Queue();
+                            Log.Error($"Error in AddMusicVideo->SaveMultipleVideos: {currResult.VideoID} failed");
+                            foreach (var err in downResult.ErrorOutput)
+                            {
+                                Log.Error(err);
+                            }
                         }
                     }, TaskScheduler.FromCurrentSynchronizationContext());
                 }
                 else
                 {
-                    SukiHost.ShowToast("Error", $"Something went wrong with downloading {_resultsVM.SelectedVideos[i].Title}");
+                    ToastManager.CreateToast()
+                        .WithTitle("Error")
+                        .WithContent($"Something went wrong with downloading {_resultsVM.SelectedVideos[i].Title}")
+                        .OfType(NotificationType.Error)
+                        .Queue();
+                    Log.Error($"Error in AddMusicVideo->SaveMultipleVideos: {currResult.VideoID} failed");
+                    foreach (var err in downResult.ErrorOutput)
+                    {
+                        Log.Error(err);
+                    }
                     break;
                 }
             }
-            return result;
-        }
-
-        public async void SaveVideo()
-        {
-            WaveProgressViewModel waveVM = new WaveProgressViewModel();
-            waveVM.HeaderText = "Downloading " + _manualVM.Title;
-            CurrentContent = waveVM;
-            var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress));
-            RunResult<string> downloadResult = await _ytDLHelper.DownloadVideo(_manualVM._vidData.ID, $"{localData.RootFolder}/{_manualVM.Artist.Name}", _manualVM.Title, progress);
-            if (downloadResult.Success)
-            {
-                GenerateManualNFO(downloadResult.Data, false);
-                RefreshAlbumEvent?.Invoke(null, true);
-                _manualVM.ClearData();
-                CurrentContent = _manualVM;
-                NavVisible = true;
-            }
-            else
-            {
-                string[] errorContent = downloadResult.ErrorOutput;
-                SukiHost.ShowToast("Download Error", errorContent[0]);
-                NavVisible = true;
-            }
+            NavVisible = true;
+            return true;
         }
 
         public void SaveManualVideo()
         {
-            SettingsData localData = App.GetDBContext().SettingsData.First();
             string newPath;
             //If the local file already matches the 'expected file naming structure', don't rename it further
             if (Path.GetFileName(_manualVM.VideoPath) !=
-                $"{_manualVM.Title}-video{Path.GetExtension(_manualVM.VideoPath)}")
-            { newPath = $"{localData.RootFolder}\\{_manualVM.Artist.Name}\\{_manualVM.Title}-video{Path.GetExtension(_manualVM.VideoPath)}"; }
-            else { newPath = $"{localData.RootFolder}\\{_manualVM.Artist.Name}\\{Path.GetFileName(_manualVM.VideoPath)}"; }
+                $"{_manualVM.Title}{Path.GetExtension(_manualVM.VideoPath)}")
+            { newPath = $"{_settings.RootFolder}\\{_manualVM.Artist.Name}\\{_manualVM.Title}{Path.GetExtension(_manualVM.VideoPath)}"; }
+            else { newPath = $"{_settings.RootFolder}\\{_manualVM.Artist.Name}\\{Path.GetFileName(_manualVM.VideoPath)}"; }
             //If the artist folder doesn't exist yet, create it
-            if (!Directory.Exists($"{localData.RootFolder}\\{_manualVM.Artist.Name}"))
+            if (!Directory.Exists($"{_settings.RootFolder}\\{_manualVM.Artist.Name}"))
             {
-                Directory.CreateDirectory($"{localData.RootFolder}\\{_manualVM.Artist.Name}");
+                Directory.CreateDirectory($"{_settings.RootFolder}\\{_manualVM.Artist.Name}");
             }
             if (_edit)
             {
-                //Delete the original video and thumbnail
-                File.Delete(_manualVM.PreviousVideo.vidPath);
-                File.Delete($"{localData.RootFolder}\\{_manualVM.Artist.Name}\\{_manualVM.PreviousVideo.thumb}");
-                //Move the new one over
-                File.Move(_manualVM.VideoPath, newPath);
+                //If for some reason someone selects a video in the destination path...
+                if(_manualVM.PreviousVideo.vidPath != newPath)
+                {
+                    //Delete the original video and thumbnail
+                    File.Delete(_manualVM.PreviousVideo.vidPath);
+                    File.Delete($"{_settings.RootFolder}\\{_manualVM.Artist.Name}\\{_manualVM.PreviousVideo.thumb}");
+                    //Move the new one over
+                    File.Move(_manualVM.VideoPath, newPath);
+                }
                 //Re-generate the NFO
-                GenerateManualNFO(newPath, true);
+                _manualVM.GenerateManualNFO(newPath, true);
             }
             else
             {
                 //Move the local file over
                 File.Move(_manualVM.VideoPath, newPath);
                 //Generate a new NFO
-                GenerateManualNFO(newPath, false);
+                _manualVM.GenerateManualNFO(newPath, false);
             }
             NavVisible = true;
+        }
+
+        public void HandleDismiss()
+        {        
+            App.GetToastManager().CreateToast()
+            .WithTitle(currentDownload.HeaderText)
+            .WithLoadingState(true)
+            .WithContent($"{currentDownload.ProgressValue}%/100%")
+            .Dismiss().ByClicking()
+            .Queue();
         }
 
         public void Close()
         {
             _resultsVM = null;
             _manualVM = null;
-            SukiHost.CloseDialog();
-        }
-        
-        private async void GenerateManualNFO(string vidPath, bool edit)
-        {
-            if (edit)
-            {
-                _dbContext.MusicVideos.Remove(_manualVM.PreviousVideo);
-            }
-            MusicVideo newMV = new MusicVideo();
-            newMV.title = _manualVM.Title;
-            newMV.year = _manualVM.Year;
-            newMV.artist = _manualVM.Artist;
-            newMV.vidPath = vidPath;
-            if (_manualVM.CurrAlbum != null)
-            {
-                newMV.album = _manualVM.CurrAlbum;
-            }
-            else
-            {
-                newMV.album = null;
-            }
-
-            if (_manualVM._vidData != null)
-            {
-                newMV.videoID = _manualVM._vidData.ID;
-                newMV.source = "youtube";
-                await _manualVM.SaveThumbnailAsync($"{localData.RootFolder}/{newMV.artist.Name}", newMV.title);
-                newMV.thumb = $"{newMV.title}-video.jpg";
-            }
-            else
-            {
-                newMV.source = "local";
-                var newImagePath = $"{localData.RootFolder}/{newMV.artist.Name}/{newMV.title}-video.png";
-                FFMpeg.Snapshot(vidPath, newImagePath, new System.Drawing.Size(400, 225), TimeSpan.FromSeconds(localData.ScreenshotSecond));
-                newMV.thumb = $"{newMV.title}-video.png";
-            }
-
-            newMV.nfoPath = $"{localData.RootFolder}/{newMV.artist.Name}/{newMV.title}-video.nfo";
-            newMV.SaveToNFO();
-            _dbContext.MusicVideos.Add(newMV);
-            _dbContext.SaveChanges();
-            RefreshAlbumEvent?.Invoke(null, true);
-            Close();
+            DialogManager.DismissDialog();
         }
     }
 }

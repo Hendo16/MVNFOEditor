@@ -2,17 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:vm="using:MVNFOEditor.ViewModels"
              x:Class="MVNFOEditor.Views.ManualArtistView"
              x:DataType="vm:ManualArtistViewModel">
-    <Grid Height="150" Width="420" ColumnDefinitions="Auto,Auto">
-        <Grid MaxWidth="150" Grid.Column="0" RowDefinitions="Auto">
-            <TextBox Width="150" Grid.Row="0" Watermark="Name" Text="{Binding ArtistNameText}"/>
-        </Grid>
-        <Grid Grid.Column="1" MaxWidth="270" RowDefinitions="Auto, Auto">
-            <Image Grid.Row="0" Height="113" Width="270" Stretch="Uniform" Source="{Binding ArtistBanner}"/>
-            <Button Grid.Row="1" Content="Browse" Click="BannerSearch"/>
-        </Grid>
-    </Grid>
+    <suki:GroupBox Height="150" Width="400" Header="Artist Name">
+        <TextBox Height="50" Watermark="Name" Text="{Binding ArtistNameText}"/>
+    </suki:GroupBox>
   </UserControl>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -13,11 +14,16 @@ namespace MVNFOEditor.Models
     public class Album
     {
         public int Id { get; set; }
+        [MaxLength(255)]
         public string Title { get; set; }
-        
+        [MaxLength(4)]
         public string Year { get; set; }
+        [MaxLength(255)]
         public string? ArtURL { get; set; }
-        public string? ytMusicBrowseID { get; set; }
+        [MaxLength(255)]
+        public string? AlbumBrowseID { get; set; }
+        
+        public AlbumMetadata Metadata { get; set; }
         public Artist Artist { get; set; }
         public Album() { } // Parameterless constructor required by EF Core
 
@@ -26,7 +32,7 @@ namespace MVNFOEditor.Models
             Title = result.Title;
             Year = result.Year;
             ArtURL = result.thumbURL;
-            ytMusicBrowseID = result.browseId;
+            AlbumBrowseID = result.browseId;
             Artist = result.Artist;
         }
         private static HttpClient s_httpClient = new();

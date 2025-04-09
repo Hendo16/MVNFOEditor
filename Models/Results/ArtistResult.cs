@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 
 namespace MVNFOEditor.Models
 {
-    public class SyncResult
+    public class ArtistResult
     {
-        public string Title { get; set; }
-        public Artist Artist { get; set; }
-        public string? Duration { get; set; }
-        public string vidID { get; set; }
+        public string Name { get; set; }
+        public string browseId { get; set; }
+        public string artistLinkURL { get; set; }
         public string thumbURL { get; set; }
+
         private static HttpClient s_httpClient = new();
-        public SyncResult() { }
+        public ArtistResult() { }
 
         public async Task<Stream> LoadCoverBitmapAsync()
         {
@@ -27,7 +27,7 @@ namespace MVNFOEditor.Models
             }
             else
             {
-                return File.OpenRead("./Assets/sddefault.jpg");
+                return File.OpenRead("./Assets/tmbte-FULL.jpg");
             }
         }
 
@@ -37,8 +37,7 @@ namespace MVNFOEditor.Models
             {
                 Directory.CreateDirectory(folderPath);
             }
-            return File.OpenWrite(folderPath + $"/{Title}-video.jpg");
+            return File.OpenWrite(folderPath + $"/{Name}.jpg");
         }
-
     }
 }

@@ -1,37 +1,34 @@
-﻿using Material.Icons;
-using MVNFOEditor.Features;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.Models;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using MVNFOEditor.DB;
 using MVNFOEditor.Helpers;
 using Avalonia.Media.Imaging;
 using Newtonsoft.Json.Linq;
-using ReactiveUI;
-using SukiUI.Controls;
-using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
+using SukiUI.Dialogs;
+using SukiUI.Toasts;
 
 namespace MVNFOEditor.ViewModels
 {
     public partial class ArtistDetailsViewModel : ObservableValidator
     {
         private ArtistListParentViewModel _parentVM;
-        private AddMusicVideoParentViewModel _addMVVM;
         private Artist _artist;
         private string _artistName;
         private MusicDBHelper DBHelper;
         private YTMusicHelper ytMusicHelper;
+        private iTunesAPIHelper _iTunesApiHelper;
         private ArtistDetailsBannerViewModel _bannerVM;
         private NewAlbumDialogViewModel _currAlbumDialog;
+        private ISukiToastManager ToastManager;
 
         [ObservableProperty] private bool _isBusy;
+        [ObservableProperty] private bool _hasAlbums;
+        [ObservableProperty] private bool _hasSingles;
         [ObservableProperty] private string _busyText;
+        [ObservableProperty] private SearchSource _source;
         [ObservableProperty] private ObservableCollection<AlbumViewModel> _albumCards;
         [ObservableProperty] private ObservableCollection<SingleViewModel> _singleCards;
         public string ArtistName
@@ -61,14 +58,14 @@ namespace MVNFOEditor.ViewModels
             {
                 await using (var imageStream = await _artist.LoadLargeBannerBitmapAsync())
                 {
-                    BannerVM = new ArtistDetailsBannerViewModel(Bitmap.DecodeToHeight(imageStream, 800));
+                    BannerVM = new ArtistDetailsBannerViewModel(Bitmap.DecodeToHeight(imageStream, 800), this);
                 }
             }
             else
             {
                 await using (var imageStream = await _artist.LoadLocalLargeBannerBitmapAsync())
                 {
-                    BannerVM = new ArtistDetailsBannerViewModel(Bitmap.DecodeToHeight(imageStream, 800));
+                    BannerVM = new ArtistDetailsBannerViewModel(Bitmap.DecodeToHeight(imageStream, 800), this);
                 }
             }
         }
@@ -77,37 +74,79 @@ namespace MVNFOEditor.ViewModels
         {
             DBHelper = App.GetDBHelper();
             ytMusicHelper = App.GetYTMusicHelper();
+            _iTunesApiHelper = App.GetiTunesHelper();
             _parentVM = App.GetVM().GetParentView();
             _parentVM.SetDetailsVM(this);
+            ToastManager = App.GetVM().GetToastManager();
         }
 
         public void AddAlbum()
         {
-            if (_artist.YTMusicAlbumResults == null)
+            //TODO: When adding album, how do we select a primary source??? Just assume AppleMusic for now
+            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.AppleMusic);
+            switch (artistMetadata.SourceId)
+            {
+                case SearchSource.YouTubeMusic:
+                    AddYTMusicAlbum();
+                    break;
+                case SearchSource.AppleMusic:
+                    AddAMAlbum();
+                    break;
+            }
+        }
+
+        private async void AddAMAlbum()
+        {
+            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.AppleMusic);
+            if (artistMetadata.AlbumResults.Count == 0)
             {
                 ManualAlbumViewModel manualVM = new ManualAlbumViewModel(_artist);
                 NewAlbumDialogViewModel newAlbumVM = new NewAlbumDialogViewModel(manualVM, _artist);
-                SukiHost.ShowToast("Error", "No YouTube Music Albums Available");
-                SukiHost.ShowDialog(newAlbumVM);
+                ToastManager.CreateToast()
+                    .WithTitle("No Apple Music Albums Available")
+                    .WithContent($"Please provide videos manually")
+                    .OfType(NotificationType.Warning)
+                    .Queue();
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithViewModel(dialog => newAlbumVM)
+                    .TryShow();
                 return;
             }
-            JArray AlbumList = _artist.YTMusicAlbumResults;
-            ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>();
-            for (int i = 0; i < AlbumList.Count; i++)
+            ObservableCollection<AlbumResultViewModel> results = await _iTunesApiHelper.GenerateAlbumResultList(_artist);
+            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results);
+            NewAlbumDialogViewModel parentVM = new NewAlbumDialogViewModel(resultsVM, _artist);
+            _currAlbumDialog = parentVM;
+            for (int i = 0; i < results.Count; i++)
             {
-                var currAlbum = AlbumList[i];
-                AlbumResult currResult = new AlbumResult();
-
-                currResult.Title = currAlbum["title"].ToString();
-                try { currResult.Year = currAlbum["year"].ToString(); } catch (NullReferenceException e) { }
-                currResult.browseId = currAlbum["browseId"].ToString();
-                currResult.thumbURL = App.GetYTMusicHelper().GetHighQualityArt((JObject)currAlbum);
-                currResult.isExplicit = Convert.ToBoolean(currAlbum["isExplicit"]);
-                currResult.Artist = _artist;
-                AlbumResultViewModel newVM = new AlbumResultViewModel(currResult);
-                newVM.LoadThumbnail();
-                results.Add(newVM);
+                var result = results[i];
+                result.NextPage += AddAlbumEventHandler;
             }
+            parentVM.ClosePageEvent += ReturnToPreviousView;
+            //Open Dialog
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => parentVM)
+                .TryShow();
+            
+        }
+
+        private async void AddYTMusicAlbum()
+        {
+            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.YouTubeMusic);
+            if (artistMetadata.AlbumResults.Count == 0)
+            {
+                ManualAlbumViewModel manualVM = new ManualAlbumViewModel(_artist);
+                NewAlbumDialogViewModel newAlbumVM = new NewAlbumDialogViewModel(manualVM, _artist);
+                ToastManager.CreateToast()
+                    .WithTitle("No YouTube Music Albums Available")
+                    .WithContent($"Please provide videos manually")
+                    .OfType(NotificationType.Warning)
+                    .Queue();
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithViewModel(dialog => newAlbumVM)
+                    .TryShow();
+                return;
+            }
+            ObservableCollection<AlbumResultViewModel> results = await App.GetYTMusicHelper().GenerateAlbumResultList(_artist);
             AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results);
             NewAlbumDialogViewModel parentVM = new NewAlbumDialogViewModel(resultsVM, _artist);
             _currAlbumDialog = parentVM;
@@ -119,7 +158,9 @@ namespace MVNFOEditor.ViewModels
             }
             parentVM.ClosePageEvent += ReturnToPreviousView;
             //Open Dialog
-            SukiHost.ShowDialog(parentVM);
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => parentVM)
+                .TryShow();
         }
 
         private async void AddAlbumEventHandler(object? sender, AlbumResult _result)
@@ -127,66 +168,123 @@ namespace MVNFOEditor.ViewModels
             await _currAlbumDialog.NextStep(null, _result);
         }
 
-        public async void AddSingle()
+        public async void AddYTMVideo()
         {
             BusyText = "Searching Youtube Music...";
             IsBusy = true;
-            string artistID = _artist.YTMusicId;
+            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.YouTubeMusic);
+            string artistID = artistMetadata.BrowseId;
             JArray videoSearch = ytMusicHelper.get_videos(artistID);
             //Sometimes artists won't have any videos listed, so we need to handle this
             if (videoSearch == null)
             {
                 IsBusy = false;
-                TextBlock errBox = new TextBlock() { Text = "No Videos Available" };
-                SukiHost.ShowDialog(errBox, allowBackgroundClose: true);
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithContent("No Videos Available")
+                    .Dismiss().ByClickingBackground()
+                    .TryShow();
                 return;
             }
-            ObservableCollection<SyncResultViewModel> results = await ytMusicHelper.GenerateSyncResultList(videoSearch, _artist);
+            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videoSearch, _artist);
             if (results.Count == 0)
             {
                 IsBusy = false;
-                TextBlock errBox = new TextBlock() { Text = "No Videos Available" };
-                SukiHost.ShowDialog(errBox, allowBackgroundClose: true);
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithContent("No Videos Available")
+                    .Dismiss().ByClickingBackground()
+                    .TryShow();
             }
             else
             {
-                SyncDialogViewModel resultsVM = new SyncDialogViewModel(results);
-                AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM);
+                VideoResultsViewModel resultsVM = new VideoResultsViewModel(results);
+                AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM, artistMetadata.SourceId);
                 parentVM.RefreshAlbumEvent += RefreshDetailsView;
-                _addMVVM = parentVM;
                 for (int i = 0; i < results.Count; i++)
                 {
                     var result = results[i];
-                    result.ProgressStarted += parentVM.BuildProgressVM;
+                    result.ProgressStarted += parentVM.SaveYTMVideo;
                 }
                 IsBusy = false;
                 //Open Dialog
-                SukiHost.ShowDialog(parentVM);
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithViewModel(dialog => parentVM)
+                    .Dismiss().ByClickingBackground()
+                    .TryShow();
             }
         }
 
-        private void RefreshDetailsView(object? sender, bool e)
+        public async void AddAppleMusicVideo()
         {
-            LoadAlbums();
-            
+            BusyText = "Searching Apple Music...";
+            IsBusy = true;            
+            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.AppleMusic);
+            string artistID = artistMetadata.BrowseId;
+            JArray videoSearch = await _iTunesApiHelper.GetVideosByArtistId(artistID);
+            //Sometimes artists won't have any videos listed, so we need to handle this
+            if (videoSearch == null)
+            {
+                IsBusy = false;
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithContent("No Videos Available")
+                    .Dismiss().ByClickingBackground()
+                    .TryShow();
+                return;
+            }
+            ObservableCollection<VideoResultViewModel> results = await _iTunesApiHelper.GenerateVideoResultList(videoSearch, _artist);
+            if (results.Count == 0)
+            {
+                IsBusy = false;
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithContent("No Videos Available")
+                    .Dismiss().ByClickingBackground()
+                    .TryShow();
+            }
+            else
+            {
+                VideoResultsViewModel resultsVM = new VideoResultsViewModel(results);
+                AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM, artistMetadata.SourceId);
+                parentVM.RefreshAlbumEvent += RefreshDetailsView;
+                for (int i = 0; i < results.Count; i++)
+                {
+                    var result = results[i];
+                    result.ProgressStarted += parentVM.SaveYTMVideo;
+                }
+                IsBusy = false;
+                //Open Dialog
+                App.GetVM().GetDialogManager().CreateDialog()
+                    .WithViewModel(dialog => parentVM)
+                    .Dismiss().ByClickingBackground()
+                    .TryShow();
+            }
+        }
+        
+        private async void RefreshDetailsView(object? sender, bool e)
+        {
+            await LoadAlbums();
         }
 
-        public async void AddManualSingle()
+        public async void AddManualVideo()
         {
             ManualMusicVideoViewModel newVM = new ManualMusicVideoViewModel(_artist);
             AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(newVM);
-            SukiHost.ShowDialog(parentVM, allowBackgroundClose: true);
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => parentVM)
+                .Dismiss().ByClickingBackground()
+                .TryShow();
         }
 
         public async void SetArtist(Artist artist)
         {
             _artist = artist;
+            //TODO: When adding album, how do we select a primary source??? Just assume AppleMusic for now
+            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.AppleMusic);
+            Source = artistMetadata.SourceId;
             ArtistName = _artist.Name;
-            LoadAlbums();
+            await LoadAlbums();
             await LoadBanner();
         }
 
-        public async void LoadAlbums()
+        public async Task<bool> LoadAlbums()
         {
             BusyText = "Loading Albums...";
             IsBusy = true;
@@ -196,7 +294,10 @@ namespace MVNFOEditor.ViewModels
             {
                 AlbumCards[i].SyncStarted += LoadingSync;
             }
+            HasAlbums = AlbumCards.Count > 0;
+            HasSingles = SingleCards.Count > 0;
             IsBusy = false;
+            return true;
         }
 
         private void LoadingSync(object sender, bool isSyncTriggered)

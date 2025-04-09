@@ -2,14 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MVNFOEditor.App"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
-             xmlns:sukiUi1="clr-namespace:SukiUI;assembly=SukiUI"
+             xmlns:sukiUi="clr-namespace:SukiUI;assembly=SukiUI"
              xmlns:common="clr-namespace:MVNFOEditor.Common"
              RequestedThemeVariant="Dark">
     <Application.DataTemplates>
         <common:ViewLocator />
     </Application.DataTemplates>
     <Application.Styles>
-        <sukiUi1:SukiTheme ThemeColor="Blue"  />
+        <sukiUi:SukiTheme ThemeColor="Blue"/>
         <avalonia:MaterialIconStyles />
     </Application.Styles>
 </Application>

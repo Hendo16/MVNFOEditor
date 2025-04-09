@@ -10,12 +10,31 @@ namespace MVNFOEditor.Views
         {
             InitializeComponent();
         }
-        private void ModeToggleChange(object? sender, RoutedEventArgs e)
+
+        private void ManualVideoClicked(object? sender, RoutedEventArgs e)
         {
             if (DataContext is NewArtistDialogViewModel viewModel &&
-                sender is ToggleSwitch _switch)
+                (bool)(sender as RadioButton)?.IsChecked)
             {
-                viewModel.HandleChangedMode(_switch.IsChecked);
+                viewModel.ManualChecked();
+            }
+        }
+
+        private void YTMusicClicked(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is NewArtistDialogViewModel viewModel &&
+                (bool)(sender as RadioButton)?.IsChecked)
+            {
+                viewModel.YouTubeChecked();
+            }
+        }
+
+        private void AppleMusicClicked(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is NewArtistDialogViewModel viewModel &&
+                (bool)(sender as RadioButton)?.IsChecked)
+            {
+                viewModel.AppleMusicChecked();
             }
         }
     }

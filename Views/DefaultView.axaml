@@ -4,7 +4,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:MVNFOEditor.ViewModels"
         xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
-        xmlns:views="clr-namespace:MVNFOEditor.Views"
         xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
         x:Class="MVNFOEditor.Views.DefaultView"
@@ -15,6 +14,10 @@
         CanMove="{Binding !WindowLocked}"
         CanResize="{Binding !WindowLocked}"
         Title="MVNFOEditor">
+    <suki:SukiWindow.Hosts>
+        <suki:SukiToastHost Manager="{Binding ToastManager}"/>
+        <suki:SukiDialogHost Manager="{Binding DialogManager}"/>
+    </suki:SukiWindow.Hosts>
   <Design.DataContext>
     <vm:DefaultViewModel/>
   </Design.DataContext>

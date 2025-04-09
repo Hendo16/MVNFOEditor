@@ -1,14 +1,12 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.Models;
-using ReactiveUI;
-using System.Threading.Tasks;
+using SukiUI.Dialogs;
 using Bitmap = Avalonia.Media.Imaging.Bitmap;
-using SukiUI.Controls;
 
 namespace MVNFOEditor.ViewModels
 {
-    public class ArtistViewModel : ReactiveObject
+    public class ArtistViewModel : ObservableObject
     {
         private readonly Artist _artist;
 
@@ -21,23 +19,33 @@ namespace MVNFOEditor.ViewModels
 
         private Bitmap? _cover;
         private Bitmap? _largeBanner;
-
+        
         public Bitmap? Cover
         {
-            get => _cover;
-            private set => this.RaiseAndSetIfChanged(ref _cover, value);
+            get { return _cover; }
+            set
+            {
+                _cover = value;
+                OnPropertyChanged(nameof(Cover));
+            }
         }
 
         public Bitmap? LargeBanner
         {
-            get => _largeBanner;
-            private set => this.RaiseAndSetIfChanged(ref _largeBanner, value);
+            get { return _largeBanner; }
+            set
+            {
+                _largeBanner = value;
+                OnPropertyChanged(nameof(LargeBanner));
+            }
         }
 
         public void EditArtist()
         {
             EditArtistDialogViewModel editVM = new EditArtistDialogViewModel(_artist, Cover);
-            SukiHost.ShowDialog(editVM, allowBackgroundClose: true);
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => editVM)
+                .TryShow();
         }
 
         public async Task LoadCover()

@@ -15,9 +15,15 @@ using System.Threading.Tasks;
 using MVNFOEditor.Models;
 using MVNFOEditor.ViewModels;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Media;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using MVNFOEditor.DB;
 using SukiUI.Controls;
+using SukiUI.Dialogs;
+using SukiUI.Enums;
+using SukiUI.Toasts;
+using YoutubeDLSharp.Metadata;
 
 namespace MVNFOEditor.Helpers
 {
@@ -33,8 +39,7 @@ namespace MVNFOEditor.Helpers
             {
                 dynamic ytmusicapi = Py.Import("ytmusicapi");
 
-                // Now, you can use ytmusicapi as if you were writing Python code
-                _ytMusic = ytmusicapi.YTMusic();
+                _ytMusic = ytmusicapi.YTMusic("./Assets/oauth.json");
             }
             _dbContext = App.GetDBContext();
         }
@@ -130,8 +135,11 @@ namespace MVNFOEditor.Helpers
                     }
                     catch (PythonException e)
                     {
-                        SukiHost.ShowToast("Error",
-                            "Error fetching video list, please wait a few seconds and try again");
+                        App.GetVM().GetToastManager().CreateToast()
+                            .WithTitle("Error")
+                            .WithContent("Error fetching video list, please wait a few seconds and try again")
+                            .OfType(NotificationType.Error)
+                            .Queue();
                         return null;
                     }
                 }
@@ -169,9 +177,32 @@ namespace MVNFOEditor.Helpers
             return JObject.Parse(parsedResult);
         }
 
-        public async Task<ObservableCollection<SyncResultViewModel>> GenerateSyncResultList(JArray vidResults, JObject albumDetails, List<MusicVideo>? songs, Album album)
+        public async Task<ObservableCollection<AlbumResultViewModel>> GenerateAlbumResultList(Artist artist)
         {
-            ObservableCollection<SyncResultViewModel> results = new ObservableCollection<SyncResultViewModel>();
+            ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>();
+            ArtistMetadata artistMetadata = artist.GetArtistMetadata(SearchSource.YouTubeMusic);
+            for (int i = 0; i < artistMetadata.AlbumResults.Count; i++)
+            {
+                var currAlbum = artistMetadata.AlbumResults[i];
+                AlbumResult currResult = new AlbumResult();
+
+                currResult.Title = currAlbum["title"].ToString();
+                currResult.Year = currAlbum["year"] != null ? currAlbum["year"].ToString() : "";
+                currResult.browseId = currAlbum["browseId"].ToString();
+                currResult.thumbURL = GetHighQualityArt((JObject)currAlbum);
+                currResult.isExplicit = Convert.ToBoolean(currAlbum["isExplicit"]);
+                currResult.Artist = artist;
+                AlbumResultViewModel newVM = new AlbumResultViewModel(currResult);
+                await newVM.LoadThumbnail();
+                results.Add(newVM);
+            }
+
+            return results;
+        }
+
+        public async Task<ObservableCollection<VideoResultViewModel>> GenerateVideoResultList(JArray vidResults, JObject albumDetails, List<MusicVideo>? songs, Album album)
+        {
+            ObservableCollection<VideoResultViewModel> results = new ObservableCollection<VideoResultViewModel>();
             //Grab videos that are only within this album
             List<string> albumTitles = ((JArray)albumDetails["tracks"]).Select(t => (Regex.Replace((string)t["title"], @"[^\w\s]", "")).ToLower()).ToList();
            // List<JToken> matchingVideos = vidResults.Where(vid => albumTitles.Contains(CleanYTName((string)vid["title"], album.Artist).ToLower())).ToList();
@@ -184,40 +215,51 @@ namespace MVNFOEditor.Helpers
                 })
                 .ToList();
 
-            //Create a list of SyncResultViewModel
+            //Create a list of VideoResultViewModel
             for (int i = 0; i < matchingVideos.Count; i++)
             {
                 JToken vid = matchingVideos[i];
-                SyncResult newResult = new SyncResult();
+                VideoResult newResult = new VideoResult();
                 var parsedTitle = CleanYTName(vid["title"].ToString(), album.Artist);
 
                 //newResult.Artist = vid["artists"][0]["name"].ToString();
                 newResult.Artist = album.Artist;
                 newResult.Title = parsedTitle;
-                newResult.vidID = vid["videoId"].ToString();
+                newResult.VideoID = vid["videoId"].ToString();
                 newResult.thumbURL = vid["thumbnails"][0]["url"].ToString();
 
                 //'Duration' is null sometimes
                 try { newResult.Duration = vid["duration"].ToString(); } catch (NullReferenceException e) { }
-
-                SyncResultViewModel resultVM = new SyncResultViewModel(newResult, album);
+                
+                //Until I find a faster way to get resolutions for videos, this is commented out for the time being :(
+                /*
+                //YTDL VideoData
+                VideoData vidData = await App.GetYTDLHelper()
+                    .GetVideoFormats(newResult.VideoID);
+                if (vidData != null)
+                {
+                    var list = (vidData.Formats.Where(f => f.FormatNote != null && f.Resolution != "audio only")).OrderByDescending(f => f.AverageBitrate);
+                    newResult.TopRes = list.FirstOrDefault().FormatNote == "Premium" ? "1080p (Premium)" : list.FirstOrDefault().FormatNote;
+                }
+                */
+                VideoResultViewModel resultVM = new VideoResultViewModel(newResult, album);
                 //Check if the song already exists in the DataBase
-                if (songs!= null && songs.Exists(s => s.videoID == newResult.vidID || s.title.ToLower() == parsedTitle.ToLower()))
+                if (songs!= null && songs.Exists(s => s.videoID == newResult.VideoID || s.title.ToLower() == parsedTitle.ToLower()))
                 {
                     resultVM.BorderColor = "Green";
-                    resultVM.DownloadEnabled = "False";
+                    resultVM.DownloadEnabled = false;
                     resultVM.DownloadBtnText = "Downloaded";
                 }
                 else if (songs != null && songs.Exists(s => s.title.ToLower().Contains(parsedTitle.ToLower())))
                 {
                     resultVM.BorderColor = "Orange";
-                    resultVM.DownloadEnabled = "False";
+                    resultVM.DownloadEnabled = false;
                     resultVM.DownloadBtnText = "Downloaded";
                 }
                 else
                 {
                     resultVM.BorderColor = "Black";
-                    resultVM.DownloadEnabled = "True";
+                    resultVM.DownloadEnabled = true;
                     resultVM.DownloadBtnText = "Download";
                 }
                 await resultVM.LoadThumbnail();
@@ -226,41 +268,51 @@ namespace MVNFOEditor.Helpers
             return results;
         }
 
-        public async Task<ObservableCollection<SyncResultViewModel>> GenerateSyncResultList(JArray vidResults, Artist artist)
+        public async Task<ObservableCollection<VideoResultViewModel>> GenerateVideoResultList(JArray vidResults, Artist artist)
         {
-            ObservableCollection<SyncResultViewModel> results = new ObservableCollection<SyncResultViewModel>();
+            ObservableCollection<VideoResultViewModel> results = new ObservableCollection<VideoResultViewModel>();
             var songs = _dbContext.MusicVideos.ToList();
             for (int i = 0; i < vidResults.Count; i++)
             {
                 var vid = vidResults[i];
                 var parsedTitle = CleanYTName(vid["title"].ToString(), artist);
-                SyncResult newResult = new SyncResult();
+                VideoResult newResult = new VideoResult();
 
                 newResult.Title = parsedTitle;
-                newResult.vidID = vid["videoId"].ToString();
+                newResult.VideoID = vid["videoId"].ToString();
                 newResult.thumbURL = vid["thumbnails"][0]["url"].ToString();
                 newResult.Artist = artist;
                 //'Duration' is null sometimes
                 try { newResult.Duration = vid["duration"].ToString(); } catch (NullReferenceException e) { }
-
-                SyncResultViewModel resultVM = new SyncResultViewModel(newResult);
+                //Until I find a faster way to get resolutions for videos, this is commented out for the time being :(
+                /*
+                //YTDL VideoData
+                VideoData vidData = await App.GetYTDLHelper()
+                    .GetVideoFormats(newResult.VideoID);
+                if (vidData != null)
+                {
+                    var list = (vidData.Formats.Where(f => f.FormatNote != null && f.Resolution != "audio only")).OrderByDescending(f => f.AverageBitrate);
+                    newResult.TopRes = list.FirstOrDefault().FormatNote == "Premium" ? "1080p (Premium)" : list.FirstOrDefault().FormatNote;
+                }
+                */
+                VideoResultViewModel resultVM = new VideoResultViewModel(newResult);
                 //Check if the song already exists in the DataBase
-                if (songs != null && songs.Exists(s => s.videoID == newResult.vidID || s.title.ToLower() == parsedTitle.ToLower()))
+                if (songs != null && songs.Exists(s => s.videoID == newResult.VideoID || s.title.ToLower() == parsedTitle.ToLower()))
                 {
                     resultVM.BorderColor = "Green";
-                    resultVM.DownloadEnabled = "False";
+                    resultVM.DownloadEnabled = false;
                     resultVM.DownloadBtnText = "Downloaded";
                 }
                 else if (songs != null && songs.Exists(s => s.title.ToLower().Contains(parsedTitle.ToLower())))
                 {
                     resultVM.BorderColor = "Orange";
-                    resultVM.DownloadEnabled = "False";
+                    resultVM.DownloadEnabled = false;
                     resultVM.DownloadBtnText = "Downloaded";
                 }
                 else
                 {
                     resultVM.BorderColor = "Black";
-                    resultVM.DownloadEnabled = "True";
+                    resultVM.DownloadEnabled = true;
                     resultVM.DownloadBtnText = "Download";
                 }
                 await resultVM.LoadThumbnail();
@@ -349,7 +401,8 @@ namespace MVNFOEditor.Helpers
 
         public JObject GetAlbumObj(string albumName, Artist artist)
         {
-            JArray albumList = artist.YTMusicAlbumResults;
+            ArtistMetadata artistMetadata = artist.GetArtistMetadata(SearchSource.YouTubeMusic);
+            JArray albumList = artistMetadata.AlbumResults;
             for (int i = 0; i < albumList.Count; i++)
             {
                 //Checking if album matches the object result

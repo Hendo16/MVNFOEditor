@@ -1,6 +1,9 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Media;
 using System.Runtime;
 using MVNFOEditor.ViewModels;
 
@@ -11,6 +14,7 @@ namespace MVNFOEditor.Views
         public SettingsDialogSetFolderCardView()
         {
             InitializeComponent();
+            MVInput.Text = App.GetSettings().RootFolder;
         }
         public async void BrowseMVFolder(object sender, RoutedEventArgs e)
         {
@@ -22,39 +26,8 @@ namespace MVNFOEditor.Views
             });
             if (folder.Count > 0 && DataContext is SettingsDialogViewModel viewModel)
             {
-                viewModel.SetMVFolder(folder[0].TryGetLocalPath());
+                App.GetSettings().RootFolder = folder[0].TryGetLocalPath();
                 MVInput.Text = folder[0].TryGetLocalPath();
-            }
-        }
-
-        public async void BrowseFFMPEGPath(object sender, RoutedEventArgs e)
-        {
-            var topLevel = TopLevel.GetTopLevel(this);
-            var path = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
-            {
-                Title = "Select FFMPEG Path",
-                AllowMultiple = false
-            });
-            if (path.Count > 0 && DataContext is SettingsDialogViewModel viewModel)
-            {
-                viewModel.SetFFMPEGPath(path[0].TryGetLocalPath());
-                FFMPEGInput.Text = path[0].TryGetLocalPath();
-            }
-        }
-
-        public async void BrowseYTDLPath(object sender, RoutedEventArgs e)
-        {
-            var topLevel = TopLevel.GetTopLevel(this);
-            var path = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
-            {
-                Title = "Select YTDL Path",
-                AllowMultiple = false
-            });
-
-            if (path.Count > 0 && DataContext is SettingsDialogViewModel viewModel)
-            {
-                viewModel.SetYTDLPath(path[0].TryGetLocalPath());
-                YTDLInput.Text = path[0].TryGetLocalPath();
             }
         }
     }

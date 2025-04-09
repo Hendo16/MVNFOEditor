@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -13,16 +16,51 @@ namespace MVNFOEditor.Models
 {
     public class Artist
     {
+        public Artist() { } // Parameterless constructor required by EF Core
         public int Id { get; set; }
-        public string? YTMusicId { get; set; }
+        [MaxLength(255)]
+        public string Name { get; set; }
         public string? CardBannerURL { get; set; }
         public string? LargeBannerURL { get; set; }
-        public string Name { get; set; }
-        public JArray? YTMusicAlbumResults { get; set; }
-        public Artist() { } // Parameterless constructor required by EF Core
-        private static HttpClient s_httpClient = new();
+        public ICollection<ArtistMetadata> Metadata { get; set; }
+        
         private string CachePath => $"./Cache/{Name}";
+        
+        private static HttpClient s_httpClient = new();
 
+        public static async Task<Artist> CreateArtist(ArtistResult resultInfo, SearchSource source)
+        {
+            Artist newArtist = new Artist();
+            JArray albums = new JArray();
+            List<ArtistMetadata> metaData = new List<ArtistMetadata>();
+            switch (source)
+            {
+                case SearchSource.AppleMusic:
+                    string[] banners = App.GetiTunesHelper().GetArtistBannerLinks(resultInfo.artistLinkURL);
+                    albums = await App.GetiTunesHelper().GetAlbumsByArtistID(resultInfo.browseId);
+                    if (banners[0] != "")
+                    {
+                        newArtist.LargeBannerURL = banners[0];
+                        newArtist.CardBannerURL = banners[1];
+                    }
+                    break;
+                case SearchSource.YouTubeMusic:
+                    albums = App.GetYTMusicHelper().GetAlbums(resultInfo.browseId);
+                    newArtist.CardBannerURL = App.GetYTMusicHelper().GetArtistBanner(resultInfo.browseId, 540);
+                    newArtist.LargeBannerURL = App.GetYTMusicHelper().GetArtistBanner(resultInfo.browseId, 1080);
+                    break;
+            }
+            newArtist.Name = resultInfo.Name;
+            metaData.Add(new ArtistMetadata(source, resultInfo.browseId, albums));
+            newArtist.Metadata = metaData;
+            return newArtist;
+        }
+
+        public ArtistMetadata GetArtistMetadata(SearchSource source)
+        {
+            return Metadata.First(am => am.SourceId == source);
+        }
+        
         public bool IsCardSaved(){return File.Exists(CachePath + "/cardBanner.jpg");}
         public bool IsBannerSaved(){return File.Exists(CachePath + "/largeBanner.jpg");}
         public async Task<Stream> LoadCardBannerBitmapAsync()
@@ -38,7 +76,7 @@ namespace MVNFOEditor.Models
             }
             else
             {
-                return File.OpenRead("./Assets/defaultBanner.jpg");
+                return File.OpenRead("./Assets/defaultBanner.png");
             }
         }
         public async Task<Stream> LoadLocalCardBannerBitmapAsync()
@@ -49,10 +87,9 @@ namespace MVNFOEditor.Models
             }
             else
             {
-                return File.OpenRead("./Assets/defaultBanner.jpg");
+                return File.OpenRead("./Assets/defaultBanner.png");
             }
         }
-
         public async Task<Stream> LoadLargeBannerBitmapAsync()
         {
             if (File.Exists(CachePath + "/largeBanner.jpg"))
@@ -75,11 +112,10 @@ namespace MVNFOEditor.Models
                 //If no banner is found, return default banner
                 else
                 {
-                    return File.OpenRead("./Assets/defaultLargeBanner.jpg");
+                    return File.OpenRead("./Assets/defaultBanner.png");
                 }
             }
         }
-
         public async Task<Stream> LoadLocalLargeBannerBitmapAsync()
         {
             if (File.Exists(CachePath + "/largeBanner.jpg"))
@@ -92,10 +128,9 @@ namespace MVNFOEditor.Models
             }
             else
             {
-                return File.OpenRead("./Assets/defaultLargeBanner.jpg");
+                return File.OpenRead("./Assets/defaultBanner.png");
             }
         }
-
         public async Task SaveAsync()
         {
             if (!Directory.Exists("./Cache"))
@@ -108,7 +143,6 @@ namespace MVNFOEditor.Models
                 await SaveToStreamAsync(this, fs);
             }
         }
-
         public void SaveManualBanner(string path)
         {
             if (!Directory.Exists(CachePath))

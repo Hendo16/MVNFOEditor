@@ -1,40 +1,43 @@
-﻿using Avalonia.Controls;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform.Storage;
-using MVNFOEditor.Models;
-using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using Avalonia.Media.Imaging;
 using System.IO;
-using System.Linq;
-using System.Runtime;
-using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MVNFOEditor.ViewModels
 {
-    public class ManualArtistViewModel : ReactiveObject
+    public class ManualArtistViewModel : ObservableObject
     {
         private string _artistNameText;
         public string ArtistNameText
         {
-            get => _artistNameText;
-            set => this.RaiseAndSetIfChanged(ref _artistNameText, value);
+            get { return _artistNameText; }
+            set
+            {
+                _artistNameText = value;
+                OnPropertyChanged(nameof(ArtistNameText));
+            }
         }
         
         private Bitmap? _banner;
         private string _bannerPath;
-
+        
         public Bitmap? ArtistBanner
         {
-            get => _banner;
-            private set => this.RaiseAndSetIfChanged(ref _banner, value);
+            get { return _banner; }
+            set
+            {
+                _banner = value;
+                OnPropertyChanged(nameof(ArtistBanner));
+            }
         }
         public string BannerPath
         {
-            get => _bannerPath;
-            set => this.RaiseAndSetIfChanged(ref _bannerPath, value);
+            get { return _bannerPath; }
+            set
+            {
+                _bannerPath = value;
+                OnPropertyChanged(nameof(BannerPath));
+            }
         }
 
         public async void LoadBanner(string path)

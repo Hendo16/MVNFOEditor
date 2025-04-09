@@ -5,9 +5,9 @@ using MVNFOEditor.ViewModels;
 
 namespace MVNFOEditor.Views
 {
-    public partial class SyncResultView : UserControl
+    public partial class VideoResultView : UserControl
     {
-        public SyncResultView()
+        public VideoResultView()
         {
             InitializeComponent();
         }

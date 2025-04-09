@@ -1,48 +1,76 @@
-﻿using Avalonia;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Templates;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-using Microsoft.EntityFrameworkCore;
+using Config.Net;
+using log4net;
+using log4net.Config;
 using Microsoft.Extensions.DependencyInjection;
-using MVNFOEditor.DB;
-using MVNFOEditor.Helpers;
-using MVNFOEditor.ViewModels;
-using MVNFOEditor.Views;
-using SimpleInjector;
-using SimpleInjector.Lifestyles;
-using System;
-using System.ComponentModel;
-using System.Linq;
 using MVNFOEditor.Common;
+using MVNFOEditor.DB;
 using MVNFOEditor.Features;
-using MVNFOEditor.Services;
-using Microsoft.Extensions.Hosting.Internal;
+using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
-using SukiUI.Controls;
+using MVNFOEditor.Services;
+using MVNFOEditor.Settings;
+using MVNFOEditor.ViewModels;
+using SukiUI.Dialogs;
+using SukiUI.Toasts;
 
 namespace MVNFOEditor;
 
 public partial class App : Application
 {
+    private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
     private static MusicDbContext _dbContext;
     private static MusicDBHelper _dbHelper;
     private static YTDLHelper _ytdlHelper;
     private static YTMusicHelper _ytmHelper;
+    private static iTunesAPIHelper _iTunesHelper;
+    private static AppleMusicDLHelper _appleMusicDLHelper;
     private static DefaultViewModel _mainViewModel;
-    private static SettingsData _settingsData;
     private static IDataTemplate _viewLocater;
+    private static ISukiToastManager _toastManager;
+    private static ISukiDialogManager _dialogManager;
+    private static ISettings _settings;
     private IServiceProvider? _provider;
+    
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
         _provider = ConfigureServices();
+        _settings = new ConfigurationBuilder<ISettings>()
+            .UseJsonFile("./Assets/config.json")
+            .Build();
         _dbContext = new MusicDbContext();
-        _dbContext.Database.EnsureCreated();
+        _toastManager = new SukiToastManager();
+        _dialogManager = new SukiDialogManager();
+        ConfigureLogging();
+        SetupHelpers();
+    }
+    
+    private void ConfigureLogging()
+    {
+        var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+        var configFileInfo = new FileInfo("log4net.config");
+        XmlConfigurator.Configure(logRepository, configFileInfo);
+    }
+
+    private async void SetupHelpers()
+    {
         _ytmHelper = new YTMusicHelper();
         _dbHelper = new MusicDBHelper(_dbContext);
         _ytdlHelper = new YTDLHelper();
+        _iTunesHelper = new iTunesAPIHelper();
+        _appleMusicDLHelper = await AppleMusicDLHelper.CreateHelper();
+        CheckSettings();
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -54,21 +82,29 @@ public partial class App : Application
             var mainVm = _provider?.GetRequiredService<DefaultViewModel>();
             _mainViewModel = mainVm;
             desktop.MainWindow = viewLocator?.Build(mainVm) as Window;
-            desktop.MainWindow.Opened += CheckSettings;
         }
 
         // Line below is needed to remove Avalonia data validation.
         // Without this line you will get duplicate validations from both Avalonia and CT
         base.OnFrameworkInitializationCompleted();
     }
-    private void CheckSettings(object sender, System.EventArgs e)
+    private void CheckSettings()
     {
-        if (!GetDBHelper().CheckIfSettingsValid())
+        if (_dbContext.Database.EnsureCreated())
         {
-            _settingsData = new SettingsData();
-            SukiHost.ShowToast("Error!", "Database doesn't exist - go to Settings");
             SettingsDialogViewModel newDialog = new SettingsDialogViewModel();
-            SukiHost.ShowDialog(newDialog);
+            GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => newDialog)
+                .TryShow();
+        }
+        //AM Check
+        if (!_appleMusicDLHelper.IsValidToken())
+        {
+            GetVM().GetDialogManager().CreateDialog()
+                .OfType(NotificationType.Warning)
+                .WithTitle("Apple Music Token Expired")
+                .WithViewModel(dialog => new AMUserSubmissionViewModel(dialog))
+                .TryShow();
         }
     }
 
@@ -90,11 +126,11 @@ public partial class App : Application
             services.AddSingleton(typeof(PageBase), type);
 
         return services.BuildServiceProvider();
-    }
+    } 
 
-    public static SettingsData GetSettings()
+    public static ISettings GetSettings()
     {
-        return _settingsData != null ? _settingsData : _dbContext.SettingsData.Single();
+        return _settings;
     }
 
     public static MusicDbContext GetDBContext()
@@ -117,8 +153,28 @@ public partial class App : Application
         return _ytmHelper;
     }
 
+    public static iTunesAPIHelper GetiTunesHelper()
+    {
+        return _iTunesHelper;
+    }
+
+    public static AppleMusicDLHelper GetAppleMusicDLHelper()
+    {
+        return _appleMusicDLHelper;
+    }
+
     public static DefaultViewModel GetVM()
     {
         return _mainViewModel;
+    }
+
+    public static ISukiToastManager GetToastManager()
+    {
+        return _toastManager;
+    }
+
+    public static ISukiDialogManager GetDialogManager()
+    {
+        return _dialogManager;
     }
 }

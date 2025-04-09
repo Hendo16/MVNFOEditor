@@ -6,12 +6,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Shapes;
 using System.Xml.Linq;
+using Avalonia.Controls.Notifications;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FFMpegCore;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
+using MVNFOEditor.Settings;
 using SukiUI.Controls;
+using SukiUI.Dialogs;
+using SukiUI.Toasts;
 
 namespace MVNFOEditor.ViewModels
 {
@@ -32,6 +36,17 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private string _source;
         [ObservableProperty] private string _bitrate;
         [ObservableProperty] private string _aspectRatio;
+
+        public MusicVideoDetailsViewModel()
+        {
+            DBHelper = App.GetDBHelper();
+            _parentVM = App.GetVM().GetParentView();
+            ISettings settingsData = App.GetSettings();
+            GlobalFFOptions.Configure(new FFOptions { 
+                BinaryFolder = Directory.GetParent(settingsData.FFPROBEPath).FullName,
+                TemporaryFilesFolder = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Cache", "FFPROBE", "tmp") 
+            });
+        }
 
         public Bitmap? Thumbnail
         {
@@ -63,19 +78,14 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
-        public MusicVideoDetailsViewModel()
-        {
-            DBHelper = App.GetDBHelper();
-            _parentVM = App.GetVM().GetParentView();
-        }
-
         public async void UpdateMusicVideo()
         {
             string originalTitle = _musicVideo.title;
 
             _musicVideo.title = Title;
             _musicVideo.year = Year;
-            if (_currAlbum.Title == "") {_musicVideo.album = null;} else{ _musicVideo.album = _currAlbum; }
+            //TODO: Handle better blank album entry
+            //if (_currAlbum.Title == "") {_musicVideo.album = new Album();} else{ _musicVideo.album = _currAlbum; }
 
             //Handle title changes
             if (originalTitle != Title)
@@ -85,14 +95,14 @@ namespace MVNFOEditor.ViewModels
                 var thumbFileName = folderPath + "/" + _musicVideo.thumb;
                 if (File.Exists(thumbFileName))
                 {
-                    File.Move(thumbFileName, folderPath + $"/{Title}-video.jpg");
-                    _musicVideo.thumb = $"{Title}-video.jpg";
+                    File.Move(thumbFileName, folderPath + $"/{Title}.jpg");
+                    _musicVideo.thumb = $"{Title}.jpg";
                 }
 
                 if (File.Exists(nfoPath))
                 {
-                    File.Move(nfoPath, folderPath + $"/{Title}-video.nfo");
-                    _musicVideo.nfoPath = folderPath + $"\\{Title}-video.nfo";
+                    File.Move(nfoPath, folderPath + $"/{Title}.nfo");
+                    _musicVideo.nfoPath = folderPath + $"\\{Title}.nfo";
                 }
 
                 //Get Video
@@ -100,8 +110,8 @@ namespace MVNFOEditor.ViewModels
                 if (videoPath.Length > 0)
                 {
                     var ext = System.IO.Path.GetExtension(videoPath);
-                    File.Move(videoPath, folderPath + $"/{Title}-video{ext}");
-                    _musicVideo.vidPath = folderPath + $"\\{Title}-video{ext}";
+                    File.Move(videoPath, folderPath + $"/{Title}{ext}");
+                    _musicVideo.vidPath = folderPath + $"\\{Title}{ext}";
                 }
             }
             int success = await DBHelper.UpdateMusicVideo(_musicVideo);
@@ -116,7 +126,10 @@ namespace MVNFOEditor.ViewModels
         {
             ManualMusicVideoViewModel newVM = new ManualMusicVideoViewModel(_musicVideo);
             AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(newVM, true);
-            SukiHost.ShowDialog(parentVM, allowBackgroundClose: true);
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => parentVM)
+                .Dismiss().ByClickingBackground()
+                .TryShow();
         }
 
         public void SetVideo(MusicVideo video)
@@ -130,17 +143,29 @@ namespace MVNFOEditor.ViewModels
             {
                 CurrAlbum = Albums.Find(a => a.Id == video.album.Id);
             }
-            Albums.Insert(0, new Album(){Title=""});
+            //Albums.Insert(0, new Album() { Title = "" });
+        }
+
+        public void NewAlbum()
+        {
+            ManualAlbumViewModel manualVM = new ManualAlbumViewModel(_musicVideo.artist);
+            NewAlbumDialogViewModel newAlbumVM = new NewAlbumDialogViewModel(manualVM, _musicVideo.artist, true);
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => newAlbumVM)
+                .OnDismissed(_ => { Albums = DBHelper.GetAlbums(_musicVideo.artist.Id);})
+                .TryShow();
         }
 
         public async void AnalyzeVideo()
         {
             var info = await FFProbe.AnalyseAsync(_musicVideo.vidPath);
+            int minutes = (int)info.PrimaryVideoStream.Duration.TotalMinutes;
+            int seconds = (int)((info.PrimaryVideoStream.Duration.TotalMinutes - (int)info.PrimaryVideoStream.Duration.TotalMinutes) * 60);
             Codec = $"Codec: {info.PrimaryVideoStream.CodecName}";
-            Duration = $"Duration: {info.PrimaryVideoStream.Duration.TotalMinutes}";
+            Duration = minutes != 0 ? $"Duration: {minutes:D2}:{seconds:D2}" : "Duration: unavaible";
             Resolution = $"Resolution: {info.PrimaryVideoStream.Width}"+"x"+$"{info.PrimaryVideoStream.Height}";
-            Bitrate = $"Bitrate: {info.PrimaryVideoStream.BitRate}";
-            AspectRatio = $"Aspect Ratio: {info.PrimaryVideoStream.DisplayAspectRatio.Width}:{info.PrimaryVideoStream.DisplayAspectRatio.Height}";
+            Bitrate = info.PrimaryVideoStream.BitRate/ 1000000.0 >= 1 ? $"AverageBitrate: {Math.Round(info.PrimaryVideoStream.BitRate / 1000000.0)} Mbps" : $"AverageBitrate: {Math.Round(info.PrimaryVideoStream.BitRate / 1000.0)} kbps";
+            AspectRatio = info.PrimaryVideoStream.DisplayAspectRatio.Width != 0 ? $"Aspect Ratio: {info.PrimaryVideoStream.DisplayAspectRatio.Width}:{info.PrimaryVideoStream.DisplayAspectRatio.Height}" : "Aspect Ratio unavaliable";
         }
 
         public async Task LoadThumbnail()
@@ -164,7 +189,11 @@ namespace MVNFOEditor.ViewModels
         {
             if (DBHelper.DeleteVideo(_musicVideo) != 1)
             {
-                SukiHost.ShowToast("Error Deleting Video", "Please manually delete the video for " + _musicVideo.title);
+                App.GetVM().GetToastManager().CreateToast()
+                    .WithTitle("Error Deleting Video")
+                    .WithContent($"Please manually delete the video for {_musicVideo.title}")
+                    .OfType(NotificationType.Error)
+                    .Queue();
             }
             NavigateBack();
         }

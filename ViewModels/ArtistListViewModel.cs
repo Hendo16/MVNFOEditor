@@ -6,7 +6,6 @@ using Material.Icons;
 using MVNFOEditor.Features;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.Views;
-using ReactiveUI;
 using SimpleInjector.Advanced;
 using SukiUI.Controls;
 using CommunityToolkit.Mvvm.Input;
@@ -15,6 +14,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Threading;
+using SukiUI.Dialogs;
 
 namespace MVNFOEditor.ViewModels
 {
@@ -37,10 +37,7 @@ namespace MVNFOEditor.ViewModels
         public ArtistListViewModel()
         {
             DBHelper = App.GetDBHelper();
-            if (DBHelper.CheckIfSettingsValid())
-            {
-                LoadArtists();
-            }
+            LoadArtists();
             
         }
 
@@ -48,7 +45,9 @@ namespace MVNFOEditor.ViewModels
         {
             NewArtistDialogViewModel newVM = new NewArtistDialogViewModel();
             newVM.ClosePageEvent += RefreshArtists;
-            SukiHost.ShowDialog(newVM);
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => newVM)
+                .TryShow();
         }
 
         public async void InitData()
@@ -56,7 +55,6 @@ namespace MVNFOEditor.ViewModels
             BusyText = "Building Database...";
             IsBusy = true;
             DBHelper.ProgressUpdate += UpdateInitProgressText;
-            await DBHelper.InitilizeData();
             bool textTest = false;
             await LoadArtists();
         }

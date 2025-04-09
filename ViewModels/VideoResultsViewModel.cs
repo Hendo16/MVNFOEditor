@@ -3,28 +3,26 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DynamicData;
-using SukiUI.Controls;
 
 namespace MVNFOEditor.ViewModels
 {
     public class SelectedItem
     {
-        public SyncResultViewModel viewModel { get; set; }
+        public VideoResultViewModel viewModel { get; set; }
         public bool IsSelected { get; set; }
     }
-    public partial class SyncDialogViewModel : ObservableObject
+    public partial class VideoResultsViewModel : ObservableObject
     {
-        private ObservableCollection<SyncResultViewModel> _results;
-        private ObservableCollection<SyncResultViewModel> _fullResults;
+        private ObservableCollection<VideoResultViewModel> _results;
+        private ObservableCollection<VideoResultViewModel> _fullResults;
         private ObservableCollection<SelectedItem> _fullSelectedItems;
 
-        [ObservableProperty] private ObservableCollection<SyncResultViewModel> _selectedVideos;
+        [ObservableProperty] private ObservableCollection<VideoResultViewModel> _selectedVideos;
         [ObservableProperty] private bool _isBusy;
         [ObservableProperty] private string _busyText;
         [ObservableProperty] private string _searchText;
 
-        public ObservableCollection<SyncResultViewModel> SearchResults
+        public ObservableCollection<VideoResultViewModel> SearchResults
         {
             get { return _results; }
             set
@@ -42,19 +40,20 @@ namespace MVNFOEditor.ViewModels
                 return;
             }
             
-            SearchResults = new ObservableCollection<SyncResultViewModel>(
+            SearchResults = new ObservableCollection<VideoResultViewModel>(
                 _fullResults.Where(item => item.Title?.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0));
         }
 
-        public SyncDialogViewModel(ObservableCollection<SyncResultViewModel> results)
+        public VideoResultsViewModel(ObservableCollection<VideoResultViewModel> results)
         {
             _results = results;
             _fullResults = results;
             _fullSelectedItems = new ObservableCollection<SelectedItem>();
-            SelectedVideos = new ObservableCollection<SyncResultViewModel>();
+            SelectedVideos = new ObservableCollection<VideoResultViewModel>();
         }
 
         [RelayCommand]
-        public void CloseDialog() => SukiHost.CloseDialog();
+        public void CloseDialog() =>
+            App.GetVM().GetDialogManager().DismissDialog();
     }
 }

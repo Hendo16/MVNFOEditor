@@ -1,5 +1,6 @@
 ﻿using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
 using SukiUI.Controls;
@@ -50,7 +51,13 @@ namespace MVNFOEditor.ViewModels
         private void RefreshView()
         {
             _parentVM.RefreshList();
-            SukiHost.CloseDialog();
+            App.GetVM().GetDialogManager().DismissDialog();
+        }
+        [RelayCommand]
+        public void CloseDialog()
+        {
+            App.GetVM().GetDialogManager().DismissDialog();
+            
         }
     }
 }

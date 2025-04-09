@@ -8,29 +8,32 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.NewArtistDialogView"
              x:DataType="vm:NewArtistDialogViewModel">
-    <Grid RowDefinitions="Auto, Auto, Auto,Auto,*,Auto">
-        <Border Grid.Row="0">
-            <Grid IsVisible="{Binding NavVisible}" Margin="0 5 0 0" VerticalAlignment="Center">
-                <Button Command="{Binding CloseDialog}" VerticalAlignment="Center" HorizontalAlignment="Right">
-                    <PathIcon Data="{x:Static content:Icons.Cross}" />
-                </Button>
-            </Grid>
-        </Border>
+    <Grid RowDefinitions="Auto, Auto,Auto,*,Auto">
+        <Grid ColumnDefinitions="*, 60" Grid.Row="0" VerticalAlignment="Center">
+        <controls:Stepper Width="400" Grid.Column="0" HorizontalAlignment="Center" IsEnabled="{Binding StepperEnabled}" IsVisible="{Binding ToggleVisible}" AlternativeStyle="True" Index="{Binding StepIndex}" Steps="{Binding Steps}" />
+          <Button Grid.Column="1" IsVisible="{Binding NavVisible}" Command="{Binding CloseDialog}" VerticalAlignment="Center">
+              <PathIcon Data="{x:Static content:Icons.Cross}"/>
+          </Button>
+        </Grid>
         <controls:GlassCard Grid.Row="1" IsVisible="{Binding ShowError}">
             <controls:GroupBox Header="Error">
                 <TextBlock Text="{Binding ErrorText}"/>
             </controls:GroupBox>
         </controls:GlassCard>
-        <controls:Stepper Grid.Row="2" VerticalAlignment="Center" AlternativeStyle="True" Index="{Binding StepIndex}" Steps="{Binding Steps}" />
-        <ToggleSwitch Grid.Row="3" IsVisible="{Binding ToggleVisible}" IsEnabled="{Binding ToggleEnable}" IsChecked="{Binding ToggleValue}" IsCheckedChanged="ModeToggleChange" Margin="150,0" VerticalAlignment="Center" OffContent="Manual" OnContent="Automatic" />
-        <controls:BusyArea Grid.Row="4" BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
+        <!--<ToggleSwitch Grid.Row="2" IsVisible="{Binding ToggleVisible}" IsEnabled="{Binding ToggleEnable}" IsChecked="{Binding ToggleValue}" IsCheckedChanged="ModeToggleChange" Margin="150,0" HorizontalAlignment="Center" OffContent="Manual" OnContent="YouTube" />-->
+        <StackPanel Grid.Row="2" IsVisible="{Binding ToggleVisible}"  HorizontalAlignment="Center"  Orientation="Horizontal" Spacing="10">
+            <RadioButton Height="40" Classes="Chips" Content="Manual" GroupName="VideoType" IsCheckedChanged="ManualVideoClicked"/>
+            <RadioButton Height="40" Classes="Chips" Content="Youtube Music" GroupName="VideoType" IsChecked="True" IsCheckedChanged="YTMusicClicked"/>
+            <RadioButton Height="40" Classes="Chips" Content="Apple Music" GroupName="VideoType" IsCheckedChanged="AppleMusicClicked"/>
+        </StackPanel>
+        <controls:BusyArea Grid.Row="3" BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
             <ContentControl Content="{Binding CurrentContent}" />
         </controls:BusyArea>
-        <Border Grid.Row="5">
+        <Border Grid.Row="4">
             <Grid IsVisible="{Binding NavVisible}" Margin="0 10 0 10" VerticalAlignment="Center">
                 <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Left" Classes="Flat" Content="{Binding BackButtonText}" Command="{Binding BackTrigger}" />
                 <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" Classes="Outlined" Content="Skip" Command="{Binding HandleSkip}" IsVisible="{Binding IsAlbumView}" />
-                <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="Flat Accent" Content="Next" Command="{Binding NextTrigger}" />
+                <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="Flat Accent" Content="{Binding NextButtonText}" Command="{Binding NextTrigger}" />
             </Grid>
         </Border>
     </Grid>

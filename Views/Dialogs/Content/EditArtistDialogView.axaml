@@ -6,20 +6,25 @@
              xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.EditArtistDialogView"
+             xmlns:content="clr-namespace:SukiUI.Content;assembly=SukiUI"
+             xmlns:theme="clr-namespace:SukiUI.Theme;assembly=SukiUI"
              x:DataType="vm:EditArtistDialogViewModel">
     <Grid RowDefinitions="Auto,Auto,*">
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*" RowDefinitions="Auto,Auto,*">
-            <Panel Height="200" Grid.Column="0" Grid.Row="0">
-                <TextBox VerticalAlignment="Top" HorizontalAlignment="Left" Text="{Binding Name}" Watermark="Name" />
-            </Panel>
-            <Border Grid.Column="1" Grid.Row="0" CornerRadius="10" ClipToBounds="True">
-                <Panel Width="540">
-                    <Image Width="540" Stretch="Uniform" Source="{Binding Banner}"/>
-                </Panel>
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+          <Grid Grid.Column="0" RowDefinitions="Auto, Auto">
+            <TextBox Grid.Row="0" theme:TextBoxExtensions.Prefix="Artist Name:  " Text="{Binding Name}"/>
+            <Border Grid.Row="1" CornerRadius="10" ClipToBounds="True">
+              <Panel Width="540">
+                <Image Width="540" Stretch="Uniform" Source="{Binding Banner}"/>
+              </Panel>
             </Border>
+          </Grid>
+          <Button Grid.Column="1" Command="{Binding CloseDialog}" VerticalAlignment="Top" Margin="10 0 0 0">
+            <PathIcon Data="{x:Static content:Icons.Cross}"/>
+          </Button>
         </Grid>
-        <Grid Grid.Row="1" VerticalAlignment="Center">
-            <Button VerticalAlignment="Center" HorizontalAlignment="Left" Classes="Flat Accent" Content="Delete" Command="{Binding DeleteArtist}"/>
+        <Grid Grid.Row="1" VerticalAlignment="Center" Margin="0 10 0 0">
+            <Button VerticalAlignment="Center" HorizontalAlignment="Left" Classes="Flat Red" Content="Delete" Command="{Binding DeleteArtist}"/>
             <Button VerticalAlignment="Center" HorizontalAlignment="Right" Classes="Flat Accent" Content="Save" Command="{Binding UpdateArtist}"/>
         </Grid>
     </Grid>

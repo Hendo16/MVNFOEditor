@@ -4,10 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:MVNFOEditor.ViewModels"
              xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d"
              x:Class="MVNFOEditor.Views.WaveProgressView"
              x:DataType="vm:WaveProgressViewModel">
-    <controls:GlassCard Margin="20">
+    <controls:GlassCard>
         <controls:GroupBox Header="{Binding HeaderText}">
             <Grid>
                 <controls:WaveProgress Value="{Binding ProgressValue}" />

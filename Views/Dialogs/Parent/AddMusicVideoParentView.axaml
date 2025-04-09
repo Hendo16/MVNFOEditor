@@ -10,7 +10,7 @@
              x:DataType="vm:AddMusicVideoParentViewModel">
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
       <Border Grid.Row="0">
-        <Grid IsVisible="{Binding NavVisible}" Margin="0 5 0 0" VerticalAlignment="Center">
+        <Grid IsVisible="{Binding NavVisible}" Margin="0 5 0 5" VerticalAlignment="Center">
             <Button Command="{Binding Close}" VerticalAlignment="Center" HorizontalAlignment="Right">
                 <PathIcon Data="{x:Static content:Icons.Cross}" />
             </Button>

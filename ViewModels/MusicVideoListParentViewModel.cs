@@ -10,7 +10,7 @@ using MVNFOEditor.Helpers;
 
 namespace MVNFOEditor.ViewModels
 {
-    public partial class MusicVideoListParentViewModel : PageBase
+    public partial class MusicVideoListParentViewModel : ObservableObject
     {
         private MusicVideoListViewModel _musicVideoList;
         private MusicVideoDetailsViewModel _musicVideoDetails;
@@ -18,7 +18,8 @@ namespace MVNFOEditor.ViewModels
 
         [ObservableProperty] private object _currentContent;
 
-        public MusicVideoListParentViewModel() : base("Music Videos", MaterialIconKind.AccountMusic, 1)
+        //public MusicVideoListParentViewModel() : base("Music Videos", MaterialIconKind.AccountMusic, 1)
+        public MusicVideoListParentViewModel()
         {
             MusicVideoListViewModel currView = new MusicVideoListViewModel();
             CurrentContent = currView;

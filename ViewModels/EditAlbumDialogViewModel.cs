@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
 using SukiUI.Controls;
@@ -37,6 +38,15 @@ namespace MVNFOEditor.ViewModels
             Cover = coverInstance;
             DBHelper = App.GetDBHelper();
             _parentVM = App.GetVM().GetParentView();
+            if(album.ArtURL != null)
+            {
+                CoverURL = album.ArtURL;
+                _uRLRadio = true;
+            }
+            else
+            {
+                _localRadio = true;
+            }
         }
         public async void UpdateAlbum()
         {
@@ -68,7 +78,12 @@ namespace MVNFOEditor.ViewModels
         {
             ArtistDetailsViewModel ArtistDetailsVM = (ArtistDetailsViewModel)_parentVM.CurrentContent;
             ArtistDetailsVM.LoadAlbums();
-            SukiHost.CloseDialog();
+            App.GetVM().GetDialogManager().DismissDialog();
+        }
+        [RelayCommand]
+        public void CloseDialog()
+        {
+            App.GetVM().GetDialogManager().DismissDialog();
         }
     }
 }

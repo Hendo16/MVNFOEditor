@@ -2,22 +2,19 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
-using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-using Avalonia.Controls.Primitives;
 using YoutubeDLSharp.Metadata;
-using Microsoft.EntityFrameworkCore;
 using MVNFOEditor.DB;
-using Avalonia.Controls.Shapes;
+using FFMpegCore;
+using MVNFOEditor.Settings;
 using Newtonsoft.Json.Linq;
-using Path = Avalonia.Controls.Shapes.Path;
 
 namespace MVNFOEditor.ViewModels
 {
@@ -29,6 +26,7 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private string _videoURL;
         [ObservableProperty] private string _grabText;
         [ObservableProperty] private string _videoPath;
+        [ObservableProperty] private ObservableCollection<ManualMVEntryViewModel> _manualItems;
 
         [ObservableProperty] private bool _localRadio;
         [ObservableProperty] private bool _localVisible;
@@ -42,6 +40,7 @@ namespace MVNFOEditor.ViewModels
         private YTDLHelper _ytDLHelper;
         private YTMusicHelper _ytMusicHelper;
         private MusicDbContext _dbContext;
+        private static ISettings _settings;
         private static HttpClient s_httpClient = new();
         public VideoData? _vidData { get; set; }
         public Artist Artist { get; set; }
@@ -112,6 +111,7 @@ namespace MVNFOEditor.ViewModels
             _dbContext = App.GetDBContext();
             _ytMusicHelper = App.GetYTMusicHelper();
             _ytDLHelper = App.GetYTDLHelper();
+            _settings = App.GetSettings();
             Artist = art;
             YTRadio = true;
             GrabText = "Grab";
@@ -119,6 +119,7 @@ namespace MVNFOEditor.ViewModels
             {
                 Albums = App.GetDBContext().Album.Where(e => e.Artist == Artist).ToList();
             };
+            ManualItems = new ObservableCollection<ManualMVEntryViewModel>();
         }
 
         public ManualMusicVideoViewModel(Album album)
@@ -126,11 +127,13 @@ namespace MVNFOEditor.ViewModels
             _dbContext = App.GetDBContext();
             _ytMusicHelper = App.GetYTMusicHelper();
             _ytDLHelper = App.GetYTDLHelper();
+            _settings = App.GetSettings();
             Albums = new List<Album>(){ album };
             CurrAlbum = album;
             Artist = album.Artist;
             YTRadio = true;
             GrabText = "Grab";
+            ManualItems = new ObservableCollection<ManualMVEntryViewModel>();
         }
 
         public ManualMusicVideoViewModel(MusicVideo video)
@@ -138,6 +141,7 @@ namespace MVNFOEditor.ViewModels
             _dbContext = App.GetDBContext();
             _ytMusicHelper = App.GetYTMusicHelper();
             _ytDLHelper = App.GetYTDLHelper();
+            _settings = App.GetSettings();
             Artist = video.artist;
             if (video.source == "youtube" || video.source == "tidal" || video.source == "null")
             {
@@ -156,6 +160,7 @@ namespace MVNFOEditor.ViewModels
             PreviousVideo = video;
             var root_folder = System.IO.Path.GetDirectoryName(video.nfoPath);
             LoadThumbnail($"{root_folder}\\{video.thumb}", true);
+            ManualItems = new ObservableCollection<ManualMVEntryViewModel>();
         }
 
         public ManualMusicVideoViewModel(List<Album> albumList)
@@ -163,12 +168,19 @@ namespace MVNFOEditor.ViewModels
             _dbContext = App.GetDBContext();
             _ytMusicHelper = App.GetYTMusicHelper();
             _ytDLHelper = App.GetYTDLHelper();
+            _settings = App.GetSettings();
             Albums = albumList;
             Artist = Albums[0].Artist;
             YTRadio = true;
             GrabText = "Grab";
+            ManualItems = new ObservableCollection<ManualMVEntryViewModel>();
         }
 
+        private void RemoveCard(object sender, EventArgs e)
+        {
+            ManualItems.Remove((ManualMVEntryViewModel)sender);
+        }
+        
         public async void GrabYTVideo()
         {
             IsBusy = true;
@@ -192,19 +204,27 @@ namespace MVNFOEditor.ViewModels
             GrabText = "Grab";
         }
 
+        public void AddSingleToList()
+        {
+            var newMVEntry = new ManualMVEntryViewModel(_title, _year, Thumbnail, _vidData.ID, CurrAlbum, _vidData);
+            newMVEntry.RemoveCallback += RemoveCard;
+            ManualItems.Add(newMVEntry);
+        }
+
         public void DetectAlbum()
         {
             var SongName = Title.ToLower();
-            foreach (JToken AlbumResult in Artist.YTMusicAlbumResults)
+            ArtistMetadata artistMetadata = Artist.GetArtistMetadata(SearchSource.YouTubeMusic);
+            foreach (JToken AlbumResult in artistMetadata.AlbumResults)
             {
                 JObject newAlbumCheck = _ytMusicHelper.get_album(AlbumResult["browseId"].ToString());
                 //Check if the title directly exists
                 if (((JArray)newAlbumCheck["tracks"]).Any(t => t["title"].ToString().ToLower() == SongName))
                 {
-                    if (_dbContext.Album.Any(a => a.ytMusicBrowseID == AlbumResult["browseId"].ToString()))
+                    if (_dbContext.Album.Any(a => a.AlbumBrowseID == AlbumResult["browseId"].ToString()))
                     {
                         CurrAlbum = _dbContext.Album.First(a =>
-                            a.ytMusicBrowseID == AlbumResult["browseId"].ToString());
+                            a.AlbumBrowseID == AlbumResult["browseId"].ToString());
                     }
                     else
                     {
@@ -223,7 +243,6 @@ namespace MVNFOEditor.ViewModels
 
                         CurrAlbum = newAlbum;
                     }
-                    continue;
                 }
             }
         }
@@ -255,15 +274,14 @@ namespace MVNFOEditor.ViewModels
             {
                 Directory.CreateDirectory(folderPath);
             }
-            return File.OpenWrite(folderPath + $"/{fileName}-video.jpg");
+            return File.OpenWrite(folderPath + $"/{fileName}.jpg");
         }
 
         public void SetLocalVideo(string path)
         {
             VideoPath = path;
-            Title = System.IO.Path.GetFileNameWithoutExtension(path);
-            SettingsData localData = App.GetDBContext().SettingsData.First();
-            Debug.WriteLine($"Move {System.IO.Path.GetFileName(VideoPath)} to {localData.RootFolder}/{Artist.Name}/{System.IO.Path.GetFileName(VideoPath)}");
+            Title = Path.GetFileNameWithoutExtension(path);
+            Debug.WriteLine($"Move {Path.GetFileName(VideoPath)} to {_settings.RootFolder}/{Artist.Name}/{System.IO.Path.GetFileName(VideoPath)}");
         }
 
         public void ClearData()
@@ -274,11 +292,58 @@ namespace MVNFOEditor.ViewModels
             VideoURL = "";
             Thumbnail = null;
         }
-        public async void GenerateManualNFO(string vidPath)
+        public async Task<int> GenerateManualNFO(string vidPath, int currInd)
         {
             MusicDbContext _dbContext = App.GetDBContext();
-            SettingsData localData = _dbContext.SettingsData.First();
             MusicVideo newMV = new MusicVideo();
+            newMV.title = ManualItems[currInd].Title;
+            newMV.year = ManualItems[currInd].Year;
+            newMV.artist = Artist;
+            newMV.vidPath = vidPath;
+            if (ManualItems[currInd].Album != null)
+            {
+                newMV.album = ManualItems[currInd].Album;
+            }
+            else
+            {
+                newMV.album = null;
+            }
+
+            if (ManualItems[currInd].VidData != null)
+            {
+                newMV.videoID = ManualItems[currInd].VidData.ID;
+                newMV.source = "youtube";
+                await SaveThumbnailAsync($"{_settings.RootFolder}/{newMV.artist.Name}",newMV.title);
+                newMV.thumb = $"{newMV.title}.jpg";
+            }
+            else
+            {
+                newMV.source = "local";
+            }
+            newMV.nfoPath = $"{_settings.RootFolder}/{newMV.artist.Name}/{newMV.title}.nfo";
+            
+            newMV.SaveToNFO();
+            _dbContext.MusicVideos.Add(newMV);
+            return await _dbContext.SaveChangesAsync();
+        }
+        
+        public async Task<int> GenerateManualNFO(string vidPath, bool edit)
+        {
+            MusicVideo newMV;
+            if (edit)
+            {
+                //Clear out old data
+                File.Delete(PreviousVideo.vidPath);
+                File.Delete($"{_settings.RootFolder}\\{Artist.Name}\\{PreviousVideo.thumb}");
+                File.Delete($"{_settings.RootFolder}\\{Artist.Name}\\{PreviousVideo.nfoPath}");
+                //Retain old video entry
+                newMV = PreviousVideo;
+            }
+            else
+            {
+                newMV = new MusicVideo();
+            }
+             
             newMV.title = Title;
             newMV.year = Year;
             newMV.artist = Artist;
@@ -296,18 +361,21 @@ namespace MVNFOEditor.ViewModels
             {
                 newMV.videoID = _vidData.ID;
                 newMV.source = "youtube";
-                await SaveThumbnailAsync($"{localData.RootFolder}/{newMV.artist.Name}",newMV.title);
-                newMV.thumb = $"{newMV.title}-video.jpg";
+                await SaveThumbnailAsync($"{_settings.RootFolder}/{newMV.artist.Name}", newMV.title);
+                newMV.thumb = $"{newMV.title}.jpg";
             }
             else
             {
                 newMV.source = "local";
+                var newImagePath = $"{_settings.RootFolder}/{newMV.artist.Name}/{newMV.title}.png";
+                FFMpeg.Snapshot(vidPath, newImagePath, new System.Drawing.Size(400, 225), TimeSpan.FromSeconds(_settings.ScreenshotSecond));
+                newMV.thumb = $"{newMV.title}.png";
             }
-            newMV.nfoPath = $"{localData.RootFolder}/{newMV.artist.Name}/{newMV.title}-video.nfo";
-            
+
+            newMV.nfoPath = $"{_settings.RootFolder}/{newMV.artist.Name}/{newMV.title}.nfo";
             newMV.SaveToNFO();
             _dbContext.MusicVideos.Add(newMV);
-            _dbContext.SaveChanges();
+            return await _dbContext.SaveChangesAsync();
         }
     }
 }

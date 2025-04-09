@@ -1,6 +1,11 @@
+using System;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using MVNFOEditor.ViewModels;
+using SukiUI.Controls;
+using SukiUI.Enums;
+using SukiUI.Toasts;
 
 namespace MVNFOEditor.Views
 {
@@ -12,19 +17,38 @@ namespace MVNFOEditor.Views
         }
         public void Previous(object source, RoutedEventArgs args)
         {
-            settingsPages.Previous();
             if (DataContext is SettingsDialogViewModel viewModel)
             {
-                viewModel.HandleBackwards();
+                viewModel.HandleBackwards(settingsPages);
             }
         }
 
         public void Next(object source, RoutedEventArgs args)
         {
-            settingsPages.Next();
             if (DataContext is SettingsDialogViewModel viewModel)
             {
-                viewModel.HandleForward();
+                if (viewModel.StepIndex == 1)
+                {
+                    if (FolderView.MVInput.Text == null)
+                    {
+                        App.GetVM().GetToastManager().CreateToast()
+                            .WithTitle("Error!")
+                            .WithContent($"Music Video Folder Missing!")
+                            .OfType(NotificationType.Error)
+                            .Dismiss().After(TimeSpan.FromSeconds(3))
+                            .Queue();
+                        return;
+                    }
+                }
+
+                if (viewModel.StepIndex == 3)
+                {
+                    if (AdvancedView.YTDLFormat.Text == null)
+                    {
+                        AdvancedView.YTDLFormat.Text = "";
+                    }
+                }
+                viewModel.HandleForward(settingsPages);
             }
         }
     }

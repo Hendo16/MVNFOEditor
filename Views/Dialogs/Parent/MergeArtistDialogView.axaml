@@ -1,0 +1,42 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             xmlns:content="https://github.com/kikipoulet/SukiUI"
+             xmlns:views="clr-namespace:MVNFOEditor.Views"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="250"
+             x:Class="MVNFOEditor.Views.MergeArtistDialogView"
+             x:DataType="vm:MergeArtistDialogViewModel">
+    <suki:GroupBox Header="A ViewModel Dialog">
+        <StackPanel Orientation="Vertical" Spacing="10">
+            <!--ShowGridLines="True"-->
+            <Grid Name="ArtistGrid" ColumnDefinitions="Auto, 240, Auto" RowDefinitions="Auto, Auto, Auto" Margin="20">
+                <Border Grid.Row="0" Grid.Column="0" CornerRadius="10" ClipToBounds="True">
+                    <Panel Background="#00000000">
+                        <Image Width="240" Stretch="Uniform" Source="{Binding Artist1.Cover}"/>
+                    </Panel>
+                </Border>
+                <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" Classes="h4" Text="{Binding Artist1.Name}"/>
+                <PathIcon Grid.Row="1" Grid.Column="1" Data="{x:Static content:Icons.ArrowRight}" />
+                <Border Grid.Row="0" Grid.Column="2" CornerRadius="10" ClipToBounds="True">
+                    <Panel Background="#00000000">
+                        <Image Width="240" Stretch="Uniform" Source="{Binding Artist2.Cover}"/>
+                    </Panel>
+                </Border>
+                <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Classes="h4" Text="{Binding Artist2.Name}"/>
+            </Grid>
+            <StackPanel Orientation="Horizontal">
+                <Button Width="200"
+                        Name="MergeBtn"
+                        Command="{Binding HandleMerge}" 
+                        Content="Merge"/>
+                <Button Width="200"
+                        Name="CloseBtn"
+                        Command="{Binding CloseDialogCommand}"
+                        Content="Close" />
+            </StackPanel>
+        </StackPanel>
+    </suki:GroupBox>
+</UserControl>

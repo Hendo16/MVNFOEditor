@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Avalonia.Styling;
 using Microsoft.EntityFrameworkCore;
 using MVNFOEditor.Models;
@@ -15,7 +16,9 @@ namespace MVNFOEditor.DB
         public DbSet<Artist> Artist { get; set; }
         public DbSet<Album> Album { get; set; }
         public DbSet<Genre> Genres { get; set; }
-        public DbSet<SettingsData> SettingsData { get; set; }
+        public DbSet<AMVideoMetadata> AppleMusicVideoMetadata { get; set; }
+        public DbSet<PsshKey> PsshKeys { get; set; }
+        public DbSet<ArtistMetadata> ArtistMetadata { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,31 +36,33 @@ namespace MVNFOEditor.DB
                 .HasForeignKey(mvg => mvg.GenreID);
 
             modelBuilder.Entity<Artist>()
-                .Property(a => a.YTMusicAlbumResults)
+                .HasMany(a => a.Metadata)
+                .WithOne(am => am.Artist)
+                .HasForeignKey(am => am.ArtistId)
+                .HasPrincipalKey(a => a.Id)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ArtistMetadata>()
+                .Property(a => a.AlbumResults)
                 .HasColumnType("jsonb");
 
-            modelBuilder.Entity<Artist>()
-                .Property(a => a.YTMusicAlbumResults)
+            modelBuilder.Entity<ArtistMetadata>()
+                .Property(am => am.AlbumResults)
+                .HasConversion(
+                    am => am.ToString(),
+                    am => JArray.Parse(am));
+
+            modelBuilder.Entity<ArtistMetadata>()
+                .Property(a => a.SourceId)
                 .HasConversion(
                     a => a.ToString(),
-                    a => JArray.Parse(a));
-
-            modelBuilder.Entity<SettingsData>()
-                .Property(t => t.Theme)
-                .HasConversion(
-                    a => JsonConvert.SerializeObject(a),
-                    a => JsonConvert.DeserializeObject<SukiColorTheme>(a));
-
-            modelBuilder.Entity<SettingsData>()
-                .Property(t => t.LightOrDark)
-                .HasConversion(
-                    a => JsonConvert.SerializeObject(a),
-                    a => JsonConvert.DeserializeObject<ThemeVariant>(a));
+                    a => (SearchSource)Enum.Parse(typeof(SearchSource), a));
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             // Other configurations if needed
-            optionsBuilder.UseSqlite("Data Source=MVNFOEditor.db;");
+            optionsBuilder.UseSqlite("Data Source=./Assets/MVNFOEditor.db;");
             base.OnConfiguring(optionsBuilder);
         }
     }

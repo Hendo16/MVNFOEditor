@@ -12,7 +12,7 @@
              x:DataType="vm:MusicVideoListViewModel">
     <controls:BusyArea BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-            <controls:GlassCard>
+            <controls:GlassCard IsAnimated="True">
                 <controls:GlassCard.Resources>
                     <system:Double x:Key="GlassOpacity">0.2</system:Double>
                 </controls:GlassCard.Resources>

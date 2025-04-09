@@ -43,7 +43,7 @@ namespace MVNFOEditor.ViewModels
 
         public void RefreshDetails()
         {
-            _detailsVM.LoadAlbums();;
+            _detailsVM.LoadAlbums();
         }
 
         public void RefreshList()

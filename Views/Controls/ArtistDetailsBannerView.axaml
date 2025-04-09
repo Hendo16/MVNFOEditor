@@ -4,12 +4,49 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:MVNFOEditor.ViewModels"
              xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             xmlns:sukiContent="clr-namespace:SukiUI.Content;assembly=SukiUI"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.ArtistDetailsBannerView"
              x:DataType="vm:ArtistDetailsBannerViewModel">
   <Grid>
     <controls:GlassCard Margin="0,0,0,15">
+      <controls:GlassCard.ContextMenu>
+        <ContextMenu>
+          <MenuItem Command="{Binding AddAlbum}"
+                    Header="Add Album">
+            <MenuItem.Icon>
+              <PathIcon Width="15"
+                        Height="15"
+                        Data="{x:Static sukiContent:Icons.Plus}" />
+            </MenuItem.Icon>
+          </MenuItem>
+          <MenuItem IsVisible="{Binding IsYTMusic}" Command="{Binding AddYTMVideo}"
+                    Header="Search YouTube Music">
+            <MenuItem.Icon>
+              <PathIcon Width="15"
+                        Height="15"
+                        Data="{x:Static sukiContent:Icons.Plus}" />
+            </MenuItem.Icon>
+          </MenuItem>
+          <MenuItem IsVisible="{Binding IsAppleMusic}" Command="{Binding AddAppleMusicVideo}"
+                    Header="Search Apple Music">
+            <MenuItem.Icon>
+              <PathIcon Width="15"
+                        Height="15"
+                        Data="{x:Static sukiContent:Icons.Plus}" />
+            </MenuItem.Icon>
+          </MenuItem>
+          <MenuItem Command="{Binding AddManualVideo}"
+                    Header="Add Manual Single">
+            <MenuItem.Icon>
+              <PathIcon Width="15"
+                        Height="15"
+                        Data="{x:Static sukiContent:Icons.CircleOutlinePlus}" />
+            </MenuItem.Icon>
+          </MenuItem>
+        </ContextMenu>
+      </controls:GlassCard.ContextMenu>
         <controls:GlassCard.Resources>
             <system:Double x:Key="GlassOpacity">0.2</system:Double>
         </controls:GlassCard.Resources>

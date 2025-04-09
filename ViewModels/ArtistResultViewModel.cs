@@ -1,53 +1,56 @@
 ﻿using Avalonia.Media.Imaging;
-using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.DB;
-using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
-using ReactiveUI;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MVNFOEditor.ViewModels
 {
-    public class ArtistResultViewModel : ReactiveObject
+    public class ArtistResultViewModel : ObservableObject
     {
         private readonly ArtistResult _result;
         private Bitmap? _thumbnail;
         private string _borderColor;
         private bool _loading;
         private string _selectText;
-        private MusicDbContext _dbContext;
         
         public string Name => _result.Name;
-        public string BrowseId => _result.browseId;
 
         public bool Loading
         {
-            get => _loading;
-            set => this.RaiseAndSetIfChanged(ref _loading, value);
+            get { return _loading; }
+            set
+            {
+                _loading = value;
+                OnPropertyChanged(nameof(Loading));
+            }
         }
 
         public string SelectButtonText
         {
-            get => _selectText;
-            set => this.RaiseAndSetIfChanged(ref _selectText, value);
+            get { return _selectText; }
+            set
+            {
+                _selectText = value;
+                OnPropertyChanged(nameof(SelectButtonText));
+            }
         }
 
         public event EventHandler<ArtistResult> NextPage;
 
         public Bitmap? Thumbnail
         {
-            get => _thumbnail;
-            private set => this.RaiseAndSetIfChanged(ref _thumbnail, value);
+            get { return _thumbnail; }
+            set
+            {
+                _thumbnail = value;
+                OnPropertyChanged(nameof(Thumbnail));
+            }
         }
 
         public ArtistResultViewModel(ArtistResult result)
         {
-            _dbContext = App.GetDBContext();
             Loading = false;
             SelectButtonText = "Select";
             _result = result;

@@ -17,16 +17,9 @@
             <objectModel:ObservableCollection x:TypeArguments="controls:SettingsLayoutItem">
                 <controls:SettingsLayoutItem Header="Folder/App Locations">
                     <controls:SettingsLayoutItem.Content>
-                        <UniformGrid Rows="3" Columns="3">
-                            <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="Music Video Folder" Name="MVInput" Text="{Binding MvText}" />
-                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="Music Video Folder"/>
-                            <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseMVFolder" />
-                            <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="FFMPEG Path" Name="FFMPEGInput" Text="{Binding FfmpegText}"  />
-                          <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="FFMPEG Path"/>
-                          <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseFFMPEGPath" />
-                          <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="YTDL Path" Name="YTDLInput" Text="{Binding YtdlText}"  />
-                          <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="YTDL Path"/>
-                            <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseYTDLPath" />
+                        <UniformGrid Rows="1" Columns="2">
+                            <TextBox theme:TextBoxExtensions.Prefix="Music Video Folder Location:  " Width="800" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="Music Video Folder" Name="MVInput" Text="{Binding MvText}" />
+                          <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseMVFolder" />
                         </UniformGrid>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>
@@ -35,7 +28,8 @@
                         <StackPanel>
                           <StackPanel HorizontalAlignment="Center"
                                       Orientation="Horizontal"
-                                      Spacing="20">
+                                      Spacing="20"
+                                      Margin="0 0 0 5">
                             <RadioButton Width="180"
                                          Height="160"
                                          Padding="0"
@@ -99,35 +93,31 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <DockPanel>
-                                <ToggleButton VerticalAlignment="Top"
-                                              Classes="Switch"
-                                              DockPanel.Dock="Right"
-                                              IsChecked="{Binding IsBackgroundAnimated}" />
-                                <StackPanel HorizontalAlignment="Left">
-                                    <TextBlock FontSize="16"
-                                               FontWeight="DemiBold"
-                                               Text="Animated Background" />
-                                    <TextBlock Margin="0,12,70,0"
-                                               Foreground="{DynamicResource SukiLowText}"
-                                               Text="Enable a 'cloud' effect in the background. The background will be dynamic and the colors spaces will change over time."
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-                            </DockPanel>
+                        </StackPanel>
+                    </controls:SettingsLayoutItem.Content>
+                </controls:SettingsLayoutItem>
+                <controls:SettingsLayoutItem Header="YTDL Options">
+                    <controls:SettingsLayoutItem.Content>
+                        <StackPanel Orientation="Vertical">
+                            <ComboBox PlaceholderText="Resolution" ItemsSource="{Binding Resolutions}" SelectedItem="{Binding SelectedResolution}"/>
                         </StackPanel>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>
               <controls:SettingsLayoutItem Header="Advanced Options">
                 <controls:SettingsLayoutItem.Content>
                   <StackPanel Orientation="Vertical">
-                    <TextBox theme:TextBoxExtensions.Prefix="Screenshot Second:  " Name="ScreenshotSecond" Text="{Binding ScreenshotSecond}"/>
-                    <TextBox theme:TextBoxExtensions.Prefix="YTDL Options:  " Name="YTDLFormat" Text="{Binding YtdlFormat}"/>
+                    <TextBox theme:TextBoxExtensions.Prefix="Screenshot Second:  " Text="{Binding ScreenshotSecond}"/>
+                    <TextBox theme:TextBoxExtensions.Prefix="YTDL Options:  " Text="{Binding YtdlFormat}"/>
                   </StackPanel>
                 </controls:SettingsLayoutItem.Content>
               </controls:SettingsLayoutItem>
               <controls:SettingsLayoutItem Header="Save">
                     <controls:SettingsLayoutItem.Content>
-                        <Button Grid.Row="2" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" Content="Save" Click="SaveSettings" />
+                        <Grid ColumnDefinitions="*,*,*">
+                            <Button Grid.Column="0" Width="100" Content="Save" Command="{Binding SaveChanges}" />
+                            <Button Grid.Column="1" Width="300" Content="Download Popup Test" Command="{Binding AppleMusicDownloadTesting}" />
+                            <Button Grid.Column="2" Width="300" Content="Artist Merge Test" Command="{Binding ArtistMergeTest}" />
+                        </Grid>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>
             </objectModel:ObservableCollection>

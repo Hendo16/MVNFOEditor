@@ -39,7 +39,7 @@ namespace MVNFOEditor.Models
             {
                 Directory.CreateDirectory(folderPath);
             }
-            return File.OpenWrite(folderPath + $"/{Title}-video.jpg");
+            return File.OpenWrite(folderPath + $"/{Title}.jpg");
         }
     }
 }

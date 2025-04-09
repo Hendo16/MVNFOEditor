@@ -14,7 +14,7 @@
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
             <Grid RowDefinitions="Auto, Auto, *">
                 <ContentControl Grid.Row ="0" Content="{Binding BannerVM}"/>
-                <controls:GlassCard Margin="10 10 10 10" Grid.Row="1">
+                <controls:GlassCard IsAnimated="True" Margin="10 10 10 10" Grid.Row="1" IsVisible="{Binding HasAlbums}">
                     <controls:GlassCard.Resources>
                         <system:Double x:Key="GlassOpacity">0.2</system:Double>
                     </controls:GlassCard.Resources>
@@ -45,13 +45,13 @@
                         </ItemsControl>
                     </controls:GroupBox>
                 </controls:GlassCard>
-                <controls:GlassCard Margin="10 10 10 10" Grid.Row="2">
+                <controls:GlassCard IsAnimated="True" Margin="10 10 10 10" Grid.Row="2" IsVisible="{Binding HasSingles}">
                     <controls:GlassCard.Resources>
                         <system:Double x:Key="GlassOpacity">0.2</system:Double>
                     </controls:GlassCard.Resources>
                     <controls:GlassCard.ContextMenu>
                         <ContextMenu>
-                            <MenuItem Command="{Binding AddSingle}"
+                            <MenuItem Command="{Binding AddYTMVideo}"
                                       Header="Search YouTube Music">
                                 <MenuItem.Icon>
                                     <PathIcon Width="15"
@@ -59,7 +59,7 @@
                                               Data="{x:Static sukiContent:Icons.Plus}" />
                                 </MenuItem.Icon>
                             </MenuItem>
-                            <MenuItem Command="{Binding AddManualSingle}"
+                            <MenuItem Command="{Binding AddManualVideo}"
                                       Header="Add Manual Single">
                                 <MenuItem.Icon>
                                     <PathIcon Width="15"

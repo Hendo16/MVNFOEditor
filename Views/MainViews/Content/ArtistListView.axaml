@@ -12,7 +12,7 @@
              x:DataType="vm:ArtistListViewModel">
     <sukiControls:BusyArea BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-            <sukiControls:GlassCard>
+            <sukiControls:GlassCard IsAnimated="True" >
               <sukiControls:GlassCard.Resources>
                 <system:Double x:Key="GlassOpacity">0.2</system:Double>
               </sukiControls:GlassCard.Resources>
@@ -42,7 +42,6 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </sukiControls:GroupBox>
-            
             </sukiControls:GlassCard>
         </ScrollViewer>
     </sukiControls:BusyArea>
