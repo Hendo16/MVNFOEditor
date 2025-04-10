@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -17,8 +16,6 @@ using log4net;
 using M3U8Parser;
 using M3U8Parser.Attributes.BaseAttribute;
 using M3U8Parser.ExtXType;
-using Microsoft.Extensions.Configuration;
-using Microsoft.VisualBasic;
 using MVNFOEditor.DB;
 using MVNFOEditor.Models;
 using MVNFOEditor.Settings;
