@@ -212,7 +212,6 @@ public class AppleMusicDLHelper
         {
             Log.Error("Error in AppleMusicDLHelper->DownloadVideo: Invalid user token");
             return AppleMusicDownloadResponse.InvalidUserToken;
-            
         }
 
         int id = int.Parse(videoResult.VideoURL.Split('/')[^1]);
