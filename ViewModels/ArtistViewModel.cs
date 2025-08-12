@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.Models;
 using SukiUI.Dialogs;
@@ -19,6 +20,22 @@ namespace MVNFOEditor.ViewModels
 
         private Bitmap? _cover;
         private Bitmap? _largeBanner;
+
+        public string SourceIcon
+        {
+            get
+            {
+                switch (_artist.Metadata.First().SourceId)
+                {
+                    case SearchSource.YouTubeMusic:
+                        return "/Assets/ytm-48x48.png";
+                    case SearchSource.AppleMusic:
+                        return "/Assets/am-48x48.png";
+                    default:
+                        return "";
+                }
+            }
+        }
         
         public Bitmap? Cover
         {

@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MVNFOEditor.Models;
@@ -112,7 +113,7 @@ namespace MVNFOEditor.ViewModels
         {
             NavVisible = false;
             //TODO: How to distingish during navigation - assume apple music for now
-            ArtistMetadata artistMetadata = newAlbum.Artist.GetArtistMetadata(SearchSource.AppleMusic);
+            ArtistMetadata artistMetadata = newAlbum.Artist.GetArtistMetadata();
             switch (artistMetadata.SourceId)
             {
                 case SearchSource.YouTubeMusic:
@@ -191,9 +192,9 @@ namespace MVNFOEditor.ViewModels
 
             ArtistMetadata artistMetadata = album.Artist.GetArtistMetadata(SearchSource.YouTubeMusic);
             string artistID = artistMetadata.BrowseId;
-            JArray videoSearch = ytMusicHelper.get_videos(artistID);
-            JObject fullAlbumDetails = ytMusicHelper.get_album(album.AlbumBrowseID);
-            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videoSearch, fullAlbumDetails, null, album);
+            List<VideoResult>? videos = await album.Artist.GetVideos(SearchSource.YouTubeMusic);
+            YtMusicNet.Models.Album? fullAlbum = await ytMusicHelper.GetAlbum(album.AlbumBrowseID);
+            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videos, fullAlbum, null, album);
 
             if (results.Count == 0)
             {
@@ -296,7 +297,7 @@ namespace MVNFOEditor.ViewModels
             
             if (currentType == typeof(AlbumResultsViewModel))
             {
-                BusyText = "Searching YouTube Music...";
+                BusyText = "Getting videos...";
                 ToggleVisible = false;
                 await NextStep(null, _resultVM.SelectedAlbum.GetResult());
                 NavVisible = true;

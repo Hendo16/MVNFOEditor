@@ -85,7 +85,7 @@ namespace MVNFOEditor.ViewModels
 
         public async void AppleMusicDownloadTesting()
         {
-            AppleMusicDLHelper _amHelper = new AppleMusicDLHelper();
+            AppleMusicDLHelper _amHelper = await AppleMusicDLHelper.CreateHelper();
             WaveProgressViewModel waveVM = new WaveProgressViewModel();
             waveVM.HeaderText = "Downloading Closure - ";
             App.GetVM().GetDialogManager().CreateDialog()

@@ -211,42 +211,6 @@ namespace MVNFOEditor.ViewModels
             ManualItems.Add(newMVEntry);
         }
 
-        public void DetectAlbum()
-        {
-            var SongName = Title.ToLower();
-            ArtistMetadata artistMetadata = Artist.GetArtistMetadata(SearchSource.YouTubeMusic);
-            foreach (JToken AlbumResult in artistMetadata.AlbumResults)
-            {
-                JObject newAlbumCheck = _ytMusicHelper.get_album(AlbumResult["browseId"].ToString());
-                //Check if the title directly exists
-                if (((JArray)newAlbumCheck["tracks"]).Any(t => t["title"].ToString().ToLower() == SongName))
-                {
-                    if (_dbContext.Album.Any(a => a.AlbumBrowseID == AlbumResult["browseId"].ToString()))
-                    {
-                        CurrAlbum = _dbContext.Album.First(a =>
-                            a.AlbumBrowseID == AlbumResult["browseId"].ToString());
-                    }
-                    else
-                    {
-                        AlbumResult currResult = new AlbumResult();
-
-                        currResult.Title = newAlbumCheck["title"].ToString();
-                        try { currResult.Year = newAlbumCheck["year"].ToString(); } catch (NullReferenceException e) { }
-                        currResult.browseId = AlbumResult["browseId"].ToString();
-                        currResult.thumbURL = _ytMusicHelper.GetHighQualityArt(newAlbumCheck);
-                        currResult.isExplicit = Convert.ToBoolean(newAlbumCheck["isExplicit"]);
-                        currResult.Artist = Artist;
-
-                        Album newAlbum = new Album(currResult);
-                        _dbContext.Album.Add(newAlbum);
-                        _dbContext.SaveChanges();
-
-                        CurrAlbum = newAlbum;
-                    }
-                }
-            }
-        }
-
         public async Task LoadThumbnail(string URL, bool edit = false)
         {
             var data = edit ? await File.ReadAllBytesAsync(URL) : await s_httpClient.GetByteArrayAsync(URL);

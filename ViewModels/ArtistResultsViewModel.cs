@@ -14,6 +14,7 @@ using Avalonia.Input;
 using Flurl.Http;
 using log4net;
 using SukiUI.Toasts;
+using YtMusicNet.Records;
 
 namespace MVNFOEditor.ViewModels
 {
@@ -29,7 +30,7 @@ namespace MVNFOEditor.ViewModels
         private YTMusicHelper ytMusicHelper;
         private iTunesAPIHelper itunesHelper;
 
-        public event EventHandler<ArtistResult> NextPage;
+        public event EventHandler<ArtistResultCard> NextPage;
         public event EventHandler<bool> ValidSearch;
         public SearchSource selectedSource;
 
@@ -60,10 +61,11 @@ namespace MVNFOEditor.ViewModels
         private async void YouTubeSearch()
         {
             ObservableCollection<ArtistResultViewModel> _tempResults = new ObservableCollection<ArtistResultViewModel>();
-            JArray results = new JArray();
+            //JArray results = new JArray();
+            List<ArtistResult> results = new List<ArtistResult>();
             try
             {
-                results = ytMusicHelper.search_Artists(_searchInput);
+                results = await ytMusicHelper.searchArtists(SearchInput);
                 ValidSearch(null, true);
             }
             catch (FlurlHttpException e)
@@ -79,14 +81,16 @@ namespace MVNFOEditor.ViewModels
             }
             for (int i = 0; i < results.Count; i++)
             {
+                /*
                 JObject result = results[i].ToObject<JObject>();
-                ArtistResult arrResult = new ArtistResult();
+                ArtistResultCard arrResultCard = new ArtistResultCard();
 
-                arrResult.Name = result["artist"].ToString();
-                arrResult.browseId = result["browseId"].ToString();
-                arrResult.thumbURL = ytMusicHelper.GetHighQualityArt(result);
-
-                ArtistResultViewModel newVM = new ArtistResultViewModel(arrResult);
+                arrResultCard.Name = result["artist"].ToString();
+                arrResultCard.browseId = result["browseId"].ToString();
+                arrResultCard.thumbURL = ytMusicHelper.GetHighQualityArt(result);
+                */
+                ArtistResultCard arrResultCard = new ArtistResultCard(results[i]);
+                ArtistResultViewModel newVM = new ArtistResultViewModel(arrResultCard);
                 newVM.NextPage += NextPage;
                 await newVM.LoadThumbnail();
                 _tempResults.Add(newVM);
@@ -124,16 +128,16 @@ namespace MVNFOEditor.ViewModels
             for (int i = 0; i < limit; i++)
             {
                 JObject result = results[i].ToObject<JObject>();
-                ArtistResult arrResult = new ArtistResult();
+                ArtistResultCard arrResultCard = new ArtistResultCard();
 
-                arrResult.Name = result.Value<string>("artistName");
-                arrResult.browseId = result.Value<int>("artistId").ToString();
+                arrResultCard.Name = result.Value<string>("artistName");
+                arrResultCard.browseId = result.Value<int>("artistId").ToString();
                 
                 //Some results return outdated iTunes based links - so we need to fix these
-                arrResult.artistLinkURL = result.Value<string>("artistLinkUrl").Replace("itunes.apple.com", "music.apple.com");
-                arrResult.thumbURL =  itunesHelper.GetArtistThumb(arrResult.artistLinkURL);
+                arrResultCard.artistLinkURL = result.Value<string>("artistLinkUrl").Replace("itunes.apple.com", "music.apple.com");
+                arrResultCard.thumbURL =  itunesHelper.GetArtistThumb(arrResultCard.artistLinkURL);
 
-                ArtistResultViewModel newVM = new ArtistResultViewModel(arrResult);
+                ArtistResultViewModel newVM = new ArtistResultViewModel(arrResultCard);
                 newVM.NextPage += NextPage;
                 await newVM.LoadThumbnail();
                 _tempResults.Add(newVM);

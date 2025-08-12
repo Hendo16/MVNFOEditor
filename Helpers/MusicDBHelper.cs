@@ -30,11 +30,17 @@ namespace MVNFOEditor.Helpers
         private List<Artist> initArtists = new List<Artist>();
         private List<Album> initAlbums = new List<Album>();
         public event ProgressUpdateDelegate ProgressUpdate;
-        public MusicDBHelper(MusicDbContext db)
+        private MusicDBHelper(MusicDbContext db)
         {
             _db = db;
             _settings = App.GetSettings();
             ytMusicHelper = App.GetYTMusicHelper();
+        }
+
+        public static MusicDBHelper CreateHelper(MusicDbContext db)
+        {
+            MusicDBHelper newHelper = new MusicDBHelper(db);
+            return newHelper;
         }
 
         public async Task<ObservableCollection<ArtistViewModel>> GenerateArtists()

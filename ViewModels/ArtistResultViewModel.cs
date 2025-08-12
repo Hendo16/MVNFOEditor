@@ -9,13 +9,13 @@ namespace MVNFOEditor.ViewModels
 {
     public class ArtistResultViewModel : ObservableObject
     {
-        private readonly ArtistResult _result;
+        private readonly ArtistResultCard _resultCard;
         private Bitmap? _thumbnail;
         private string _borderColor;
         private bool _loading;
         private string _selectText;
         
-        public string Name => _result.Name;
+        public string? Name => _resultCard.Name;
 
         public bool Loading
         {
@@ -37,7 +37,7 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
-        public event EventHandler<ArtistResult> NextPage;
+        public event EventHandler<ArtistResultCard> NextPage;
 
         public Bitmap? Thumbnail
         {
@@ -49,11 +49,11 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
-        public ArtistResultViewModel(ArtistResult result)
+        public ArtistResultViewModel(ArtistResultCard resultCard)
         {
             Loading = false;
             SelectButtonText = "Select";
-            _result = result;
+            _resultCard = resultCard;
         }
 
         public void GrabArtist()
@@ -63,14 +63,14 @@ namespace MVNFOEditor.ViewModels
             TriggerNextPage();
         }
 
-        public ArtistResult GetResult()
+        public ArtistResultCard GetResult()
         {
-            return _result;
+            return _resultCard;
         }
 
         public async Task LoadThumbnail()
         {
-            await using (var imageStream = await _result.LoadCoverBitmapAsync())
+            await using (var imageStream = await _resultCard.LoadCoverBitmapAsync())
             {
                 Thumbnail = new Bitmap(imageStream);
             }
@@ -81,7 +81,7 @@ namespace MVNFOEditor.ViewModels
             var bitmap = Thumbnail;
             await Task.Run(() =>
             {
-                using (var fs = _result.SaveThumbnailBitmapStream(folderPath))
+                using (var fs = _resultCard.SaveThumbnailBitmapStream(folderPath))
                 {
                     bitmap.Save(fs);
                 }
@@ -90,7 +90,7 @@ namespace MVNFOEditor.ViewModels
 
         protected virtual void TriggerNextPage()
         {
-            NextPage?.Invoke(this, _result);
+            NextPage?.Invoke(this, _resultCard);
         }
     }
 }

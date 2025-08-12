@@ -17,48 +17,80 @@ namespace MVNFOEditor.Models
     public class Artist
     {
         public Artist() { } // Parameterless constructor required by EF Core
+
+        public Artist(ArtistMetadata metadata, YtMusicNet.Models.Artist ytArtist)
+        {
+            Description = ytArtist.Description;
+            Name = ytArtist.Name;
+            CardBannerURL = LargeBannerURL = ytArtist.Thumbnails.Last().URL;
+            Metadata = new List<ArtistMetadata>() { metadata };
+        }
+        
         public int Id { get; set; }
         [MaxLength(255)]
         public string Name { get; set; }
+        public string? Description { get; set; }
         public string? CardBannerURL { get; set; }
         public string? LargeBannerURL { get; set; }
         public ICollection<ArtistMetadata> Metadata { get; set; }
-        
         private string CachePath => $"./Cache/{Name}";
         
         private static HttpClient s_httpClient = new();
 
-        public static async Task<Artist> CreateArtist(ArtistResult resultInfo, SearchSource source)
+        public static async Task<Artist?> CreateArtist(ArtistResultCard resultCardInfo, SearchSource source)
         {
             Artist newArtist = new Artist();
-            JArray albums = new JArray();
-            List<ArtistMetadata> metaData = new List<ArtistMetadata>();
             switch (source)
             {
                 case SearchSource.AppleMusic:
-                    string[] banners = App.GetiTunesHelper().GetArtistBannerLinks(resultInfo.artistLinkURL);
-                    albums = await App.GetiTunesHelper().GetAlbumsByArtistID(resultInfo.browseId);
+                    string[] banners = App.GetiTunesHelper().GetArtistBannerLinks(resultCardInfo.artistLinkURL);
                     if (banners[0] != "")
                     {
                         newArtist.LargeBannerURL = banners[0];
                         newArtist.CardBannerURL = banners[1];
                     }
+                    newArtist.Name = resultCardInfo.Name;
+                    newArtist.Metadata = new List<ArtistMetadata>() { new (source, resultCardInfo.browseId) };
                     break;
                 case SearchSource.YouTubeMusic:
-                    albums = App.GetYTMusicHelper().GetAlbums(resultInfo.browseId);
-                    newArtist.CardBannerURL = App.GetYTMusicHelper().GetArtistBanner(resultInfo.browseId, 540);
-                    newArtist.LargeBannerURL = App.GetYTMusicHelper().GetArtistBanner(resultInfo.browseId, 1080);
+                    YtMusicNet.Models.Artist? fullArtistInfo = await App.GetYTMusicHelper().GetArtist(resultCardInfo.browseId);
+                    if (fullArtistInfo == null)
+                    {
+                        return null;
+                    }
+                    newArtist = new Artist(new ArtistMetadata(fullArtistInfo), fullArtistInfo);
                     break;
             }
-            newArtist.Name = resultInfo.Name;
-            metaData.Add(new ArtistMetadata(source, resultInfo.browseId, albums));
-            newArtist.Metadata = metaData;
             return newArtist;
         }
 
-        public ArtistMetadata GetArtistMetadata(SearchSource source)
+        public ArtistMetadata GetArtistMetadata(SearchSource? source = null)
         {
-            return Metadata.First(am => am.SourceId == source);
+            return source != null ? Metadata.First(am => am.SourceId == source) : Metadata.First();
+        }
+
+        public async Task<List<AlbumResult>?> GetAlbums(SearchSource? source = null)
+        {
+            ArtistMetadata matchingMetadata = source != null ? Metadata.First(am => am.SourceId == source) : Metadata.First();
+            switch (source)
+            {
+                case SearchSource.YouTubeMusic:
+                    return await App.GetYTMusicHelper().GetAlbums(matchingMetadata.BrowseId, this);
+                default:
+                    return null;
+            }
+        }
+
+        public async Task<List<VideoResult>?> GetVideos(SearchSource? source = null)
+        {
+            ArtistMetadata matchingMetadata = source != null ? Metadata.First(am => am.SourceId == source) : Metadata.First();
+            switch (source)
+            {
+                case SearchSource.YouTubeMusic:
+                    return await App.GetYTMusicHelper().GetVideosFromArtistId(matchingMetadata.YTVideoId, this);
+                default:
+                    return null;
+            }
         }
         
         public bool IsCardSaved(){return File.Exists(CachePath + "/cardBanner.jpg");}

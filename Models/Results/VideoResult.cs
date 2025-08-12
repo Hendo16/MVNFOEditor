@@ -10,6 +10,18 @@ namespace MVNFOEditor.Models
 {
     public class VideoResult
     {
+        public VideoResult() { }
+        public VideoResult(YtMusicNet.Models.Track track, Artist artist)
+        {
+            Artist = artist;
+            Title = track.Title;
+            Year = track.Year;
+            Explicit = track.IsExplicit;
+            Duration = track.Duration.ToString();
+            VideoID = track.VideoId;
+            thumbURL = track.Thumbnails.Last().URL;
+            VideoURL = "";
+        }
         public Artist Artist {get; set; }
         public string Title { get; set; }
         public string? Year { get; set; }
@@ -20,7 +32,6 @@ namespace MVNFOEditor.Models
         public string VideoURL { get; set; }
         public string thumbURL { get; set; }
         private static HttpClient s_httpClient = new();
-        public VideoResult() { }
 
         public async Task<Stream> LoadCoverBitmapAsync()
         {

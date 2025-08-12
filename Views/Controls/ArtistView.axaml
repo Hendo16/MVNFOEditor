@@ -27,6 +27,7 @@
                 <Panel Height="200" IsVisible="{Binding Cover, Converter={x:Static ObjectConverters.IsNull}}">
                     <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
                 </Panel>
+                <Image VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="48" Source="{Binding SourceIcon}"/>
             </Panel>
         </Border>
         <TextBlock HorizontalAlignment="Center" Text="{Binding Name}"/>

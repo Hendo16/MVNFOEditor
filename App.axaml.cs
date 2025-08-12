@@ -41,6 +41,7 @@ public partial class App : Application
     private static ISukiDialogManager _dialogManager;
     private static ISettings _settings;
     private IServiceProvider? _provider;
+    private bool _enableAppleMusic = false;
     
     public override void Initialize()
     {
@@ -65,11 +66,14 @@ public partial class App : Application
 
     private async void SetupHelpers()
     {
-        _ytmHelper = new YTMusicHelper();
-        _dbHelper = new MusicDBHelper(_dbContext);
-        _ytdlHelper = new YTDLHelper();
-        _iTunesHelper = new iTunesAPIHelper();
-        _appleMusicDLHelper = await AppleMusicDLHelper.CreateHelper();
+        _dbHelper = MusicDBHelper.CreateHelper(_dbContext);
+        _ytdlHelper = YTDLHelper.CreateHelper();
+        _iTunesHelper = iTunesAPIHelper.CreateHelper();
+        _ytmHelper = await YTMusicHelper.CreateHelper();
+        if (_enableAppleMusic)
+        {
+            _appleMusicDLHelper = await AppleMusicDLHelper.CreateHelper();
+        }
         CheckSettings();
     }
 
@@ -98,7 +102,7 @@ public partial class App : Application
                 .TryShow();
         }
         //AM Check
-        if (!_appleMusicDLHelper.IsValidToken())
+        if (_enableAppleMusic && !_appleMusicDLHelper.IsValidToken())
         {
             GetVM().GetDialogManager().CreateDialog()
                 .OfType(NotificationType.Warning)

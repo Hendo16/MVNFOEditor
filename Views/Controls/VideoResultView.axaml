@@ -16,7 +16,7 @@
         <StackPanel>
           <TextBlock Margin="10 10 0 0" Classes="h4" VerticalAlignment="Top" Text="{Binding Title}"/>
           <TextBlock Margin="10 10 0 5" Classes="Accent" HorizontalAlignment="Left" VerticalAlignment="Bottom" Text="{Binding Duration}"/>
-          <TextBlock Margin="10 10 0 5" Classes="Primary" HorizontalAlignment="Left" VerticalAlignment="Bottom" Text="{Binding Year}"/>
+          <TextBlock Margin="10 10 0 5" Classes="Primary" HorizontalAlignment="Right" VerticalAlignment="Bottom" Text="{Binding TopRes}"/>
         </StackPanel>
         </Panel>
     </StackPanel>

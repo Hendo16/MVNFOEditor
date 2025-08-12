@@ -23,7 +23,6 @@ namespace MVNFOEditor.ViewModels
     {
         private ArtistListParentViewModel _parentVM;
         private MusicVideo _musicVideo;
-        private List<Album?> _albums;
         private Album _currAlbum;
         private MusicDBHelper DBHelper;
         private Bitmap? _thumbnail;
@@ -36,6 +35,7 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private string _source;
         [ObservableProperty] private string _bitrate;
         [ObservableProperty] private string _aspectRatio;
+        [ObservableProperty] List<Album> _albums;
 
         public MusicVideoDetailsViewModel()
         {
@@ -55,16 +55,6 @@ namespace MVNFOEditor.ViewModels
             {
                 _thumbnail = value;
                 OnPropertyChanged(nameof(Thumbnail));
-            }
-        }
-
-        public List<Album> Albums
-        {
-            get { return _albums; }
-            set
-            {
-                _albums = value;
-                OnPropertyChanged(nameof(Albums));
             }
         }
 
@@ -143,7 +133,6 @@ namespace MVNFOEditor.ViewModels
             {
                 CurrAlbum = Albums.Find(a => a.Id == video.album.Id);
             }
-            //Albums.Insert(0, new Album() { Title = "" });
         }
 
         public void NewAlbum()

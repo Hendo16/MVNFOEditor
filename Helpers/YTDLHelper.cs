@@ -21,13 +21,19 @@ namespace MVNFOEditor.Helpers
         private YoutubeDL ytdl;
         private OptionSet _settings;
         private static ISettings _settingsData;
-        public YTDLHelper()
+        private YTDLHelper()
         {
             ytdl = new YoutubeDL();
             _settings = new OptionSet();
             _settingsData = App.GetSettings();
             ytdl.FFmpegPath = _settingsData.FFMPEGPath;
             ytdl.YoutubeDLPath = _settingsData.YTDLPath;
+        }
+
+        public static YTDLHelper CreateHelper()
+        {
+            YTDLHelper newHelper = new YTDLHelper();
+            return newHelper;
         }
 
         public async Task<RunResult<string>> DownloadVideo(string id, string outputFolder, string outputName, Progress<DownloadProgress> progress)

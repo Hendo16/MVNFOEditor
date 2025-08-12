@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.Models;
@@ -83,27 +84,19 @@ namespace MVNFOEditor.ViewModels
         public void AddAlbum()
         {
             //TODO: When adding album, how do we select a primary source??? Just assume AppleMusic for now
-            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.AppleMusic);
-            switch (artistMetadata.SourceId)
-            {
-                case SearchSource.YouTubeMusic:
-                    AddYTMusicAlbum();
-                    break;
-                case SearchSource.AppleMusic:
-                    AddAMAlbum();
-                    break;
-            }
+            ArtistMetadata artistMetadata = _artist.GetArtistMetadata();
+            AddAlbum(artistMetadata.SourceId);
         }
 
-        private async void AddAMAlbum()
+        private async void AddAlbum(SearchSource source)
         {
-            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.AppleMusic);
-            if (artistMetadata.AlbumResults.Count == 0)
+            List<AlbumResult>? albumResults = await _artist.GetAlbums(source);
+            if (albumResults == null || albumResults.Count == 0)
             {
                 ManualAlbumViewModel manualVM = new ManualAlbumViewModel(_artist);
                 NewAlbumDialogViewModel newAlbumVM = new NewAlbumDialogViewModel(manualVM, _artist);
                 ToastManager.CreateToast()
-                    .WithTitle("No Apple Music Albums Available")
+                    .WithTitle($"No {source.ToString()} Albums Available")
                     .WithContent($"Please provide videos manually")
                     .OfType(NotificationType.Warning)
                     .Queue();
@@ -112,42 +105,10 @@ namespace MVNFOEditor.ViewModels
                     .TryShow();
                 return;
             }
-            ObservableCollection<AlbumResultViewModel> results = await _iTunesApiHelper.GenerateAlbumResultList(_artist);
-            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results);
-            NewAlbumDialogViewModel parentVM = new NewAlbumDialogViewModel(resultsVM, _artist);
-            _currAlbumDialog = parentVM;
-            for (int i = 0; i < results.Count; i++)
-            {
-                var result = results[i];
-                result.NextPage += AddAlbumEventHandler;
-            }
-            parentVM.ClosePageEvent += ReturnToPreviousView;
-            //Open Dialog
-            App.GetVM().GetDialogManager().CreateDialog()
-                .WithViewModel(dialog => parentVM)
-                .TryShow();
-            
-        }
 
-        private async void AddYTMusicAlbum()
-        {
-            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.YouTubeMusic);
-            if (artistMetadata.AlbumResults.Count == 0)
-            {
-                ManualAlbumViewModel manualVM = new ManualAlbumViewModel(_artist);
-                NewAlbumDialogViewModel newAlbumVM = new NewAlbumDialogViewModel(manualVM, _artist);
-                ToastManager.CreateToast()
-                    .WithTitle("No YouTube Music Albums Available")
-                    .WithContent($"Please provide videos manually")
-                    .OfType(NotificationType.Warning)
-                    .Queue();
-                App.GetVM().GetDialogManager().CreateDialog()
-                    .WithViewModel(dialog => newAlbumVM)
-                    .TryShow();
-                return;
-            }
-            ObservableCollection<AlbumResultViewModel> results = await App.GetYTMusicHelper().GenerateAlbumResultList(_artist);
+            ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>(albumResults.ConvertAll(AlbumResultToVM));
             AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results);
+            resultsVM.LoadCovers();
             NewAlbumDialogViewModel parentVM = new NewAlbumDialogViewModel(resultsVM, _artist);
             _currAlbumDialog = parentVM;
             for (int i = 0; i < results.Count; i++)
@@ -161,6 +122,11 @@ namespace MVNFOEditor.ViewModels
             App.GetVM().GetDialogManager().CreateDialog()
                 .WithViewModel(dialog => parentVM)
                 .TryShow();
+        }
+
+        private AlbumResultViewModel AlbumResultToVM(AlbumResult result)
+        {
+            return new AlbumResultViewModel(result);
         }
 
         private async void AddAlbumEventHandler(object? sender, AlbumResult _result)
@@ -173,10 +139,9 @@ namespace MVNFOEditor.ViewModels
             BusyText = "Searching Youtube Music...";
             IsBusy = true;
             ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.YouTubeMusic);
-            string artistID = artistMetadata.BrowseId;
-            JArray videoSearch = ytMusicHelper.get_videos(artistID);
+            List<VideoResult>? videos = await _artist.GetVideos(SearchSource.YouTubeMusic);
             //Sometimes artists won't have any videos listed, so we need to handle this
-            if (videoSearch == null)
+            if (videos == null)
             {
                 IsBusy = false;
                 App.GetVM().GetDialogManager().CreateDialog()
@@ -185,7 +150,7 @@ namespace MVNFOEditor.ViewModels
                     .TryShow();
                 return;
             }
-            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videoSearch, _artist);
+            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videos, _artist);
             if (results.Count == 0)
             {
                 IsBusy = false;
@@ -276,8 +241,8 @@ namespace MVNFOEditor.ViewModels
         public async void SetArtist(Artist artist)
         {
             _artist = artist;
-            //TODO: When adding album, how do we select a primary source??? Just assume AppleMusic for now
-            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.AppleMusic);
+            //TODO: When adding album, how do we select a primary source??? Just assume first for now
+            ArtistMetadata artistMetadata = _artist.GetArtistMetadata();
             Source = artistMetadata.SourceId;
             ArtistName = _artist.Name;
             await LoadAlbums();
@@ -302,7 +267,7 @@ namespace MVNFOEditor.ViewModels
 
         private void LoadingSync(object sender, bool isSyncTriggered)
         {
-            BusyText = "Searching Youtube Music...";
+            BusyText = $"Getting videos...";
             IsBusy = isSyncTriggered;
         }
 

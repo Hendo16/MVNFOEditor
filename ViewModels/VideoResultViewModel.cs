@@ -101,7 +101,7 @@ namespace MVNFOEditor.ViewModels
         public async Task<int> GenerateNFO(string filePath)
         {
             //TODO: Handle multiple sources, how do we determine metadata
-            ArtistMetadata artistMetadata = _result.Artist.GetArtistMetadata(SearchSource.AppleMusic);
+            ArtistMetadata artistMetadata = _result.Artist.GetArtistMetadata();
             switch (artistMetadata.SourceId)
             {
                 case SearchSource.YouTubeMusic:

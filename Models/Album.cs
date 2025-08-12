@@ -24,6 +24,7 @@ namespace MVNFOEditor.Models
         public string? AlbumBrowseID { get; set; }
         
         public AlbumMetadata Metadata { get; set; }
+        public bool? IsExplicit { get; set; }
         public Artist Artist { get; set; }
         public Album() { } // Parameterless constructor required by EF Core
 

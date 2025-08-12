@@ -36,13 +36,13 @@ class Program
             .WithInterFont()
             .LogToTrace();
         
-        /* For debugging with HTTP Tookit, enable this block
+        
         FlurlHttp.Clients.WithDefaults(builder => builder
             .ConfigureInnerHandler(hch => {
                 hch.Proxy = new WebProxy("http://localhost:8000");
                 hch.UseProxy = true;
             }));
-        */
+        
         if (OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() || OperatingSystem.IsLinux())
             app.UseManagedSystemDialogs();
         return app;

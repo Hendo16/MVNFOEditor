@@ -26,10 +26,16 @@ public class iTunesAPIHelper
     private static int resultLimit = 200;
     private readonly IFlurlClient _flurlClient;
 
-    public iTunesAPIHelper()
+    private iTunesAPIHelper()
     {
         _flurlClient = new FlurlClient();
         _dbContext = App.GetDBContext();
+    }
+
+    public static iTunesAPIHelper CreateHelper()
+    {
+        iTunesAPIHelper newHelper = new iTunesAPIHelper();
+        return newHelper;
     }
 
     public async Task<JObject> ArtistSearch(string artistName)
@@ -131,9 +137,10 @@ public class iTunesAPIHelper
     {            
         ArtistMetadata artistMetadata = artist.GetArtistMetadata(SearchSource.AppleMusic);
         //Process Album Results
-        JArray AlbumList = artistMetadata.AlbumResults;
+        //JArray AlbumList = artistMetadata.AlbumResults;
+        JArray AlbumList = new JArray();
         ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>();
-            
+        
         //Build up the album cards
         for (int i = 0; i < AlbumList.Count; i++)
         {

@@ -4,6 +4,8 @@ using MVNFOEditor.DB;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -55,9 +57,23 @@ namespace MVNFOEditor.ViewModels
 
         public AlbumResultViewModel(AlbumResult result)
         {
-            _dbContext = App.GetDBContext();
+            //_dbContext = App.GetDBContext();
             _result = result;
-            SelectBtnText = _dbContext.Album.Any(a => a.AlbumBrowseID == result.browseId) ? "Open" : "Select";
+            SelectBtnText = "Select";
+            //SelectBtnText = _dbContext.Album.Any(a => a.AlbumBrowseID == result.browseId) ? "Open" : "Select";
+        }
+
+        public static async Task<ObservableCollection<AlbumResultViewModel>> GetAlbumResultVM(List<AlbumResult> results)
+        {
+            ObservableCollection<AlbumResultViewModel>
+                returnedModels = new ObservableCollection<AlbumResultViewModel>();
+            for (int i = 0; i < results.Count; i++)
+            {
+                AlbumResultViewModel newVM = new AlbumResultViewModel(results[i]);
+                await newVM.LoadThumbnail();
+                returnedModels.Add(newVM);
+            }
+            return returnedModels;
         }
 
         public AlbumResult GetResult()

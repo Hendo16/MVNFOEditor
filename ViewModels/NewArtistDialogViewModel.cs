@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MVNFOEditor.DB;
@@ -285,7 +286,7 @@ namespace MVNFOEditor.ViewModels
             ClosePageEvent?.Invoke(this, true);
             App.GetVM().GetDialogManager().DismissDialog();
         }
-        public void NextStep(object? sender, ArtistResult newArtist)
+        public void NextStep(object? sender, ArtistResultCard newArtist)
         {
             BusyText = "Getting Albums...";
             IsBusy = true;
@@ -330,16 +331,16 @@ namespace MVNFOEditor.ViewModels
                 NextButtonText = "Download";
                 IsBusy = true;
                 NavVisible = false;
-                ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.YouTubeMusic);
+                ArtistMetadata artistMetadata = _artist.GetArtistMetadata();
                 string artistID = artistMetadata.BrowseId;
-                JArray videoSearch = ytMusicHelper.get_videos(artistID);
+                List<VideoResult>? videos = await _artist.GetVideos();
                 //Run this check here because if videoSearch is null, the artist has no videos and the next command will throw an exception, crashing the app
-                if(videoSearch == null)
+                if(videos == null)
                 {
                     HandleNoVideos();
                     return;
                 }
-                ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videoSearch, _artist);
+                ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videos, _artist);
                 if (results.Count == 0)
                 {
                     HandleNoVideos();
@@ -378,7 +379,7 @@ namespace MVNFOEditor.ViewModels
         
         #region AppleMusic
 
-        private async void AppleMusicGetAlbums(ArtistResult newArtist)
+        private async void AppleMusicGetAlbums(ArtistResultCard newArtist)
         {
             //Prevent duplicates being stored
             if (!_dbContext.ArtistMetadata.Any(am => am.SourceId == SearchSource.AppleMusic && am.BrowseId == newArtist.browseId))
@@ -399,7 +400,7 @@ namespace MVNFOEditor.ViewModels
             _parentVM.RefreshList();
             
             //If no albums are found, go straight to video view
-            if(artistMetadata.AlbumResults.Count == 0) {IsAlbumView=false;ToSingles();return;}
+            //if(artistMetadata.AlbumResults.Count == 0) {IsAlbumView=false;ToSingles();return;}
             
             //Process Album Results
             ObservableCollection<AlbumResultViewModel> results = await _iTunesApiHelper.GenerateAlbumResultList(_artist);
@@ -469,7 +470,7 @@ namespace MVNFOEditor.ViewModels
         #endregion
 
         #region YTMusic
-        private async void YTMusicGetAlbums(ArtistResult newArtist)
+        private async void YTMusicGetAlbums(ArtistResultCard newArtist)
         {
             //Prevent duplicates being stored
             if (!_dbContext.ArtistMetadata.Any(am => am.SourceId == SearchSource.YouTubeMusic && am.BrowseId == newArtist.browseId))
@@ -488,21 +489,13 @@ namespace MVNFOEditor.ViewModels
             //Refresh list to display the new artist
             _parentVM.RefreshList();
 
-            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.YouTubeMusic);
-            if(artistMetadata.AlbumResults.Count == 0) {IsAlbumView=false;ToSingles();return;}
+            List<AlbumResult> AlbumList = await _artist.GetAlbums(SearchSource.YouTubeMusic);
+            if(AlbumList == null || AlbumList.Count == 0) {IsAlbumView=false;ToSingles();return;}
 
-            JArray AlbumList = artistMetadata.AlbumResults;
             ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>();
             for (int i = 0; i < AlbumList.Count; i++)
             {
-                var currAlbum = AlbumList[i];
-                AlbumResult currResult = new AlbumResult();
-
-                currResult.Title = currAlbum["title"].ToString();
-                try{ currResult.Year = currAlbum["year"].ToString(); } catch (NullReferenceException e){}
-                currResult.browseId = currAlbum["browseId"].ToString();
-                currResult.thumbURL = ytMusicHelper.GetHighQualityArt((JObject)currAlbum);
-                currResult.isExplicit = Convert.ToBoolean(currAlbum["isExplicit"]);
+                var currResult = AlbumList[i];
                 currResult.Artist = _artist;
                 AlbumResultViewModel newVM = new AlbumResultViewModel(currResult);
                 await newVM.LoadThumbnail();
@@ -537,9 +530,9 @@ namespace MVNFOEditor.ViewModels
 
             ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.YouTubeMusic);
             string artistID = artistMetadata.BrowseId;
-            JArray videoSearch = ytMusicHelper.get_videos(artistID);
-            JObject fullAlbumDetails = ytMusicHelper.get_album(album.AlbumBrowseID);
-            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videoSearch, fullAlbumDetails, null, album);
+            List<VideoResult>? videos = await album.Artist.GetVideos(SearchSource.YouTubeMusic);
+            YtMusicNet.Models.Album? fullAlbum = await ytMusicHelper.GetAlbum(album.AlbumBrowseID);
+            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videos, fullAlbum, null, album);
             VideoResultsViewModel resultsVM = new VideoResultsViewModel(results);
             AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM, artistMetadata.SourceId);
             _videoResultsParentVM = resultsVM;
@@ -561,15 +554,14 @@ namespace MVNFOEditor.ViewModels
             IsBusy = true;
             NavVisible = false;
             ToggleVisible = false;
-            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.YouTubeMusic);
-            string artistID = artistMetadata.BrowseId;
-            JArray videoSearch = ytMusicHelper.get_videos(artistID);
-            if(videoSearch == null)
+            ArtistMetadata artistMetadata = _artist.GetArtistMetadata();
+            List<VideoResult>? videos = await _artist.GetVideos();
+            if(videos == null)
             {
                 HandleNoVideos();
                 return;
             }
-            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videoSearch, _artist);
+            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videos, _artist);
             VideoResultsViewModel resultsVM = new VideoResultsViewModel(results);
             AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM, artistMetadata.SourceId);
             _videoResultsParentVM = resultsVM;

@@ -21,7 +21,7 @@
                         <TextBox theme:TextBoxExtensions.Prefix="Title:  "  Text="{Binding Title}" Watermark="Name" />
                         <TextBox theme:TextBoxExtensions.Prefix="Year:  "  Text="{Binding Year}" Watermark="Video Year" />
                       <RelativePanel>
-                        <ComboBox x:Name="AlbumList" PlaceholderText="Album" ItemsSource="{Binding Albums}" SelectedItem="{Binding CurrAlbum}">
+                        <ComboBox PlaceholderText="Album" ItemsSource="{Binding Albums}" SelectedItem="{Binding CurrAlbum}">
                           <ComboBox.ItemTemplate>
                             <DataTemplate>
                               <TextBlock Text="{Binding Title}"/>

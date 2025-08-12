@@ -43,6 +43,14 @@ namespace MVNFOEditor.ViewModels
             _fullResults = results;
         }
 
+        public async void LoadCovers()
+        {
+            foreach (var result in _results)
+            {
+                await result.LoadThumbnail();
+            }
+        }
+
         public void FilterResults()
         {
             if (string.IsNullOrEmpty(SearchText))

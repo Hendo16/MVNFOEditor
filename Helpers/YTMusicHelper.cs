@@ -24,227 +24,78 @@ using SukiUI.Dialogs;
 using SukiUI.Enums;
 using SukiUI.Toasts;
 using YoutubeDLSharp.Metadata;
+using YtMusicNet;
+using YtMusicNet.Constants;
+using YtMusicNet.Records;
+using AlbumResult = MVNFOEditor.Models.AlbumResult;
+using VideoResult = MVNFOEditor.Models.VideoResult;
 
 namespace MVNFOEditor.Helpers
 {
     public class YTMusicHelper
     {
+        private static YtMusicClient api;
+        
         private dynamic _ytMusic;
         private MusicDbContext _dbContext;
         public YTMusicHelper()
         {
-            PythonEngine.Initialize();
-            PythonEngine.BeginAllowThreads();
-            using (Py.GIL())
-            {
-                dynamic ytmusicapi = Py.Import("ytmusicapi");
-
-                _ytMusic = ytmusicapi.YTMusic("./Assets/oauth.json");
-            }
             _dbContext = App.GetDBContext();
         }
-
-        public JArray search_Artists(string artist)
+        
+        public static async Task<YTMusicHelper> CreateHelper()
         {
-            string result = "";
-            dynamic search_results;
-            using (Py.GIL())
-            {
-                // Call methods, access properties, etc.
-                search_results = _ytMusic.search(artist,"artists");
-            }
-            string parsedResult = search_results.ToString()
-                .Replace("None", "null")
-                .Replace("True", "true")
-                .Replace("False", "false")
-                .Replace("\\xa0", " ");
-            return JArray.Parse(parsedResult);
+            YTMusicHelper newHelper = new YTMusicHelper();
+            await newHelper.InitClient();
+            return newHelper;
         }
 
-        public string get_artistID(string artist)
+        public async Task InitClient()
         {
-            string result = "";
-            dynamic search_results = "";
-            using (Py.GIL())
-            {
-                // Call methods, access properties, etc.
-                search_results = _ytMusic.search(artist);
-            }
-            string parsedResult = search_results.ToString()
-                .Replace("None","null")
-                .Replace("True","true")
-                .Replace("False","false");
-            List<Dictionary<string, object>> jsonArray = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(parsedResult);
-
-            for (int i = 0; i < jsonArray.Count; i++)
-            {
-                var curr_result = jsonArray[i];
-                if (curr_result.ContainsKey("category"))
-                {
-                    if (curr_result["category"].ToString() == "Top result")
-                    {
-                        try
-                        {
-                            var artistObj = ((JArray)curr_result["artists"])[0];
-                            result = artistObj["id"].ToString();
-                            break;
-                        }
-                        catch (KeyNotFoundException e)
-                        {
-                            result = "null";
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return result;
+            api = await YtMusicClient.CreateAsync(proxyUrl:"http://localhost:8000");
         }
 
-        public JArray? get_videos(string artistId)
+        public async Task<List<ArtistResult?>?> searchArtists(string artistStr)
         {
-            string browseId;
-            string parsedResult;
-            dynamic search_results;
-
-            using (Py.GIL())
+            List<Result?>? results = await api.Searching.Search(artistStr, FilterType.Artists);
+            if (results != null && results.Count > 0)
             {
-                search_results = _ytMusic.get_artist(artistId);
+                return results.ConvertAll(r => new ArtistResult(r.Id, r.Title, r.Thumbnails));
             }
-            parsedResult = search_results.ToString()
-                .Replace("None", "null")
-                .Replace("True", "true")
-                .Replace("False", "false")
-                .Replace("\\xa0", " ");
-
-            dynamic artistObj = JObject.Parse(parsedResult);
-
-            dynamic initVideos = artistObj.videos;
-            if (initVideos == null)
-            {
-                return null;
-            }
-            browseId = initVideos.browseId;
-            if (browseId != null)
-            {
-                using (Py.GIL())
-                {
-                    try
-                    {
-                        search_results = _ytMusic.get_playlist(browseId);
-                    }
-                    catch (PythonException e)
-                    {
-                        App.GetVM().GetToastManager().CreateToast()
-                            .WithTitle("Error")
-                            .WithContent("Error fetching video list, please wait a few seconds and try again")
-                            .OfType(NotificationType.Error)
-                            .Queue();
-                        return null;
-                    }
-                }
-                parsedResult = search_results.ToString()
-                    .Replace("None", "null")
-                    .Replace("True", "true")
-                    .Replace("False", "false")
-                    .Replace("\\xa0", " ");
-
-                dynamic playlistObj = JObject.Parse(parsedResult);
-
-                return playlistObj.tracks;
-            }
-            else
-            {
-                return (JArray)initVideos.results;
-            }
+            return null;
         }
 
-        public JObject get_album(string albumId)
-        {
-            string parsedResult;
-            dynamic search_results;
-
-            using (Py.GIL())
-            {
-                search_results = _ytMusic.get_album(albumId);
-            }
-            parsedResult = search_results.ToString()
-                .Replace("None", "null")
-                .Replace("True", "true")
-                .Replace("False", "false")
-                .Replace("\\xa0", " ");
-
-            return JObject.Parse(parsedResult);
-        }
-
-        public async Task<ObservableCollection<AlbumResultViewModel>> GenerateAlbumResultList(Artist artist)
-        {
-            ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>();
-            ArtistMetadata artistMetadata = artist.GetArtistMetadata(SearchSource.YouTubeMusic);
-            for (int i = 0; i < artistMetadata.AlbumResults.Count; i++)
-            {
-                var currAlbum = artistMetadata.AlbumResults[i];
-                AlbumResult currResult = new AlbumResult();
-
-                currResult.Title = currAlbum["title"].ToString();
-                currResult.Year = currAlbum["year"] != null ? currAlbum["year"].ToString() : "";
-                currResult.browseId = currAlbum["browseId"].ToString();
-                currResult.thumbURL = GetHighQualityArt((JObject)currAlbum);
-                currResult.isExplicit = Convert.ToBoolean(currAlbum["isExplicit"]);
-                currResult.Artist = artist;
-                AlbumResultViewModel newVM = new AlbumResultViewModel(currResult);
-                await newVM.LoadThumbnail();
-                results.Add(newVM);
-            }
-
-            return results;
-        }
-
-        public async Task<ObservableCollection<VideoResultViewModel>> GenerateVideoResultList(JArray vidResults, JObject albumDetails, List<MusicVideo>? songs, Album album)
+        public async Task<ObservableCollection<VideoResultViewModel>> GenerateVideoResultList(List<VideoResult> vidResults, YtMusicNet.Models.Album albumDetails, List<MusicVideo>? songs, Album album)
         {
             ObservableCollection<VideoResultViewModel> results = new ObservableCollection<VideoResultViewModel>();
             //Grab videos that are only within this album
-            List<string> albumTitles = ((JArray)albumDetails["tracks"]).Select(t => (Regex.Replace((string)t["title"], @"[^\w\s]", "")).ToLower()).ToList();
+            List<string> albumTitles = albumDetails.Tracks
+                .Select(t => (Regex.Replace(t.Title, @"[^\w\s]", "")).ToLower()).ToList();
+            //List<string> albumTitles = ((JArray)albumDetails["tracks"]).Select(t => (Regex.Replace((string)t["title"], @"[^\w\s]", "")).ToLower()).ToList();
            // List<JToken> matchingVideos = vidResults.Where(vid => albumTitles.Contains(CleanYTName((string)vid["title"], album.Artist).ToLower())).ToList();
-            List<JToken> matchingVideos = vidResults
-                .Where(vid =>
-                {
-                    var title = CleanYTName((string)vid["title"], album.Artist).ToLower();
-                    var cleanVidTitle = Regex.Replace(title, @"[^\w\s]", "");
-                    return title != null && (albumTitles.Contains(cleanVidTitle) || albumTitles.Any(cleanVidTitle.Contains));
-                })
-                .ToList();
+           List<VideoResult> matchingVideos = vidResults
+               .Where(vid =>
+               {
+                   var title = CleanYTName(vid.Title, album.Artist).ToLower();
+                   var cleanVidTitle = Regex.Replace(title, @"[^\w\s]", "");
+                   return (albumTitles.Contains(cleanVidTitle) || albumTitles.Any(cleanVidTitle.Contains));
+               })
+               .ToList();
 
             //Create a list of VideoResultViewModel
             for (int i = 0; i < matchingVideos.Count; i++)
             {
-                JToken vid = matchingVideos[i];
-                VideoResult newResult = new VideoResult();
-                var parsedTitle = CleanYTName(vid["title"].ToString(), album.Artist);
-
-                //newResult.Artist = vid["artists"][0]["name"].ToString();
-                newResult.Artist = album.Artist;
-                newResult.Title = parsedTitle;
-                newResult.VideoID = vid["videoId"].ToString();
-                newResult.thumbURL = vid["thumbnails"][0]["url"].ToString();
-
-                //'Duration' is null sometimes
-                try { newResult.Duration = vid["duration"].ToString(); } catch (NullReferenceException e) { }
-                
-                //Until I find a faster way to get resolutions for videos, this is commented out for the time being :(
-                /*
-                //YTDL VideoData
-                VideoData vidData = await App.GetYTDLHelper()
-                    .GetVideoFormats(newResult.VideoID);
-                if (vidData != null)
+                VideoResult vid = matchingVideos[i];
+                var parsedTitle = CleanYTName(vid.Title, album.Artist);
+                var vidMetadata = await api.Browse.GetSong(vid.VideoID);
+                if (vidMetadata != null)
                 {
-                    var list = (vidData.Formats.Where(f => f.FormatNote != null && f.Resolution != "audio only")).OrderByDescending(f => f.AverageBitrate);
-                    newResult.TopRes = list.FirstOrDefault().FormatNote == "Premium" ? "1080p (Premium)" : list.FirstOrDefault().FormatNote;
+                    var topRes = vidMetadata.StreamingData.AdaptiveFormats.OrderByDescending(af => af.Bitrate).First();
+                    vid.TopRes = topRes.QualityLabel;
                 }
-                */
-                VideoResultViewModel resultVM = new VideoResultViewModel(newResult, album);
+                VideoResultViewModel resultVM = new VideoResultViewModel(vid, album);
                 //Check if the song already exists in the DataBase
-                if (songs!= null && songs.Exists(s => s.videoID == newResult.VideoID || s.title.ToLower() == parsedTitle.ToLower()))
+                if (songs!= null && songs.Exists(s => s.videoID == vid.VideoID || s.title.ToLower() == parsedTitle.ToLower()))
                 {
                     resultVM.BorderColor = "Green";
                     resultVM.DownloadEnabled = false;
@@ -268,36 +119,25 @@ namespace MVNFOEditor.Helpers
             return results;
         }
 
-        public async Task<ObservableCollection<VideoResultViewModel>> GenerateVideoResultList(JArray vidResults, Artist artist)
+        public async Task<ObservableCollection<VideoResultViewModel>> GenerateVideoResultList(List<VideoResult> vidResults, Artist artist)
         {
             ObservableCollection<VideoResultViewModel> results = new ObservableCollection<VideoResultViewModel>();
             var songs = _dbContext.MusicVideos.ToList();
             for (int i = 0; i < vidResults.Count; i++)
             {
-                var vid = vidResults[i];
-                var parsedTitle = CleanYTName(vid["title"].ToString(), artist);
-                VideoResult newResult = new VideoResult();
-
-                newResult.Title = parsedTitle;
-                newResult.VideoID = vid["videoId"].ToString();
-                newResult.thumbURL = vid["thumbnails"][0]["url"].ToString();
-                newResult.Artist = artist;
-                //'Duration' is null sometimes
-                try { newResult.Duration = vid["duration"].ToString(); } catch (NullReferenceException e) { }
-                //Until I find a faster way to get resolutions for videos, this is commented out for the time being :(
+                VideoResult result = vidResults[i];
+                var parsedTitle = CleanYTName(result.Title, artist);
                 /*
-                //YTDL VideoData
-                VideoData vidData = await App.GetYTDLHelper()
-                    .GetVideoFormats(newResult.VideoID);
-                if (vidData != null)
+                var vidMetadata = await api.Browse.GetSong(result.VideoID);
+                if (vidMetadata != null)
                 {
-                    var list = (vidData.Formats.Where(f => f.FormatNote != null && f.Resolution != "audio only")).OrderByDescending(f => f.AverageBitrate);
-                    newResult.TopRes = list.FirstOrDefault().FormatNote == "Premium" ? "1080p (Premium)" : list.FirstOrDefault().FormatNote;
+                    var topRes = vidMetadata.StreamingData.AdaptiveFormats.OrderByDescending(af => af.Bitrate).First();
+                    result.TopRes = topRes.QualityLabel;
                 }
                 */
-                VideoResultViewModel resultVM = new VideoResultViewModel(newResult);
+                VideoResultViewModel resultVM = new VideoResultViewModel(result);
                 //Check if the song already exists in the DataBase
-                if (songs != null && songs.Exists(s => s.videoID == newResult.VideoID || s.title.ToLower() == parsedTitle.ToLower()))
+                if (songs != null && songs.Exists(s => s.videoID == result.VideoID || s.title.ToLower() == parsedTitle.ToLower()))
                 {
                     resultVM.BorderColor = "Green";
                     resultVM.DownloadEnabled = false;
@@ -321,150 +161,51 @@ namespace MVNFOEditor.Helpers
             return results;
         }
 
-        public void GetInfoFromVideo(MusicVideo mv)
+        public async Task<YtMusicNet.Models.Artist?> GetArtist(string artistId)
         {
-
+            return await api.Browse.GetArtist(artistId);
         }
 
-        public string GetArtistBanner(string artistId, int width)
+        public async Task<List<YtMusicNet.Models.Album>> GetAlbums(YtMusicNet.Models.Artist artist, ArtistOrderType sorting = ArtistOrderType.Default)
         {
-            string result="";
-            string parsedResult;
-            dynamic search_results;
-
-            using (Py.GIL())
-            {
-                search_results = _ytMusic.get_artist(artistId);
-            }
-            parsedResult = search_results.ToString()
-                .Replace("None", "null")
-                .Replace("True", "true")
-                .Replace("False", "false")
-                .Replace("\\xa0", " ");
-            dynamic artistObj = JObject.Parse(parsedResult);
-            JArray bannerList = (JArray)artistObj.thumbnails;
-            for (int i = 0; i < bannerList.Count; i++)
-            {
-                JToken bannerObj = bannerList[i];
-                if (int.Parse(bannerObj["width"].ToString()) >= width)
-                {
-                    result = bannerObj["url"].ToString();
-                }
-            }
-            return result;
+            return await api.Browse.GetArtistAlbums(artist.Albums.BrowseId, artist.Albums.Params, sorting);
         }
 
-        public JArray GetAlbums(string artistId)
+        public async Task<YtMusicNet.Models.Album?> GetAlbum(string albumId)
         {
-            string browseId;
-            string searchParams;
-            string parsedResult;
-            dynamic search_results;
-            JArray albumList;
-
-            using (Py.GIL())
+            return await api.Browse.GetAlbum(albumId);
+        }
+        
+        public async Task<List<AlbumResult>?> GetAlbums(string artistId, Artist artist, ArtistOrderType sorting = ArtistOrderType.Default)
+        {
+            YtMusicNet.Models.Artist? selectedArtist = await api.Browse.GetArtist(artistId);
+            if (selectedArtist == null)
             {
-                search_results = _ytMusic.get_artist(artistId);
+                return null;
             }
-            parsedResult = search_results.ToString()
-                .Replace("None", "null")
-                .Replace("True", "true")
-                .Replace("False", "false")
-                .Replace("\\xa0", " ");
-
-            dynamic artistObj = JObject.Parse(parsedResult);
-            if (artistObj.albums == null) {return null;}
-            JToken initAlbums = artistObj.albums;
-            browseId = initAlbums["browseId"].ToString();
-            if (browseId != "")
+            List<YtMusicNet.Models.Album>? ytAlbums = selectedArtist?.Albums?.Results;
+            //If we have a browseID then the results won't be the full list
+            if (selectedArtist.Albums.BrowseId != null)
             {
-                searchParams = initAlbums["params"].ToString();
-                using (Py.GIL())
-                {
-                    search_results = _ytMusic.get_artist_albums(browseId, searchParams);
-                }
-                parsedResult = search_results.ToString()
-                    .Replace("None", "null")
-                    .Replace("True", "true")
-                    .Replace("False", "false")
-                    .Replace("\\xa0", " ");
-                
-                albumList = JArray.Parse(parsedResult);
+                ytAlbums = await api.Browse.GetArtistAlbums(selectedArtist.Albums.BrowseId, selectedArtist.Albums.Params, sorting);
             }
-            else
-            {
-                albumList = (JArray)initAlbums["results"];
-            }
-
-            return albumList;
+            return ytAlbums.ConvertAll(a => AlbumToResult(a, artist));
         }
 
-        public JObject GetAlbumObj(string albumName, Artist artist)
-        {
-            ArtistMetadata artistMetadata = artist.GetArtistMetadata(SearchSource.YouTubeMusic);
-            JArray albumList = artistMetadata.AlbumResults;
-            for (int i = 0; i < albumList.Count; i++)
-            {
-                //Checking if album matches the object result
-                if (albumList[i] is JObject obj &&
-                    obj.TryGetValue("title", out var titleObj) &&
-                    titleObj is JValue titleValue &&
-                    (titleValue.Value.ToString().ToLower() == albumName.ToLower() ||
-                     titleValue.Value.ToString().ToLower().Contains(albumName.ToLower())))
-                {
-                    return obj;
-                }
-            }
-            //Album not in Artist album list, will have to perform a search
-            string result = "";
-            dynamic search_results;
-            using (Py.GIL())
-            {
-                // Call methods, access properties, etc.
-                search_results = _ytMusic.search(albumName);
-            }
-            string parsedResult = search_results.ToString()
-                .Replace("None", "null")
-                .Replace("True", "true")
-                .Replace("False", "false")
-                .Replace("\\xa0", " ");
-            JArray albumSearchResult = JArray.Parse(parsedResult);
-            for (int i = 0; i < albumSearchResult.Count; i++)
-            {
-                JObject currentResult = (JObject)albumSearchResult[i];
-                if (currentResult["category"].ToString() == "Top result" &&
-                    currentResult["resultType"].ToString() == "album" &&
-                    ((JArray)currentResult["artists"]).Select(e => ((string)e["name"]).ToLower() == artist.Name.ToLower()).Count() > 0)
-                {
-                    return currentResult;
-                }
-            }
-            return null;
+        public async Task<List<VideoResult>?> GetVideosFromArtistId(string browseId, Artist artist)
+        {            
+            YtMusicNet.Models.Playlist videoPlaylist = await api.Playlists.GetPlaylist(browseId);
+            return videoPlaylist?.Tracks?.ConvertAll(v => TrackToResult(v, artist));
         }
 
-        public string GetHighQualityArt(JObject albumObj)
+        private static VideoResult TrackToResult(YtMusicNet.Models.Track track, Artist artist)
         {
-            string artURL = "";
-            int artWidth = 0;
-            //Finding actual art
-            JArray thumbnails = (JArray)albumObj["thumbnails"];
-            for (int j = 0; j < thumbnails.Count; j++)
-            {
-                var currArt = thumbnails[j];
-                var parsedWidth = int.Parse(currArt["width"].ToString());
+            return new VideoResult(track, artist);
+        }
 
-                if (artURL == "")
-                {
-                    artURL = currArt["url"].ToString();
-                    artWidth = parsedWidth;
-                }
-                else if (artWidth < parsedWidth)
-                {
-                    artURL = currArt["url"].ToString();
-                    artWidth = parsedWidth;
-                }
-            }
-            return artURL;
+        private static AlbumResult AlbumToResult(YtMusicNet.Models.Album album, Artist artist)
+        {
+           return new AlbumResult(album, artist);
         }
 
         public string CleanYTName(string name, Artist artist)

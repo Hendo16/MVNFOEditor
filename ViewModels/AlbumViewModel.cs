@@ -91,7 +91,7 @@ namespace MVNFOEditor.ViewModels
         public void GenerateSongs()
         {
             var dbContext = App.GetDBContext();
-            Songs = dbContext.MusicVideos.Where(mv => mv.album.Title == Title).ToList();
+            Songs = dbContext.MusicVideos.Where(mv => mv.album.Id == _album.Id).ToList();
         }
         public async void HandleSongClick(int songID)
         {
@@ -146,18 +146,18 @@ namespace MVNFOEditor.ViewModels
             //Open Dialog
             App.GetVM().GetDialogManager().CreateDialog()
                 .WithViewModel(dialog => parentVM)
-                .OnDismissed(e => parentVM.HandleDismiss())
+                //.OnDismissed(e => parentVM.HandleDismiss())
                 .TryShow();
         }
 
         public async void AddYTMVideo()
         {
             OnSyncTrigger(true);
-            ArtistMetadata artistMetadata = Artist.GetArtistMetadata(SearchSource.AppleMusic);
+            ArtistMetadata artistMetadata = Artist.GetArtistMetadata(SearchSource.YouTubeMusic);
             string artistID = artistMetadata.BrowseId;
-            JArray videoSearch = ytMusicHelper.get_videos(artistID);
+            List<VideoResult>? videos = await Artist.GetVideos(SearchSource.YouTubeMusic);
             //Sometimes artists won't have any videos listed, so we need to handle this
-            if (videoSearch == null)
+            if (videos == null)
             {
                 OnSyncTrigger(false);
                 App.GetVM().GetDialogManager().CreateDialog()
@@ -166,8 +166,8 @@ namespace MVNFOEditor.ViewModels
                     .TryShow();
                 return;
             }
-            JObject fullAlbumDetails = ytMusicHelper.get_album(_album.AlbumBrowseID);
-            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videoSearch, fullAlbumDetails, Songs, _album);
+            YtMusicNet.Models.Album? fullAlbum = await ytMusicHelper.GetAlbum(_album.AlbumBrowseID);
+            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videos, fullAlbum, Songs, _album);
 
             if (results.Count == 0)
             {

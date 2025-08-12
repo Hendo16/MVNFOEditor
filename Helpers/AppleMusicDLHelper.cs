@@ -58,6 +58,7 @@ public class AppleMusicDataPayload
     [JsonPropertyName("uri")]
     public string? Uri { get; set; }
 }
+
 public class AppleMusicDLHelper
 {
     private static readonly ILog Log = LogManager.GetLogger(typeof(AppleMusicDLHelper));
@@ -83,7 +84,7 @@ public class AppleMusicDLHelper
     {
         return $"https://amp-api.music.apple.com/v1/catalog/{_settings.AM_Storefront}/music-videos/";
     }
-    public AppleMusicDLHelper(){
+    private AppleMusicDLHelper(){
         _db = App.GetDBContext();
         _settings = App.GetSettings();
     }

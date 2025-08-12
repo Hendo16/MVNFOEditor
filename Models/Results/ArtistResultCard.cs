@@ -4,11 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using YtMusicNet.Records;
 using System.Threading.Tasks;
 
 namespace MVNFOEditor.Models
 {
-    public class ArtistResult
+    public class ArtistResultCard
     {
         public string Name { get; set; }
         public string browseId { get; set; }
@@ -16,7 +17,13 @@ namespace MVNFOEditor.Models
         public string thumbURL { get; set; }
 
         private static HttpClient s_httpClient = new();
-        public ArtistResult() { }
+        public ArtistResultCard() { }
+        public ArtistResultCard(ArtistResult result)
+        {
+            Name = result.Title;
+            browseId = result.Id;
+            thumbURL = result.Thumbnails.Last().URL;
+        }
 
         public async Task<Stream> LoadCoverBitmapAsync()
         {

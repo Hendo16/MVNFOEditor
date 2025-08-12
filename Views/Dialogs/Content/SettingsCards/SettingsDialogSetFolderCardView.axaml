@@ -12,7 +12,7 @@
             <TextBlock Classes="h3" Text="Set Folders and Files"/>
         </controls:GroupBox.Header>
         <UniformGrid Rows="1" Columns="3">
-            <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="Music Video Folder" Name="MVInput" />
+            <TextBox Width="350" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="Music Video Folder" Name="MVInput" />
             <Label VerticalAlignment="Center" HorizontalAlignment="Center"></Label>
             <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseMVFolder" />
         </UniformGrid>

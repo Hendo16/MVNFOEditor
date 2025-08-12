@@ -44,16 +44,6 @@ namespace MVNFOEditor.DB
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ArtistMetadata>()
-                .Property(a => a.AlbumResults)
-                .HasColumnType("jsonb");
-
-            modelBuilder.Entity<ArtistMetadata>()
-                .Property(am => am.AlbumResults)
-                .HasConversion(
-                    am => am.ToString(),
-                    am => JArray.Parse(am));
-
-            modelBuilder.Entity<ArtistMetadata>()
                 .Property(a => a.SourceId)
                 .HasConversion(
                     a => a.ToString(),

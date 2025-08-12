@@ -13,7 +13,7 @@ namespace MVNFOEditor.Views
         }
         public void TriggerSongList(object sender, PointerPressedEventArgs e)
         {
-            if (DataContext is AlbumViewModel viewModel)
+            if (DataContext is AlbumViewModel viewModel && !songList.IsVisible)
             {
                 viewModel.GenerateSongs();
             }
