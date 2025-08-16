@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace MVNFOEditor.Models
 {
@@ -20,6 +21,17 @@ namespace MVNFOEditor.Models
             Duration = track.Duration.ToString();
             VideoID = track.VideoId;
             thumbURL = track.Thumbnails.Last().URL;
+            VideoURL = "";
+        }
+        public VideoResult(JToken track, Artist artist)
+        {
+            Artist = artist;
+            Title = (string)track["trackCensoredName"];
+            Year = DateTime.Parse((string)track["releaseDate"]).Year.ToString();
+            Explicit = (string)track["trackExplicitness"] == "explicit";
+            Duration = TimeSpan.FromMilliseconds((double)track["trackTimeMillis"])
+                .ToString(@"mm\:ss");
+            VideoID = (string)track["trackId"];
             VideoURL = "";
         }
         public Artist Artist {get; set; }

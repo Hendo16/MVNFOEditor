@@ -52,7 +52,7 @@ namespace MVNFOEditor.Helpers
 
         public async Task InitClient()
         {
-            api = await YtMusicClient.CreateAsync(proxyUrl:"http://localhost:8000");
+            api = await YtMusicClient.CreateAsync();
         }
 
         public async Task<List<ArtistResult?>?> searchArtists(string artistStr)

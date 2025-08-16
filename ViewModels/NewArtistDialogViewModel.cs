@@ -394,7 +394,7 @@ namespace MVNFOEditor.ViewModels
                 _artist = _dbContext.ArtistMetadata.Include(am => am.Artist).First(am => am.SourceId == SearchSource.AppleMusic && am.BrowseId == newArtist.browseId).Artist;
             }
             StepperEnabled = false;
-            ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.AppleMusic);
+            //ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.AppleMusic);
             
             //Refresh list to display the new artist
             _parentVM.RefreshList();
@@ -402,6 +402,30 @@ namespace MVNFOEditor.ViewModels
             //If no albums are found, go straight to video view
             //if(artistMetadata.AlbumResults.Count == 0) {IsAlbumView=false;ToSingles();return;}
             
+            
+            List<AlbumResult> AlbumList = await _artist.GetAlbums(SearchSource.AppleMusic);
+            if(AlbumList == null || AlbumList.Count == 0) {IsAlbumView=false;ToSingles();return;}
+            ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>();
+            for (int i = 0; i < AlbumList.Count; i++)
+            {
+                var currResult = AlbumList[i];
+                currResult.Artist = _artist;
+                AlbumResultViewModel newVM = new AlbumResultViewModel(currResult);
+                await newVM.LoadThumbnail();
+                results.Add(newVM);
+            }
+            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results);
+            _albumResultsVM = resultsVM;
+            for (int i = 0; i < results.Count; i++)
+            {
+                var result = results[i];
+                result.NextPage += ToVideos;
+            }
+            IsBusy = false;
+            NavVisible = true;
+            ToggleVisible = true;
+            CurrentContent = resultsVM;
+            /*
             //Process Album Results
             ObservableCollection<AlbumResultViewModel> results = await _iTunesApiHelper.GenerateAlbumResultList(_artist);
             
@@ -417,6 +441,7 @@ namespace MVNFOEditor.ViewModels
             NavVisible = true;
             ToggleVisible = true;
             CurrentContent = resultsVM;
+            */
         }
         public async void AppleMusicToVideos(AlbumResult newAlbum)
         {

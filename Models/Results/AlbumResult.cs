@@ -30,6 +30,14 @@ namespace MVNFOEditor.Models
             thumbURL = ytAlbum.Thumbnails.Last().URL;
             isExplicit = ytAlbum.IsExplicit;
         }
+        public AlbumResult(JToken album, Artist artist)
+        {
+            Artist = artist;
+            Title = album["collectionName"].ToString();
+            Year = DateTime.Parse(album["releaseDate"].ToString()).Year.ToString();
+            browseId = album["collectionId"].ToString();
+            isExplicit = album["collectionExplicitness"].ToString() == "Explicit";
+        }
         public AlbumResult() { }
 
         public static List<AlbumResult> GetAlbumResults<T>(List<T> albums)

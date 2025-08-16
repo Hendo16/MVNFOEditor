@@ -58,7 +58,7 @@ namespace MVNFOEditor.ViewModels
             _settings.ScreenshotSecond = ScreenshotSecond == null ? 20 : int.Parse(ScreenshotSecond);
             _settings.YTDLResolution = SelectedResolution != null ? SelectedResolution : "1080p";
             _settings.YTDLFormat = YtdlFormat == null ? "" : YtdlFormat;
-            
+            _settings.RootFolder = "C:\\Users\\nhenderson\\Videos\\mvnfo";
             App.GetVM().GetDialogManager().DismissDialog();
             //Task.Run(() => { App.GetVM().GetParentView().InitList(); });
         }

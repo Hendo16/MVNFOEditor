@@ -153,6 +153,7 @@ namespace MVNFOEditor.ViewModels
                                 .Queue();
                             Log.Error($"Error in AddMusicVideo->HandleSave: {_resultsVM.SelectedVideos[0]} failed");
                             Console.WriteLine("Failure to download");
+                            Close();
                             break;
                         case AppleMusicDownloadResponse.InvalidUserToken:
                             ToastManager.CreateToast()
@@ -162,6 +163,17 @@ namespace MVNFOEditor.ViewModels
                                 .Queue();
                             Log.Error($"Error in AddMusicVideo->HandleSave: Invalid user token");
                             Console.WriteLine("Invalid user token provided!");
+                            Close();
+                            break;
+                        case AppleMusicDownloadResponse.InvalidDeviceFiles:
+                            ToastManager.CreateToast()
+                                .WithTitle("Download Error")
+                                .WithContent("Invalid or missing device files! Please store these in assets folder")
+                                .OfType(NotificationType.Error)
+                                .Queue();
+                            Log.Error($"Error in AddMusicVideo->HandleSave: Invalid device files");
+                            Console.WriteLine("Invalid device files provided!");
+                            Close();
                             break;
                     }
                     break;

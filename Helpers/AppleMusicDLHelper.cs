@@ -30,7 +30,8 @@ public enum AppleMusicDownloadResponse
 {
     Success,
     Failure,
-    InvalidUserToken
+    InvalidUserToken,
+    InvalidDeviceFiles
 }
 
 public class AppleMusicStreamList
@@ -213,6 +214,12 @@ public class AppleMusicDLHelper
         {
             Log.Error("Error in AppleMusicDLHelper->DownloadVideo: Invalid user token");
             return AppleMusicDownloadResponse.InvalidUserToken;
+        }
+
+        if (!File.Exists("./Assets/device_client_id_blob") ||
+            !File.Exists("./Assets/device_private_key"))
+        {
+            return AppleMusicDownloadResponse.InvalidDeviceFiles;
         }
 
         int id = int.Parse(videoResult.VideoURL.Split('/')[^1]);

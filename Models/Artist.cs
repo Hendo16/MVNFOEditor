@@ -76,6 +76,8 @@ namespace MVNFOEditor.Models
             {
                 case SearchSource.YouTubeMusic:
                     return await App.GetYTMusicHelper().GetAlbums(matchingMetadata.BrowseId, this);
+                case SearchSource.AppleMusic:
+                    return await App.GetiTunesHelper().GetAlbums(matchingMetadata.BrowseId, this);
                 default:
                     return null;
             }
@@ -88,6 +90,8 @@ namespace MVNFOEditor.Models
             {
                 case SearchSource.YouTubeMusic:
                     return await App.GetYTMusicHelper().GetVideosFromArtistId(matchingMetadata.YTVideoId, this);
+                case SearchSource.AppleMusic:
+                    return await App.GetiTunesHelper().GetVideosFromArtistId(matchingMetadata.BrowseId, this);
                 default:
                     return null;
             }
@@ -101,15 +105,9 @@ namespace MVNFOEditor.Models
             {
                 return File.OpenRead(CachePath + "/cardBanner.jpg");
             }
-            else if (CardBannerURL != "")
-            {
-                var data = await s_httpClient.GetByteArrayAsync(CardBannerURL);
-                return new MemoryStream(data);
-            }
-            else
-            {
-                return File.OpenRead("./Assets/defaultBanner.png");
-            }
+            if (CardBannerURL == "") return File.OpenRead("./Assets/defaultBanner.png");
+            var data = await s_httpClient.GetByteArrayAsync(CardBannerURL);
+            return new MemoryStream(data);
         }
         public async Task<Stream> LoadLocalCardBannerBitmapAsync()
         {
@@ -117,10 +115,7 @@ namespace MVNFOEditor.Models
             {
                 return File.OpenRead(CachePath + "/cardBanner.jpg");
             }
-            else
-            {
-                return File.OpenRead("./Assets/defaultBanner.png");
-            }
+            return File.OpenRead("./Assets/defaultBanner.png");
         }
         public async Task<Stream> LoadLargeBannerBitmapAsync()
         {

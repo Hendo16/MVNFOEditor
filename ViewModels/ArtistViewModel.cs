@@ -28,9 +28,9 @@ namespace MVNFOEditor.ViewModels
                 switch (_artist.Metadata.First().SourceId)
                 {
                     case SearchSource.YouTubeMusic:
-                        return "/Assets/ytm-48x48.png";
+                        return "./Assets/ytm-48x48.png";
                     case SearchSource.AppleMusic:
-                        return "/Assets/am-48x48.png";
+                        return "./Assets/am-48x48.png";
                     default:
                         return "";
                 }

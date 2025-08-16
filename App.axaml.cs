@@ -41,7 +41,7 @@ public partial class App : Application
     private static ISukiDialogManager _dialogManager;
     private static ISettings _settings;
     private IServiceProvider? _provider;
-    private bool _enableAppleMusic = false;
+    private bool _enableAppleMusic = true;
     
     public override void Initialize()
     {

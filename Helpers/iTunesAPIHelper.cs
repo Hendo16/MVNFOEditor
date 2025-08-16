@@ -74,6 +74,12 @@ public class iTunesAPIHelper
         return arrResults;
     }
 
+    public async Task<List<AlbumResult>?> GetAlbums(string artistId, Artist artist)
+    {
+        JArray albums = await GetAlbumsByArtistID(artistId);
+        return albums.Select(x =>  albObjToResult(x, artist)).ToList();
+    }
+
     public async Task<JArray> GetTrackListByAlbumID(string albumId)
     {
         string result = await baseURL
@@ -133,6 +139,26 @@ public class iTunesAPIHelper
         return filteredResults;
     }
 
+    public async Task<List<VideoResult>?> GetVideosFromArtistId(string browseId, Artist artist)
+    {
+        JArray videos = await GetVideosByArtistId(browseId);
+        return videos.Select(x =>  vidObjToResult(x, artist)).ToList();
+    }
+    
+    private static AlbumResult albObjToResult(JToken video, Artist artist)
+    {
+        AlbumResult newResult = new AlbumResult(video, artist);
+        newResult.thumbURL = GetHighQualityArt(video);
+        return newResult;
+    }
+    
+    private static VideoResult vidObjToResult(JToken video, Artist artist)
+    {
+        VideoResult newResult = new VideoResult(video, artist);
+        newResult.thumbURL = GetHighQualityArt(video);
+        return newResult;
+    }
+    
     public async Task<ObservableCollection<AlbumResultViewModel>> GenerateAlbumResultList(Artist artist)
     {            
         ArtistMetadata artistMetadata = artist.GetArtistMetadata(SearchSource.AppleMusic);
@@ -258,7 +284,7 @@ public class iTunesAPIHelper
             return results;
     }
     
-    public string GetHighQualityArt(JObject albumObj)
+    public static string GetHighQualityArt(JToken albumObj)
     {
         string artURL = albumObj["artworkUrl100"].ToString();
         return artURL.Replace("100x100", "400x400");
