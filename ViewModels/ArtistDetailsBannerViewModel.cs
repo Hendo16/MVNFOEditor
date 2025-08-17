@@ -1,4 +1,7 @@
-﻿using Avalonia.Media.Imaging;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.Models;
 
@@ -9,28 +12,25 @@ namespace MVNFOEditor.ViewModels
         //Show/Hide Source Options
         [ObservableProperty] private bool _isYTMusic;
         [ObservableProperty] private bool _isAppleMusic;
+        [ObservableProperty] private Bitmap? _artistBanner;
+        [ObservableProperty] private List<Bitmap> _sourceIcons = new();
         
         private ArtistListParentViewModel _parentVM;
         private ArtistDetailsViewModel _detailsVM;
-        private Bitmap? _artistBanner;
-        public Bitmap? ArtistBanner
-        {
-            get { return _artistBanner; }
-            set
-            {
-                _artistBanner = value;
-                OnPropertyChanged(nameof(ArtistBanner));
-            }
-        }
 
         public ArtistDetailsBannerViewModel(Bitmap? cover, ArtistDetailsViewModel vm)
         {
             ArtistBanner = cover;
             _parentVM = App.GetVM().GetParentView();
             _detailsVM = vm;
-
             _isYTMusic = vm.Source == SearchSource.YouTubeMusic;
             _isAppleMusic = vm.Source == SearchSource.AppleMusic;
+
+            foreach (var metadata in vm.Artist.Metadata)
+            {
+                string path = metadata.SourceIconPath;
+                SourceIcons.Add(new Bitmap(path));
+            }
         }
 
         public void AddAlbum()

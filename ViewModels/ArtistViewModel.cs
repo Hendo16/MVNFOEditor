@@ -1,67 +1,62 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.Models;
 using SukiUI.Dialogs;
+using SukiUI.Toasts;
 using Bitmap = Avalonia.Media.Imaging.Bitmap;
 
 namespace MVNFOEditor.ViewModels
 {
-    public class ArtistViewModel : ObservableObject
+    public partial class ArtistViewModel : ObservableObject
     {
+        [ObservableProperty] private Bitmap? _cover;
+        [ObservableProperty] private Bitmap? _largeBanner;
+        [ObservableProperty] private List<Bitmap> _sourceIcons;
         private readonly Artist _artist;
 
         public ArtistViewModel(Artist artist)
         {
             _artist = artist;
+            SourceIcons = new List<Bitmap>();
         }
 
         public string Name => _artist.Name;
-
-        private Bitmap? _cover;
-        private Bitmap? _largeBanner;
-
-        public string SourceIcon
+        
+        public void LoadSourceIcons()
         {
-            get
+            try
             {
-                switch (_artist.Metadata.First().SourceId)
+                foreach (var metadata in _artist.Metadata)
                 {
-                    case SearchSource.YouTubeMusic:
-                        return "./Assets/ytm-48x48.png";
-                    case SearchSource.AppleMusic:
-                        return "./Assets/am-48x48.png";
-                    default:
-                        return "";
+                    string path = metadata.SourceIconPath;
+                    SourceIcons.Add(new Bitmap(path));
                 }
             }
-        }
-        
-        public Bitmap? Cover
-        {
-            get { return _cover; }
-            set
+            catch (Exception e)
             {
-                _cover = value;
-                OnPropertyChanged(nameof(Cover));
+                Console.WriteLine(e);
             }
         }
 
-        public Bitmap? LargeBanner
+        public void AddSource()
         {
-            get { return _largeBanner; }
-            set
-            {
-                _largeBanner = value;
-                OnPropertyChanged(nameof(LargeBanner));
-            }
+            AddArtistSourceViewModel newVM = new AddArtistSourceViewModel(_artist);
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(_ => newVM)
+                .TryShow();
         }
 
         public void EditArtist()
         {
             EditArtistDialogViewModel editVM = new EditArtistDialogViewModel(_artist, Cover);
             App.GetVM().GetDialogManager().CreateDialog()
-                .WithViewModel(dialog => editVM)
+                .WithViewModel(_ => editVM)
                 .TryShow();
         }
 
@@ -79,24 +74,6 @@ namespace MVNFOEditor.ViewModels
                 await using (var imageStream = await _artist.LoadLocalCardBannerBitmapAsync())
                 {
                     Cover = Bitmap.DecodeToWidth(imageStream, 540);
-                }
-            }
-        }
-
-        public async Task LoadLargeBanner()
-        {
-            if (_artist.LargeBannerURL != null)
-            {
-                await using (var imageStream = await _artist.LoadLargeBannerBitmapAsync())
-                {
-                    LargeBanner = Bitmap.DecodeToHeight(imageStream, 800);
-                }
-            }
-            else
-            {
-                await using (var imageStream = await _artist.LoadLocalLargeBannerBitmapAsync())
-                {
-                    LargeBanner = Bitmap.DecodeToHeight(imageStream, 800);
                 }
             }
         }

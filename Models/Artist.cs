@@ -50,7 +50,7 @@ namespace MVNFOEditor.Models
                         newArtist.CardBannerURL = banners[1];
                     }
                     newArtist.Name = resultCardInfo.Name;
-                    newArtist.Metadata = new List<ArtistMetadata>() { new (source, resultCardInfo.browseId) };
+                    newArtist.Metadata = new List<ArtistMetadata>() { new (source, resultCardInfo.browseId, banners[0]) };
                     break;
                 case SearchSource.YouTubeMusic:
                     YtMusicNet.Models.Artist? fullArtistInfo = await App.GetYTMusicHelper().GetArtist(resultCardInfo.browseId);

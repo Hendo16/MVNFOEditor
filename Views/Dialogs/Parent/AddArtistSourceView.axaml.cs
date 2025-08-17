@@ -1,0 +1,33 @@
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
+using MVNFOEditor.ViewModels;
+
+namespace MVNFOEditor.Views;
+
+public partial class AddArtistSourceView : UserControl
+{
+    public AddArtistSourceView()
+    {
+        InitializeComponent();
+    }
+
+    private void YTMusicClicked(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is AddArtistSourceViewModel viewModel &&
+            (bool)(sender as RadioButton)?.IsChecked)
+        {
+            viewModel.YouTubeChecked();
+        }
+    }
+
+    private void AppleMusicClicked(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is AddArtistSourceViewModel viewModel &&
+            (bool)(sender as RadioButton)?.IsChecked)
+        {
+            viewModel.AppleMusicChecked();
+        }
+    }
+}

@@ -51,6 +51,7 @@ namespace MVNFOEditor.Helpers
                 ArtistViewModel newVM = new ArtistViewModel(artist);
                 artists.Add(newVM);
                 await newVM.LoadCover();
+                newVM.LoadSourceIcons();
 
                 if (!artist.IsCardSaved())
                 {

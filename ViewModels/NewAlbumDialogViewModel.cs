@@ -17,6 +17,7 @@ using Flurl.Util;
 using log4net;
 using Microsoft.EntityFrameworkCore;
 using MVNFOEditor.Settings;
+using SukiUI.Dialogs;
 using SukiUI.Toasts;
 
 namespace MVNFOEditor.ViewModels
@@ -24,6 +25,7 @@ namespace MVNFOEditor.ViewModels
     public partial class NewAlbumDialogViewModel : ObservableObject
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(AddMusicVideoParentViewModel));
+        
         private AddMusicVideoParentViewModel _mvParentVM;
         private ArtistListParentViewModel _parentVM;
         private AlbumResultsViewModel _resultVM;
@@ -35,8 +37,8 @@ namespace MVNFOEditor.ViewModels
         private YTDLHelper _ytDLHelper;
         private static ISettings _settings;
         private MusicDbContext _dbContext;
-        private Artist _artist;
 
+        [ObservableProperty] private Artist _currArtist;
         [ObservableProperty] private bool _isBusy;
         [ObservableProperty] private bool _navVisible;
         [ObservableProperty] private bool _toggleVisible;
@@ -49,6 +51,11 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private string _busyText;
         [ObservableProperty] private string _errorText;
         [ObservableProperty] private object _currentContent;
+        [ObservableProperty] private bool _ytEnabled;
+        [ObservableProperty] private bool _amEnabled;
+        [ObservableProperty] private bool _manChecked;
+        [ObservableProperty] private bool _ytChecked;
+        [ObservableProperty] private bool _amChecked;
         [ObservableProperty] private ObservableCollection<string> _steps;
         public event EventHandler<bool> ClosePageEvent;
         
@@ -64,7 +71,7 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
-        public NewAlbumDialogViewModel(ManualAlbumViewModel vm, Artist artist, bool justAlbum = false)
+        public NewAlbumDialogViewModel(ManualAlbumViewModel vm, Artist currArtist, bool justAlbum = false)
         {
             Steps = justAlbum ? ["Create Album"] : ["Create Album", "Create Video"];
             SaveButtonText = justAlbum ? "Save" : "Next";
@@ -75,7 +82,7 @@ namespace MVNFOEditor.ViewModels
             _dbContext = App.GetDBContext();
             _settings = App.GetSettings();
             _parentVM = App.GetVM().GetParentView();
-            _artist = artist;
+            _currArtist = currArtist;
             ToggleVisible = false;
             ToggleEnable = false;
             ToggleValue = false;
@@ -87,7 +94,7 @@ namespace MVNFOEditor.ViewModels
             CurrentContent = vm;
         }
 
-        public NewAlbumDialogViewModel(AlbumResultsViewModel vm, Artist artist)
+        public NewAlbumDialogViewModel(AlbumResultsViewModel vm, Artist currArtist)
         {
             Steps = ["Select Album", "Select Videos"];
             BackButtonText = "Exit";
@@ -106,7 +113,46 @@ namespace MVNFOEditor.ViewModels
             NavVisible = true;
             NotDownload = true;
             _parentVM = App.GetVM().GetParentView();
-            _artist = artist;
+            _currArtist = currArtist;
+            
+            SetupSource(vm.selectedSource);
+        }
+
+        public async Task<AlbumResultsViewModel?> GenerateNewResults(SearchSource source)
+        {
+            List<AlbumResult>? albumResults = await CurrArtist.GetAlbums(source);
+            if (albumResults == null || albumResults.Count == 0)
+            {
+                return null;
+            }
+            ObservableCollection<AlbumResultViewModel> resultCards = new ObservableCollection<AlbumResultViewModel>(albumResults.ConvertAll(AlbumResultToVM));
+            AlbumResultsViewModel newVM = new AlbumResultsViewModel(resultCards, source);
+            newVM.LoadCovers();
+            return newVM;
+        }
+        
+        private AlbumResultViewModel AlbumResultToVM(AlbumResult result)
+        {
+            return new AlbumResultViewModel(result);
+        }
+
+        private void SetupSource(SearchSource source)
+        {
+            switch (source)
+            {
+                case SearchSource.YouTubeMusic:
+                    YtChecked = true;
+                    break;
+                case SearchSource.AppleMusic:
+                    AmChecked = true;
+                    break;
+                case SearchSource.Manual:
+                    ManChecked = true;
+                    break;
+            }
+
+            YtEnabled = CurrArtist.Metadata.Any(meta => meta.SourceId == SearchSource.YouTubeMusic) && !ManChecked;
+            AmEnabled = CurrArtist.Metadata.Any(meta => meta.SourceId == SearchSource.AppleMusic) && !ManChecked;
         }
 
         public async Task NextStep(object? sender, AlbumResult newAlbum)
@@ -124,108 +170,6 @@ namespace MVNFOEditor.ViewModels
                     break;
             }
             NavVisible = true;
-        }
-
-        private async Task<bool> GetAMVideos(AlbumResult newAlbum)
-        {
-            Album album;
-            if (!_dbContext.Album.Any(a => a.AlbumBrowseID == newAlbum.browseId))
-            {
-                album = new Album(newAlbum);
-                _dbContext.Album.Add(album);
-                await _dbContext.SaveChangesAsync();
-                _parentVM.RefreshDetails();
-            }
-            else
-            {
-                album = _dbContext.Album.Include(alb => alb.Artist).First(a => a.AlbumBrowseID == newAlbum.browseId);
-            }
-
-            ObservableCollection<VideoResultViewModel> results = await _iTunesApiHelper.GenerateVideoResultList(album, null);
-            if (results.Count == 0)
-            {
-                ManualMusicVideoViewModel manualVM = new ManualMusicVideoViewModel(_artist);
-                App.GetVM().GetToastManager().CreateToast()
-                    .WithTitle("Error")
-                    .WithContent("No Videos Available")
-                    .OfType(NotificationType.Error)
-                    .Queue();
-                manualVM.CurrAlbum = album;
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    CurrentContent = manualVM;
-                });
-                return true;
-            }
-            VideoResultsViewModel resultsVM = new VideoResultsViewModel(results);
-            ArtistMetadata artistMetadata = album.Artist.GetArtistMetadata(SearchSource.AppleMusic);
-            AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM, artistMetadata.SourceId);
-
-            _syncVM = resultsVM;
-            _mvParentVM = parentVM;
-            for (int i = 0; i < results.Count; i++)
-            {
-                var result = results[i];
-                result.ProgressStarted += parentVM.SaveAMVideo;
-            }
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                CurrentContent = resultsVM;
-            });
-            return true;
-        }
-
-        private async Task<bool> GetYTMusicVideos(AlbumResult newAlbum)
-        {
-            Album album;
-            if (!_dbContext.Album.Any(a => a.AlbumBrowseID == newAlbum.browseId))
-            {
-                album = new Album(newAlbum);
-                _dbContext.Album.Add(album);
-                await _dbContext.SaveChangesAsync();
-                _parentVM.RefreshDetails();
-            }
-            else
-            {
-                album = _dbContext.Album.Include(alb => alb.Artist).First(a => a.AlbumBrowseID == newAlbum.browseId);
-            }
-
-            ArtistMetadata artistMetadata = album.Artist.GetArtistMetadata(SearchSource.YouTubeMusic);
-            string artistID = artistMetadata.BrowseId;
-            List<VideoResult>? videos = await album.Artist.GetVideos(SearchSource.YouTubeMusic);
-            YtMusicNet.Models.Album? fullAlbum = await ytMusicHelper.GetAlbum(album.AlbumBrowseID);
-            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videos, fullAlbum, null, album);
-
-            if (results.Count == 0)
-            {
-                ManualMusicVideoViewModel manualVM = new ManualMusicVideoViewModel(_artist);
-                App.GetVM().GetToastManager().CreateToast()
-                    .WithTitle("Error")
-                    .WithContent("No Videos Available")
-                    .OfType(NotificationType.Error)
-                    .Queue();
-                manualVM.CurrAlbum = album;
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    CurrentContent = manualVM;
-                });
-                return true;
-            }
-            VideoResultsViewModel resultsVM = new VideoResultsViewModel(results);
-            AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM, artistMetadata.SourceId);
-
-            _syncVM = resultsVM;
-            _mvParentVM = parentVM;
-            for (int i = 0; i < results.Count; i++)
-            {
-                var result = results[i];
-                result.ProgressStarted += parentVM.SaveYTMVideo;
-            }
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                CurrentContent = resultsVM;
-            });
-            return true;
         }
         
         public async void HandleNavigation(bool isIncrement)
@@ -315,6 +259,137 @@ namespace MVNFOEditor.ViewModels
                     CurrentContent = _resultVM;
                 }
             }
+        }
+
+        #region StepperChecked
+
+        public void ManualChecked()
+        {
+            ManualAlbumViewModel newVM = new ManualAlbumViewModel(CurrArtist);
+            Steps = ["Create Album", "Create Video"];
+            CurrentContent = newVM;
+            _manualAlbumVM = newVM;
+        }
+        public async void YouTubeChecked()
+        {
+            AlbumResultsViewModel? newAlbums = await GenerateNewResults(SearchSource.YouTubeMusic);
+            if (newAlbums == null)
+            {
+                return;
+            }
+            CurrentContent = newAlbums;
+        }
+        public async void AppleMusicChecked()
+        {
+            AlbumResultsViewModel? newAlbums = await GenerateNewResults(SearchSource.AppleMusic);
+            if (newAlbums == null)
+            {
+                return;
+            }
+            CurrentContent = newAlbums;
+        }
+        #endregion
+        
+        private async Task<bool> GetAMVideos(AlbumResult newAlbum)
+        {
+            Album album;
+            if (!_dbContext.Album.Any(a => a.AlbumBrowseID == newAlbum.browseId))
+            {
+                album = new Album(newAlbum);
+                _dbContext.Album.Add(album);
+                await _dbContext.SaveChangesAsync();
+                _parentVM.RefreshDetails();
+            }
+            else
+            {
+                album = _dbContext.Album.Include(alb => alb.Artist).First(a => a.AlbumBrowseID == newAlbum.browseId);
+            }
+
+            ObservableCollection<VideoResultViewModel> results = await _iTunesApiHelper.GenerateVideoResultList(album, null);
+            if (results.Count == 0)
+            {
+                ManualMusicVideoViewModel manualVM = new ManualMusicVideoViewModel(_currArtist);
+                App.GetVM().GetToastManager().CreateToast()
+                    .WithTitle("Error")
+                    .WithContent("No Videos Available")
+                    .OfType(NotificationType.Error)
+                    .Queue();
+                manualVM.CurrAlbum = album;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    CurrentContent = manualVM;
+                });
+                return true;
+            }
+            VideoResultsViewModel resultsVM = new VideoResultsViewModel(results);
+            ArtistMetadata artistMetadata = album.Artist.GetArtistMetadata(SearchSource.AppleMusic);
+            AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM, artistMetadata.SourceId);
+
+            _syncVM = resultsVM;
+            _mvParentVM = parentVM;
+            for (int i = 0; i < results.Count; i++)
+            {
+                var result = results[i];
+                result.ProgressStarted += parentVM.SaveAMVideo;
+            }
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                CurrentContent = resultsVM;
+            });
+            return true;
+        }
+
+        private async Task<bool> GetYTMusicVideos(AlbumResult newAlbum)
+        {
+            Album album;
+            if (!_dbContext.Album.Any(a => a.AlbumBrowseID == newAlbum.browseId))
+            {
+                album = new Album(newAlbum);
+                _dbContext.Album.Add(album);
+                await _dbContext.SaveChangesAsync();
+                _parentVM.RefreshDetails();
+            }
+            else
+            {
+                album = _dbContext.Album.Include(alb => alb.Artist).First(a => a.AlbumBrowseID == newAlbum.browseId);
+            }
+
+            ArtistMetadata artistMetadata = album.Artist.GetArtistMetadata(SearchSource.YouTubeMusic);
+            string artistID = artistMetadata.BrowseId;
+            List<VideoResult>? videos = await album.Artist.GetVideos(SearchSource.YouTubeMusic);
+            YtMusicNet.Models.Album? fullAlbum = await ytMusicHelper.GetAlbum(album.AlbumBrowseID);
+            ObservableCollection<VideoResultViewModel> results = await ytMusicHelper.GenerateVideoResultList(videos, fullAlbum, null, album);
+
+            if (results.Count == 0)
+            {
+                ManualMusicVideoViewModel manualVM = new ManualMusicVideoViewModel(_currArtist);
+                App.GetVM().GetToastManager().CreateToast()
+                    .WithTitle("Error")
+                    .WithContent("No Videos Available")
+                    .OfType(NotificationType.Error)
+                    .Queue();
+                manualVM.CurrAlbum = album;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    CurrentContent = manualVM;
+                });
+                return true;
+            }
+            VideoResultsViewModel resultsVM = new VideoResultsViewModel(results);
+            AddMusicVideoParentViewModel parentVM = new AddMusicVideoParentViewModel(resultsVM, artistMetadata.SourceId);
+
+            _syncVM = resultsVM;
+            _mvParentVM = parentVM;
+            for (int i = 0; i < results.Count; i++)
+            {
+                var result = results[i];
+                result.ProgressStarted += parentVM.SaveYTMVideo;
+            }
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                CurrentContent = resultsVM;
+            });
+            return true;
         }
         public bool ValidateManualAlbum()
         {
@@ -465,22 +540,6 @@ namespace MVNFOEditor.ViewModels
                 }
             }
             CloseDialog();
-        }
-
-        public void HandleChangedMode(bool? changeValue)
-        {
-            if ((bool)!changeValue)
-            {
-                ManualAlbumViewModel newVM = new ManualAlbumViewModel(_artist);
-                Steps = ["Create Album", "Create Video"];
-                CurrentContent = newVM;
-                _manualAlbumVM = newVM;
-            }
-            else
-            {
-                Steps = ["Select Album", "Select Videos"];
-                CurrentContent = _resultVM;
-            }
         }
 
         public void BackTrigger(){HandleNavigation(false); }

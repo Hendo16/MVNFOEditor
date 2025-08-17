@@ -34,19 +34,23 @@ namespace MVNFOEditor.ViewModels
         public event EventHandler<bool> ValidSearch;
         public SearchSource selectedSource;
 
-        public ArtistResultsViewModel(SearchSource _source)
+        public ArtistResultsViewModel(SearchSource _source, string searchInput = "")
         {
             SearchResults = new ObservableCollection<ArtistResultViewModel>();
             ytMusicHelper = App.GetYTMusicHelper();
             itunesHelper = App.GetiTunesHelper();
             Searching = false;
             selectedSource = _source;
+            SearchInput = searchInput;
         }
 
         public void SearchArtist()
         {
             Searching = true;
-            ValidSearch(null, true);
+            if (ValidSearch != null)
+            {
+                ValidSearch(null, true);
+            }
             switch (selectedSource)
             {
                 case SearchSource.YouTubeMusic:
@@ -66,7 +70,11 @@ namespace MVNFOEditor.ViewModels
             try
             {
                 results = await ytMusicHelper.searchArtists(SearchInput);
-                ValidSearch(null, true);
+                
+                if (ValidSearch != null)
+                {
+                    ValidSearch(null, true);
+                }
             }
             catch (FlurlHttpException e)
             {
@@ -107,7 +115,10 @@ namespace MVNFOEditor.ViewModels
             try
             {
                 apiResults = await itunesHelper.ArtistSearch(_searchInput);
-                ValidSearch(null, true);
+                if (ValidSearch != null)
+                {
+                    ValidSearch(null, true);
+                }
             }
             catch (FlurlHttpException e)
             {

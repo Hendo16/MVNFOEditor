@@ -93,12 +93,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="WVCore">
+      <HintPath>ThirdPartyLibraries\WVCore.dll</HintPath>
+    </Reference>
     <Reference Include="YtMusicNet">
       <HintPath>ThirdPartyLibraries\YtMusicNet.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Documents\WVCore-main\WVCore.csproj" />
   </ItemGroup>
 </Project>

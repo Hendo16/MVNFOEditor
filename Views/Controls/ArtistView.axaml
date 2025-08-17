@@ -12,6 +12,13 @@
     <StackPanel Spacing="5" Width="540">
         <StackPanel.ContextMenu>
             <ContextMenu>
+                <MenuItem Command="{Binding AddSource}" Header="Add Another Source">
+                    <MenuItem.Icon>
+                        <PathIcon Width="15"
+                                  Height="15"
+                                  Data="{x:Static sukiContent:Icons.Plus}" />
+                    </MenuItem.Icon>
+                </MenuItem>
                 <MenuItem Command="{Binding EditArtist}" Header="Edit Artist">
                     <MenuItem.Icon>
                         <PathIcon Width="15"
@@ -27,7 +34,18 @@
                 <Panel Height="200" IsVisible="{Binding Cover, Converter={x:Static ObjectConverters.IsNull}}">
                     <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
                 </Panel>
-                <Image VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="48" Source="{Binding SourceIcon}"/>
+                <ItemsControl ItemsSource="{Binding SourceIcons}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Image Source="{Binding}" Width="48"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </Panel>
         </Border>
         <TextBlock HorizontalAlignment="Center" Text="{Binding Name}"/>

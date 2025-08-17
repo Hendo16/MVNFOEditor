@@ -97,7 +97,7 @@ namespace MVNFOEditor.ViewModels
 
         public void ArtistMergeTest()
         {
-            Artist testArt1 = App.GetDBContext().Artist.First(a => a.Name == "Architects");
+            Artist testArt1 = App.GetDBContext().Artist.First(a => a.Name == "Stray from the Path");
             Artist testArt2 = App.GetDBContext().Artist.First(a => a.Name == "Slipknot");
             App.GetVM().GetDialogManager().CreateDialog()
                 .OfType(NotificationType.Warning)

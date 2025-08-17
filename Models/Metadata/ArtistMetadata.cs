@@ -16,10 +16,11 @@ public class ArtistMetadata : IMetadata
 {
     public ArtistMetadata() { } // Parameterless constructor required by EF Core
 
-    public ArtistMetadata(SearchSource source, string browse)
+    public ArtistMetadata(SearchSource source, string browse, string? artworkUrl)
     {
         SourceId = source;
         BrowseId = browse;
+        ArtworkUrl = artworkUrl;
     }
     public ArtistMetadata(YtMusicNet.Models.Artist ytArtist)
     {
@@ -35,6 +36,24 @@ public class ArtistMetadata : IMetadata
     public int ArtistId { get; set; }
     public Artist Artist { get; set; }
     public SearchSource SourceId { get; set; }
+    
+    [NotMapped]
+    public string SourceIconPath
+    {
+        get
+        {
+            switch (SourceId)
+            {
+                case SearchSource.AppleMusic:
+                    return "./Assets/am-48x48.png";
+                case SearchSource.YouTubeMusic:
+                    return "./Assets/ytm-48x48.png";
+                default:
+                    return "";
+            }
+        }
+        
+    }
     [MaxLength(50)]
     public string BrowseId { get; set; }
     

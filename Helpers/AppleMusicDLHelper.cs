@@ -9,6 +9,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using FFMpegCore;
+using FFMpegCore.Enums;
 using Flurl;
 using Flurl.Http;
 using HtmlAgilityPack;
@@ -463,36 +465,16 @@ public class AppleMusicDLHelper
         Console.WriteLine($"Decrypt with this {decKey_a}");
         
         string muxed = Path.GetFullPath($"{_settings.RootFolder}/{videoResult.Artist.Name}/{videoResult.Title}.mp4");
-        Process muxProcess = new Process
-        {
-            StartInfo =
-            {
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                Arguments = $"-add \"{dec_v}\"#video:name=:lang=und:group=1 -add \"{dec_a}\"#audio:name=:lang=eng:group=2 -new \"{muxed}\"",
-                FileName = "mp4box",
-                WorkingDirectory = "C:\\Program Files\\GPAC"
-            }
-        };
-        
-        // Handle output and error streams asynchronously
-        muxProcess.OutputDataReceived += (sender, e) =>
-        {
-            Console.WriteLine(e.Data);
-            wavevm.UpdateProgress(0.5);
-        };
-        muxProcess.ErrorDataReceived += (sender, e) => Console.WriteLine(e.Data);
+        await FFMpegArguments
+            .FromFileInput(dec_v)
+            .AddFileInput(dec_a)
+            .OutputToFile(muxed, true, options => options
+                    .CopyChannel(Channel.Video)
+                    .CopyChannel(Channel.Audio)
+            )
+            .ProcessAsynchronously();
 
         wavevm.HeaderText = $"Creating final output...";
-        muxProcess.Start();
-
-        // Begin asynchronous reading
-        muxProcess.BeginOutputReadLine();
-        muxProcess.BeginErrorReadLine();
-        
-        muxProcess.WaitForExit();
         
         //Clear out cached files
         File.Delete(enc_v);

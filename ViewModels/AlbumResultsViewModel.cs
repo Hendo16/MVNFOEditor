@@ -37,10 +37,11 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
-        public AlbumResultsViewModel(ObservableCollection<AlbumResultViewModel> results)
+        public AlbumResultsViewModel(ObservableCollection<AlbumResultViewModel> results, SearchSource source)
         {
             _results = results;
             _fullResults = results;
+            selectedSource = source;
         }
 
         public async void LoadCovers()

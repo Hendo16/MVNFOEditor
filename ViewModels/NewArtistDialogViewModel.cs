@@ -414,7 +414,7 @@ namespace MVNFOEditor.ViewModels
                 await newVM.LoadThumbnail();
                 results.Add(newVM);
             }
-            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results);
+            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results, SearchSource.AppleMusic);
             _albumResultsVM = resultsVM;
             for (int i = 0; i < results.Count; i++)
             {
@@ -526,7 +526,7 @@ namespace MVNFOEditor.ViewModels
                 await newVM.LoadThumbnail();
                 results.Add(newVM);
             }
-            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results);
+            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results, SearchSource.YouTubeMusic);
             _albumResultsVM = resultsVM;
             for (int i = 0; i < results.Count; i++)
             {

@@ -22,7 +22,11 @@
         </suki:GroupBox>
       </suki:GlassCard>
     <suki:Stepper IsVisible="{Binding NavVisible}"  Grid.Row="2" VerticalAlignment="Center" AlternativeStyle="True" Index="{Binding StepIndex}" Steps="{Binding Steps}" />
-      <ToggleSwitch Grid.Row="3" IsVisible="{Binding ToggleVisible}" IsEnabled="{Binding ToggleEnable}" IsChecked="{Binding ToggleValue}" IsCheckedChanged="ModeToggleChange" Margin="150,0" VerticalAlignment="Center" OffContent="Manual" OnContent="YouTube" />
+    <StackPanel Name="SourceSelector" Grid.Row="3" IsVisible="{Binding ToggleVisible}"  HorizontalAlignment="Center"  Orientation="Horizontal" Spacing="10">
+        <RadioButton Height="40" Classes="Chips" Content="Manual" GroupName="VideoType" IsChecked="{Binding ManChecked}" IsCheckedChanged="ManualVideoClicked"/>
+        <RadioButton Height="40" Classes="Chips" Content="Youtube Music" Name="YtBtn" GroupName="VideoType" IsChecked="{Binding YtChecked}" IsEnabled="{Binding YtEnabled}" IsCheckedChanged="YTMusicClicked"/>
+        <RadioButton Height="40" Classes="Chips" Content="Apple Music" Name="AmBtn" GroupName="VideoType" IsChecked="{Binding AmChecked}" IsEnabled="{Binding AmEnabled}" IsCheckedChanged="AppleMusicClicked"/>
+    </StackPanel>
       <suki:BusyArea Grid.Row="4" BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
           <ContentControl Content="{Binding CurrentContent}" />
       </suki:BusyArea>

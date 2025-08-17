@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MVNFOEditor", "MVNFOEditor.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MVNFOEditor.Desktop", "MVNFOEditor.Desktop\MVNFOEditor.Desktop.csproj", "{361B71E5-0E3C-42D3-BEFF-789A19F8C702}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WVCore", "..\..\Documents\WVCore-main\WVCore.csproj", "{F647ECE0-E04F-43CD-8A08-E2C5C03F52A8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,10 +25,6 @@ Global
 		{FC2DB935-D31A-4121-8F71-B34E0F85A9DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC2DB935-D31A-4121-8F71-B34E0F85A9DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC2DB935-D31A-4121-8F71-B34E0F85A9DB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F647ECE0-E04F-43CD-8A08-E2C5C03F52A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F647ECE0-E04F-43CD-8A08-E2C5C03F52A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F647ECE0-E04F-43CD-8A08-E2C5C03F52A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F647ECE0-E04F-43CD-8A08-E2C5C03F52A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

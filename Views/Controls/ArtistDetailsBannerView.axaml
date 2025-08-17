@@ -52,8 +52,20 @@
         </controls:GlassCard.Resources>
         <StackPanel>
             <Border CornerRadius="10" ClipToBounds="True">
-                <Image Height="800" Stretch="Uniform" Source="{Binding ArtistBanner}"/>
+                <Image Stretch="Uniform" Source="{Binding ArtistBanner}"/>
             </Border>
+          <ItemsControl ItemsSource="{Binding SourceIcons}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal"/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Image Source="{Binding}" Width="48"/>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
         </StackPanel>
     </controls:GlassCard>
       <Button Width="160"

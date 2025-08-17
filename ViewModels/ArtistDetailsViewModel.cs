@@ -16,7 +16,6 @@ namespace MVNFOEditor.ViewModels
     public partial class ArtistDetailsViewModel : ObservableValidator
     {
         private ArtistListParentViewModel _parentVM;
-        private Artist _artist;
         private string _artistName;
         private MusicDBHelper DBHelper;
         private YTMusicHelper ytMusicHelper;
@@ -29,6 +28,7 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private bool _hasAlbums;
         [ObservableProperty] private bool _hasSingles;
         [ObservableProperty] private string _busyText;
+        [ObservableProperty] private Artist _artist;
         [ObservableProperty] private SearchSource _source;
         [ObservableProperty] private ObservableCollection<AlbumViewModel> _albumCards;
         [ObservableProperty] private ObservableCollection<SingleViewModel> _singleCards;
@@ -70,7 +70,6 @@ namespace MVNFOEditor.ViewModels
                 }
             }
         }
-
         public ArtistDetailsViewModel()
         {
             DBHelper = App.GetDBHelper();
@@ -84,17 +83,17 @@ namespace MVNFOEditor.ViewModels
         public void AddAlbum()
         {
             //TODO: When adding album, how do we select a primary source??? Just assume AppleMusic for now
-            ArtistMetadata artistMetadata = _artist.GetArtistMetadata();
+            ArtistMetadata artistMetadata = Artist.GetArtistMetadata();
             AddAlbum(artistMetadata.SourceId);
         }
 
         private async void AddAlbum(SearchSource source)
         {
-            List<AlbumResult>? albumResults = await _artist.GetAlbums(source);
+            List<AlbumResult>? albumResults = await Artist.GetAlbums(source);
             if (albumResults == null || albumResults.Count == 0)
             {
-                ManualAlbumViewModel manualVM = new ManualAlbumViewModel(_artist);
-                NewAlbumDialogViewModel newAlbumVM = new NewAlbumDialogViewModel(manualVM, _artist);
+                ManualAlbumViewModel manualVM = new ManualAlbumViewModel(Artist);
+                NewAlbumDialogViewModel newAlbumVM = new NewAlbumDialogViewModel(manualVM, Artist);
                 ToastManager.CreateToast()
                     .WithTitle($"No {source.ToString()} Albums Available")
                     .WithContent($"Please provide videos manually")
@@ -105,11 +104,11 @@ namespace MVNFOEditor.ViewModels
                     .TryShow();
                 return;
             }
-
+            
             ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>(albumResults.ConvertAll(AlbumResultToVM));
-            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results);
+            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results, source);
             resultsVM.LoadCovers();
-            NewAlbumDialogViewModel parentVM = new NewAlbumDialogViewModel(resultsVM, _artist);
+            NewAlbumDialogViewModel parentVM = new NewAlbumDialogViewModel(resultsVM, Artist);
             _currAlbumDialog = parentVM;
             for (int i = 0; i < results.Count; i++)
             {
