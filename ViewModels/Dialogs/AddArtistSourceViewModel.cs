@@ -75,28 +75,10 @@ public partial class AddArtistSourceViewModel : ObservableObject
     public async void SaveSource()
     {
         var resultCard = _resultsVM.SelectedArtist.GetResult();
-        ArtistMetadata? newMetadata = await GetNewMetadata(resultCard);
-        newMetadata.Artist = currentArtist;
+        ArtistMetadata? newMetadata = await ArtistMetadata.GetNewMetadata(resultCard, currentArtist);
         App.GetDBContext().ArtistMetadata.Add(newMetadata);
         await App.GetDBContext().SaveChangesAsync();
-    }
-
-    private async Task<ArtistMetadata?> GetNewMetadata(ArtistResultCard card)
-    {
-        switch (selectedSource)
-        {
-            case SearchSource.YouTubeMusic:
-                YtMusicNet.Models.Artist? fullArtistInfo = await App.GetYTMusicHelper().GetArtist(card.browseId);
-                if (fullArtistInfo == null)
-                {
-                    return null;
-                }
-                return new ArtistMetadata(fullArtistInfo);
-            case SearchSource.AppleMusic:
-                string[] banners = App.GetiTunesHelper().GetArtistBannerLinks(card.artistLinkURL);
-                return new ArtistMetadata(SearchSource.AppleMusic, card.browseId, banners[0]);
-        }
-        return null;
+        CloseDialog();
     }
     
     public void CloseDialog()

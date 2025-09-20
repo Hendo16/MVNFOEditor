@@ -10,8 +10,8 @@ namespace MVNFOEditor.ViewModels
     public partial class ArtistDetailsBannerViewModel : ObservableObject
     {
         //Show/Hide Source Options
-        [ObservableProperty] private bool _isYTMusic;
-        [ObservableProperty] private bool _isAppleMusic;
+        [ObservableProperty] private bool _hasYTMusic;
+        [ObservableProperty] private bool _hasAppleMusic;
         [ObservableProperty] private Bitmap? _artistBanner;
         [ObservableProperty] private List<Bitmap> _sourceIcons = new();
         
@@ -23,13 +23,19 @@ namespace MVNFOEditor.ViewModels
             ArtistBanner = cover;
             _parentVM = App.GetVM().GetParentView();
             _detailsVM = vm;
-            _isYTMusic = vm.Source == SearchSource.YouTubeMusic;
-            _isAppleMusic = vm.Source == SearchSource.AppleMusic;
 
             foreach (var metadata in vm.Artist.Metadata)
             {
                 string path = metadata.SourceIconPath;
                 SourceIcons.Add(new Bitmap(path));
+                if (metadata.SourceId == SearchSource.YouTubeMusic)
+                {
+                    HasYTMusic = true;
+                }
+                if (metadata.SourceId == SearchSource.AppleMusic)
+                {
+                    HasAppleMusic = true;
+                }
             }
         }
 

@@ -405,6 +405,7 @@ namespace MVNFOEditor.ViewModels
             
             List<AlbumResult> AlbumList = await _artist.GetAlbums(SearchSource.AppleMusic);
             if(AlbumList == null || AlbumList.Count == 0) {IsAlbumView=false;ToSingles();return;}
+            /*
             ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>();
             for (int i = 0; i < AlbumList.Count; i++)
             {
@@ -414,13 +415,17 @@ namespace MVNFOEditor.ViewModels
                 await newVM.LoadThumbnail();
                 results.Add(newVM);
             }
-            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results, SearchSource.AppleMusic);
+            */
+            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(SearchSource.AppleMusic);
             _albumResultsVM = resultsVM;
+            _albumResultsVM.GenerateNewResults(AlbumList);
+            /*
             for (int i = 0; i < results.Count; i++)
             {
                 var result = results[i];
                 result.NextPage += ToVideos;
             }
+            */
             IsBusy = false;
             NavVisible = true;
             ToggleVisible = true;
@@ -449,7 +454,7 @@ namespace MVNFOEditor.ViewModels
             ArtistMetadata artistMetadata = _artist.GetArtistMetadata(SearchSource.AppleMusic);
             if (!_dbContext.Album.Any(a => a.Artist.Metadata.Any(am => am.SourceId == SearchSource.AppleMusic) && a.AlbumBrowseID == newAlbum.browseId))
             {
-                album = new Album(newAlbum);
+                album = await Album.CreateAlbum(newAlbum, SearchSource.AppleMusic);
                 _dbContext.Album.Add(album);
                 await _dbContext.SaveChangesAsync();
             }
@@ -526,7 +531,7 @@ namespace MVNFOEditor.ViewModels
                 await newVM.LoadThumbnail();
                 results.Add(newVM);
             }
-            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results, SearchSource.YouTubeMusic);
+            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(SearchSource.YouTubeMusic);
             _albumResultsVM = resultsVM;
             for (int i = 0; i < results.Count; i++)
             {
@@ -542,7 +547,7 @@ namespace MVNFOEditor.ViewModels
             Album album;
             if (!_dbContext.Album.Any(a => a.Artist.Metadata.Any(am => am.SourceId == SearchSource.YouTubeMusic) && a.AlbumBrowseID == newAlbum.browseId))
             {
-                album = new Album(newAlbum);
+                album = await Album.CreateAlbum(newAlbum, SearchSource.YouTubeMusic);
                 _dbContext.Album.Add(album);
                 await _dbContext.SaveChangesAsync();
             }
@@ -621,7 +626,7 @@ namespace MVNFOEditor.ViewModels
                 var downResult = await _ytDLHelper.DownloadVideo(currResult.VideoID, $"{_settings.RootFolder}/{currResult.Artist.Name}", currResult.Title, progress);
                 if (downResult.Success)
                 {
-                    _videoResultsParentVM.SelectedVideos[i].GenerateNFO(downResult.Data).ContinueWith(t =>
+                    _videoResultsParentVM.SelectedVideos[i].GenerateNFO(downResult.Data, SearchSource.YouTubeMusic).ContinueWith(t =>
                     {
                         if (t.IsCompletedSuccessfully)
                         {

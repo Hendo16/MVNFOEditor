@@ -59,7 +59,7 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
-        public void UpdateProgress(float value, ProgressBar progTest)
+        public void UpdateProgress(float value, ref ProgressBar progTest)
         {
             var newValue = value * 100;
             if (newValue > ProgressValue)

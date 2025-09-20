@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -42,19 +43,14 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private string _ffmpegText;
         [ObservableProperty] private string _ytdlText;
         [ObservableProperty] private string _screenshotSecond;
-        [ObservableProperty] private string _selectedResolution;
         [ObservableProperty] private string _ytdlFormat;
 
         [ObservableProperty] private SettingsItemViewModel _activeVm;
+        [ObservableProperty] private AdvSettingsViewModel? _advSettings = new();
         [ObservableProperty] private int _limit = 5;
-
-        [ObservableProperty] private string[] _resolutions =
-        {
-            "4K" ,
-            "1440p",
-            "1080p",
-            "720p"
-        };
+        
+        [ObservableProperty] [property: Category("Download"), DisplayName("Desired Resolution")]
+        private Resolution _resolutions;
         public SettingsViewModel() : base("Settings", MaterialIconKind.Layers, 2)
         {
             _activeVm = new SettingsItemViewModel(1, OnRecurseClicked);
@@ -64,17 +60,19 @@ namespace MVNFOEditor.ViewModels
                 IsLightTheme = variant == ThemeVariant.Light;
 
             MvText = _settings.RootFolder;
-            ScreenshotSecond = _settings.ScreenshotSecond.ToString();
-            YtdlFormat = _settings.YTDLFormat;
             BackgroundTransitions = _settings.BackgroundTransitions;
             IsLightTheme = _settings.LightMode;
-            SelectedResolution = Resolutions.FirstOrDefault(r => r == _settings.YTDLResolution);
+            
+            ScreenshotSecond = _settings.ScreenshotSecond.ToString();
+            YtdlFormat = _settings.YTDLFormat;
+            
+            //SelectedResolution = Resolutions.FirstOrDefault(r => r == _settings.YTDLResolution);
         }
 
         public void SaveChanges()
         {
             _settings.ScreenshotSecond = int.Parse(ScreenshotSecond);
-            _settings.YTDLResolution = SelectedResolution;
+            _settings.Resolution = Resolutions;
             _settings.YTDLFormat = YtdlFormat;
             App.GetVM().GetToastManager().CreateToast()
                 .WithTitle("Success!")

@@ -12,6 +12,9 @@ using Avalonia.Markup.Xaml;
 using Config.Net;
 using log4net;
 using log4net.Config;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using MVNFOEditor.Common;
 using MVNFOEditor.DB;
@@ -92,9 +95,9 @@ public partial class App : Application
         // Without this line you will get duplicate validations from both Avalonia and CT
         base.OnFrameworkInitializationCompleted();
     }
-    private void CheckSettings()
+    private async void CheckSettings()
     {
-        if (_dbContext.Database.EnsureCreated())
+        if (!_dbContext.Exists())
         {
             SettingsDialogViewModel newDialog = new SettingsDialogViewModel();
             GetVM().GetDialogManager().CreateDialog()
@@ -110,6 +113,23 @@ public partial class App : Application
                 .WithViewModel(dialog => new AMUserSubmissionViewModel(dialog))
                 .TryShow();
         }
+        
+        //YTDL/FFMPEG Check
+        #if WINDOWS
+        if (!File.Exists($"{_settings.YTDLPath}/yt-dlp.exe"))
+        {
+            await YoutubeDLSharp.Utils.DownloadYtDlp(_settings.YTDLPath);
+        }
+        if (!File.Exists($"{_settings.FFMPEGPath}/ffmpeg.exe"))
+        {  
+            await YoutubeDLSharp.Utils.DownloadFFmpeg(_settings.FFMPEGPath);
+        }
+        if (!File.Exists($"{_settings.FFMPEGPath}/ffprobe.exe"))
+        {  
+            await YoutubeDLSharp.Utils.DownloadFFprobe(_settings.FFPROBEPath);
+        }
+        #endif
+        await YoutubeDLSharp.Utils.DownloadFFprobe(_settings.FFPROBEPath);
     }
 
     private static ServiceProvider ConfigureServices()

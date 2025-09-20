@@ -12,10 +12,10 @@
       <Grid RowDefinitions="Auto,Auto,*">
           <TextBox Grid.Row="0" Text="{Binding SearchText}" KeyUp="SearchText_KeyPressUp"
                    Watermark="Search..." Margin="0,0,0,10"/>
-          <ListBox MaxHeight="700" Grid.Row="1" SelectionMode="Single" SelectedItem="{Binding SelectedAlbum}" ItemsSource="{Binding SearchResults}">
+          <ListBox MaxHeight="250" Grid.Row="1" SelectionMode="Single" SelectedItem="{Binding SelectedAlbum}" ItemsSource="{Binding SearchResults}">
               <ListBox.ItemTemplate>
                 <DataTemplate>
-                  <views:AlbumResultView Margin="0 0 20 20" />
+                  <views:AlbumResultView Margin="0 0 10 0" />
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>

@@ -18,7 +18,7 @@
                                   Data="{x:Static sukiContent:Icons.CircleOutline}" />                    
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem IsVisible="{Binding IsYTMusic}" Command="{Binding AddYTMVideo}"
+                <MenuItem IsVisible="{Binding HasYTMusic}" Command="{Binding AddYTMVideo}"
                           Header="Search YouTube Music">
                     <MenuItem.Icon>
                         <PathIcon Width="15"
@@ -26,7 +26,7 @@
                                   Data="{x:Static sukiContent:Icons.CircleInformation}" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem IsVisible="{Binding IsAppleMusic}" Command="{Binding AddAppleMusicVideo}"
+                <MenuItem IsVisible="{Binding HasAppleMusic}" Command="{Binding AddAppleMusicVideo}"
                           Header="Search Apple Music">
                     <MenuItem.Icon>
                         <PathIcon Width="15"
@@ -50,6 +50,18 @@
                 <Panel Height="400" IsVisible="{Binding Cover, Converter={x:Static ObjectConverters.IsNull}}">
                     <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
                 </Panel>
+                <ItemsControl ItemsSource="{Binding SourceIcons}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Image Source="{Binding}" Width="48"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </Panel>
         </Border>
         <TextBlock HorizontalAlignment="Center" Text="{Binding Title}"/>

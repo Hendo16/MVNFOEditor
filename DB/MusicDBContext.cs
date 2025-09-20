@@ -2,6 +2,8 @@
 using System.Linq;
 using Avalonia.Styling;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using MVNFOEditor.Models;
 using MVNFOEditor.ViewModels;
 using Newtonsoft.Json;
@@ -19,6 +21,7 @@ namespace MVNFOEditor.DB
         public DbSet<AMVideoMetadata> AppleMusicVideoMetadata { get; set; }
         public DbSet<PsshKey> PsshKeys { get; set; }
         public DbSet<ArtistMetadata> ArtistMetadata { get; set; }
+        public DbSet<AlbumMetadata> AlbumMetadata { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,7 +46,21 @@ namespace MVNFOEditor.DB
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Album>()
+                .HasMany(a => a.Metadata)
+                .WithOne(am => am.Album)
+                .HasForeignKey(am => am.AlbumId)
+                .HasPrincipalKey(a => a.Id)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<ArtistMetadata>()
+                .Property(a => a.SourceId)
+                .HasConversion(
+                    a => a.ToString(),
+                    a => (SearchSource)Enum.Parse(typeof(SearchSource), a));
+            
+            modelBuilder.Entity<AlbumMetadata>()
                 .Property(a => a.SourceId)
                 .HasConversion(
                     a => a.ToString(),
@@ -54,6 +71,12 @@ namespace MVNFOEditor.DB
             // Other configurations if needed
             optionsBuilder.UseSqlite("Data Source=./Assets/MVNFOEditor.db;");
             base.OnConfiguring(optionsBuilder);
+        }
+
+        public bool Exists()
+        {
+            bool dbExists = Database.GetService<IRelationalDatabaseCreator>().Exists();
+            return dbExists;
         }
     }
 }

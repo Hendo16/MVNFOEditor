@@ -20,7 +20,6 @@ namespace MVNFOEditor.ViewModels
 {
     public partial class ArtistListViewModel : ObservableValidator
     {
-        private MusicDBHelper DBHelper;
         [ObservableProperty] private bool _isBusy;
         [ObservableProperty] private string _busyText;
         private ObservableCollection<ArtistViewModel> _artistCards;
@@ -36,9 +35,10 @@ namespace MVNFOEditor.ViewModels
 
         public ArtistListViewModel()
         {
-            DBHelper = App.GetDBHelper();
-            LoadArtists();
-            
+            if (App.GetDBContext().Exists())
+            {
+                LoadArtists();
+            }
         }
 
         public void AddArtist()
@@ -54,12 +54,12 @@ namespace MVNFOEditor.ViewModels
         {
             BusyText = "Building Database...";
             IsBusy = true;
-            DBHelper.ProgressUpdate += UpdateInitProgressText;
-            bool textTest = false;
-            await LoadArtists();
+            App.GetDBHelper().ProgressUpdate += UpdateInitProgressText;
+            bool textTest = false; 
+            LoadArtists();
         }
 
-        public async Task<bool> LoadArtists()
+        public async void LoadArtists()
         {
             BusyText = "Loading Artists...";
             IsBusy = true;
@@ -67,9 +67,8 @@ namespace MVNFOEditor.ViewModels
             {
                 ArtistCards.Clear();
             }
-            ArtistCards = await DBHelper.GenerateArtists();
+            ArtistCards = await App.GetDBHelper().GenerateArtists();
             IsBusy = false;
-            return true;
         }
         public void RefreshArtists(object? sender, bool t)
         {

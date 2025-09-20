@@ -23,20 +23,48 @@ namespace MVNFOEditor.Models
         [MaxLength(255)]
         public string? AlbumBrowseID { get; set; }
         
-        public AlbumMetadata Metadata { get; set; }
+        public List<AlbumMetadata> Metadata { get; set; }
         public bool? IsExplicit { get; set; }
         public Artist Artist { get; set; }
         public Album() { } // Parameterless constructor required by EF Core
 
-        public Album(AlbumResult result)
+        public Album(Artist _artist)
         {
-            Title = result.Title;
-            Year = result.Year;
-            ArtURL = result.thumbURL;
-            AlbumBrowseID = result.browseId;
-            Artist = result.Artist;
+            Artist = _artist;
+        }
+        public void AddMetadata(AlbumMetadata metadata)
+        {
+            if (Metadata == null)
+            {
+                Metadata = new List<AlbumMetadata>();
+                Title = metadata.OriginalTitle;
+                Year = metadata.Year.ToString();
+                ArtURL = metadata.ArtworkUrl;
+                AlbumBrowseID = metadata.BrowseId;
+            }
+            Metadata.Add(metadata);
         }
         private static HttpClient s_httpClient = new();
+
+        public static async Task<Album?> CreateAlbum(AlbumResult resultCardInfo, SearchSource source)
+        {
+            Album newAlbum = new Album(resultCardInfo.Artist);
+            switch (source)
+            {
+                case SearchSource.AppleMusic:
+                    newAlbum.AddMetadata(new (resultCardInfo, newAlbum));
+                    break;
+                case SearchSource.YouTubeMusic:
+                    YtMusicNet.Models.Album? fullAlbumInfo = await App.GetYTMusicHelper().GetAlbum(resultCardInfo.browseId);
+                    if (fullAlbumInfo == null)
+                    {
+                        return null;
+                    }
+                    newAlbum.AddMetadata(new (fullAlbumInfo, newAlbum, resultCardInfo.browseId));
+                    break;
+            }
+            return newAlbum;
+        }
         private string CachePath => $"./Cache/{Artist.Name}";
 
         public bool IsArtSaved() { return File.Exists(CachePath + $"/{CleansedTitle()}.jpg"); }

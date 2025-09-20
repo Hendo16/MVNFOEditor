@@ -7,7 +7,7 @@
              xmlns:theme="clr-namespace:SukiUI.Theme;assembly=SukiUI"
              x:Class="MVNFOEditor.Views.AlbumResultView"
              x:DataType="vm:AlbumResultViewModel"
-             Width="400" Height="400">
+             >
     <Border BorderBrush="{Binding BorderColor}" BorderThickness="1" CornerRadius="10" ClipToBounds="True">
         <StackPanel Spacing="5" Width="350">
             <Panel>
@@ -17,7 +17,7 @@
                 <StackPanel>
                     <TextBlock Margin="10 10 0 0" Classes="h4" VerticalAlignment="Top" Text="{Binding Title}"/>
                     <TextBlock Margin="10 10 0 0" Classes="Accent" VerticalAlignment="Center" Text="{Binding Year}"/>
-                    <TextBlock Margin="0 0 20 20" Classes="h3" VerticalAlignment="Center" HorizontalAlignment="Right" IsVisible="{Binding IsExplicit}" Text="Explicit"/>
+                    <TextBlock Margin="0 0 20 0" Classes="h3" VerticalAlignment="Center" HorizontalAlignment="Right" IsVisible="{Binding IsExplicit}" Text="Explicit"/>
                 </StackPanel>
             </Panel>
         </StackPanel>

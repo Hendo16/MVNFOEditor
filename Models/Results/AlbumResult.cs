@@ -18,6 +18,7 @@ namespace MVNFOEditor.Models
         public string thumbURL { get; set; }
         public bool? isExplicit { get; set; }
         public Artist Artist { get; set; }
+        public SearchSource SearchSource { get; set; }
 
         private static HttpClient s_httpClient = new();
 
@@ -29,6 +30,7 @@ namespace MVNFOEditor.Models
             browseId = ytAlbum.Id;
             thumbURL = ytAlbum.Thumbnails.Last().URL;
             isExplicit = ytAlbum.IsExplicit;
+            SearchSource = SearchSource.YouTubeMusic;
         }
         public AlbumResult(JToken album, Artist artist)
         {
@@ -37,6 +39,7 @@ namespace MVNFOEditor.Models
             Year = DateTime.Parse(album["releaseDate"].ToString()).Year.ToString();
             browseId = album["collectionId"].ToString();
             isExplicit = album["collectionExplicitness"].ToString() == "Explicit";
+            SearchSource = SearchSource.AppleMusic;
         }
         public AlbumResult() { }
 

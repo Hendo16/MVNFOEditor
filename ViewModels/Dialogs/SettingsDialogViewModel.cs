@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Runtime;
-using System.Text;
-using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Styling;
@@ -13,8 +9,6 @@ using CommunityToolkit.Mvvm.Input;
 using MVNFOEditor.Models;
 using MVNFOEditor.Settings;
 using SukiUI;
-using SukiUI.Controls;
-using SukiUI.Enums;
 using SukiUI.Models;
 
 namespace MVNFOEditor.ViewModels
@@ -25,22 +19,13 @@ namespace MVNFOEditor.ViewModels
         private readonly SukiTheme _theme = SukiTheme.GetInstance();
         public IAvaloniaReadOnlyList<SukiColorTheme> AvailableColors { get; }
         public Action<bool>? BackgroundTransitionsChanged { get; set; }
-        [ObservableProperty] private string _screenshotSecond;
-        [ObservableProperty] private string _ytdlFormat;
         [ObservableProperty] private bool _backgroundTransitions;
-        [ObservableProperty] private string _selectedResolution;
         [ObservableProperty] private bool _isLightTheme;
         [ObservableProperty] private bool _backVisible;
         [ObservableProperty] private bool _nextVisible;
         [ObservableProperty] private int _stepIndex;
-        //[ObservableProperty] private SukiBackgroundStyle _backgroundStyle ;
-        [ObservableProperty] private string[] _resolutions =
-        {
-            "4K" ,
-            "1440p",
-            "1080p",
-            "720p"
-        };
+        [ObservableProperty] private int _carouselHeight;
+        [ObservableProperty] private AdvSettingsViewModel? _advSettings = new();
 
         public SettingsDialogViewModel()
         {
@@ -49,16 +34,20 @@ namespace MVNFOEditor.ViewModels
             BackVisible = false;
             NextVisible = true;
             IsLightTheme = _settings.LightMode;
-            SelectedResolution = _settings.YTDLResolution;
-            ScreenshotSecond = _settings.ScreenshotSecond.ToString();
+
+            CarouselHeight = 300;
         }
 
         public void HandleFinish()
         {
-            _settings.ScreenshotSecond = ScreenshotSecond == null ? 20 : int.Parse(ScreenshotSecond);
-            _settings.YTDLResolution = SelectedResolution != null ? SelectedResolution : "1080p";
-            _settings.YTDLFormat = YtdlFormat == null ? "" : YtdlFormat;
-            _settings.RootFolder = "C:\\Users\\nhenderson\\Videos\\mvnfo";
+            _settings.Resolution = AdvSettings.Resolution;
+            _settings.ScreenshotSecond = AdvSettings.ScreenshotSecond == null ? 20 : AdvSettings.ScreenshotSecond;
+            _settings.YTDLFormat = AdvSettings.YtdlFormat == null ? "" : AdvSettings.YtdlFormat;
+            _settings.AM_DeviceId = AdvSettings.DeviceId;
+            _settings.AM_DeviceKey = AdvSettings.DeviceKey;
+            _settings.YTDLPath = AdvSettings.YtDLPath;
+            _settings.FFMPEGPath = AdvSettings.FfmpegPath;
+            App.GetDBContext().Database.EnsureCreated();
             App.GetVM().GetDialogManager().DismissDialog();
             //Task.Run(() => { App.GetVM().GetParentView().InitList(); });
         }

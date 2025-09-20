@@ -10,6 +10,23 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.SettingsDialogAdvancedOptionsCardView"
              x:DataType="vm:SettingsDialogViewModel">
+
+  <UserControl.Resources>
+    <controls:PropertyGridTemplateSelector x:Key="PropertyGridTemplateSelector" UseSukiHost="True" />
+  </UserControl.Resources>
+  
+  <WrapPanel HorizontalAlignment="Center" Classes="PageContainer" Orientation="Horizontal">
+    <controls:GlassCard Width="500">
+      <ScrollViewer>
+        <controls:PropertyGrid Item="{Binding AdvSettings}">
+          <controls:PropertyGrid.DataTemplates>
+            <StaticResource ResourceKey="PropertyGridTemplateSelector" />
+          </controls:PropertyGrid.DataTemplates>
+        </controls:PropertyGrid>
+              
+      </ScrollViewer>
+    </controls:GlassCard>
+    <!--
   <controls:GroupBox BorderBrush="Black">
     <controls:GroupBox.Header>
       <TextBlock Classes="h3" Text="Advanced Options"/>
@@ -23,4 +40,6 @@
       <TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="Outline custom settings for YouTubeDL"/>
     </UniformGrid>
   </controls:GroupBox>
+  -->
+    </WrapPanel>
 </UserControl>

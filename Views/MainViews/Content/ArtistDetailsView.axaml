@@ -14,7 +14,7 @@
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
             <Grid RowDefinitions="Auto, Auto, *">
                 <ContentControl Grid.Row ="0" Content="{Binding BannerVM}"/>
-                <controls:GlassCard IsAnimated="True" Margin="10 10 10 10" Grid.Row="1" IsVisible="{Binding HasAlbums}">
+                <controls:GlassCard IsAnimated="True" Margin="15 15 15 15" Grid.Row="1" IsVisible="{Binding HasAlbums}">
                     <controls:GlassCard.Resources>
                         <system:Double x:Key="GlassOpacity">0.2</system:Double>
                     </controls:GlassCard.Resources>

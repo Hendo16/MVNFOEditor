@@ -10,10 +10,11 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.SettingsDialogThemeCardView"
              x:DataType="vm:SettingsDialogViewModel">
+  
   <controls:SukiStackPage>
     <controls:SukiStackPage.Content>
-      <controls:SettingsLayout Name="Theming">
-        <controls:SettingsLayout.Items>
+      <controls:GlassCard Width="500">
+        <ScrollViewer>
           <objectModel:ObservableCollection x:TypeArguments="controls:SettingsLayoutItem">
             <controls:SettingsLayoutItem Header="Base Theme">
               <controls:SettingsLayoutItem.Content>
@@ -115,8 +116,8 @@
               </controls:SettingsLayoutItem.Content>
             </controls:SettingsLayoutItem>
           </objectModel:ObservableCollection>
-        </controls:SettingsLayout.Items>
-      </controls:SettingsLayout>
+          </ScrollViewer>
+        </controls:GlassCard>
     </controls:SukiStackPage.Content>
   </controls:SukiStackPage>
 </UserControl>

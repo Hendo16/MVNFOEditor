@@ -104,18 +104,18 @@ namespace MVNFOEditor.ViewModels
                     .TryShow();
                 return;
             }
-            
-            ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>(albumResults.ConvertAll(AlbumResultToVM));
-            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(results, source);
-            resultsVM.LoadCovers();
+            //ObservableCollection<AlbumResultViewModel> results = new ObservableCollection<AlbumResultViewModel>(albumResults.ConvertAll(AlbumResultToVM));
+            AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(source);
+            //resultsVM.LoadCovers();
             NewAlbumDialogViewModel parentVM = new NewAlbumDialogViewModel(resultsVM, Artist);
             _currAlbumDialog = parentVM;
+            /*
             for (int i = 0; i < results.Count; i++)
             {
                 var result = results[i];
                 result.NextPage += AddAlbumEventHandler;
-
             }
+            */
             parentVM.ClosePageEvent += ReturnToPreviousView;
             //Open Dialog
             App.GetVM().GetDialogManager().CreateDialog()
@@ -126,11 +126,6 @@ namespace MVNFOEditor.ViewModels
         private AlbumResultViewModel AlbumResultToVM(AlbumResult result)
         {
             return new AlbumResultViewModel(result);
-        }
-
-        private async void AddAlbumEventHandler(object? sender, AlbumResult _result)
-        {
-            await _currAlbumDialog.NextStep(null, _result);
         }
 
         public async void AddYTMVideo()

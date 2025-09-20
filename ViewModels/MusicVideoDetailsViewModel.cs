@@ -43,7 +43,7 @@ namespace MVNFOEditor.ViewModels
             _parentVM = App.GetVM().GetParentView();
             ISettings settingsData = App.GetSettings();
             GlobalFFOptions.Configure(new FFOptions { 
-                BinaryFolder = Directory.GetParent(settingsData.FFPROBEPath).FullName,
+                BinaryFolder = System.IO.Path.GetFullPath(settingsData.FFPROBEPath),
                 TemporaryFilesFolder = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Cache", "FFPROBE", "tmp") 
             });
         }

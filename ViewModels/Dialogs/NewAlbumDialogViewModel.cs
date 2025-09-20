@@ -100,7 +100,7 @@ namespace MVNFOEditor.ViewModels
             BackButtonText = "Exit";
             SaveButtonText = "Next";
             _resultVM = vm;
-            CurrentContent = vm;
+            CurrentContent = _resultVM;
             _syncVM = null;
             ytMusicHelper = App.GetYTMusicHelper();
             _ytDLHelper = App.GetYTDLHelper();
@@ -114,26 +114,18 @@ namespace MVNFOEditor.ViewModels
             NotDownload = true;
             _parentVM = App.GetVM().GetParentView();
             _currArtist = currArtist;
-            
-            SetupSource(vm.selectedSource);
+            SetupSource(_resultVM.selectedSource);
         }
 
-        public async Task<AlbumResultsViewModel?> GenerateNewResults(SearchSource source)
+        public async Task<bool> GenerateNewResults(SearchSource source)
         {
             List<AlbumResult>? albumResults = await CurrArtist.GetAlbums(source);
             if (albumResults == null || albumResults.Count == 0)
             {
-                return null;
+                return false;
             }
-            ObservableCollection<AlbumResultViewModel> resultCards = new ObservableCollection<AlbumResultViewModel>(albumResults.ConvertAll(AlbumResultToVM));
-            AlbumResultsViewModel newVM = new AlbumResultsViewModel(resultCards, source);
-            newVM.LoadCovers();
-            return newVM;
-        }
-        
-        private AlbumResultViewModel AlbumResultToVM(AlbumResult result)
-        {
-            return new AlbumResultViewModel(result);
+            _resultVM.GenerateNewResults(albumResults);
+            return true;
         }
 
         private void SetupSource(SearchSource source)
@@ -158,9 +150,7 @@ namespace MVNFOEditor.ViewModels
         public async Task NextStep(object? sender, AlbumResult newAlbum)
         {
             NavVisible = false;
-            //TODO: How to distingish during navigation - assume apple music for now
-            ArtistMetadata artistMetadata = newAlbum.Artist.GetArtistMetadata();
-            switch (artistMetadata.SourceId)
+            switch (newAlbum.SearchSource)
             {
                 case SearchSource.YouTubeMusic:
                     await GetYTMusicVideos(newAlbum);
@@ -272,21 +262,29 @@ namespace MVNFOEditor.ViewModels
         }
         public async void YouTubeChecked()
         {
-            AlbumResultsViewModel? newAlbums = await GenerateNewResults(SearchSource.YouTubeMusic);
-            if (newAlbums == null)
+            if (! await GenerateNewResults(SearchSource.YouTubeMusic))
             {
-                return;
+                App.GetVM().GetToastManager().CreateToast()
+                    .WithTitle("Error")
+                    .WithContent("No Albums Found on YouTube")
+                    .OfType(NotificationType.Error)
+                    .Dismiss()
+                    .After(TimeSpan.FromSeconds(5))
+                    .Queue();
             }
-            CurrentContent = newAlbums;
         }
         public async void AppleMusicChecked()
         {
-            AlbumResultsViewModel? newAlbums = await GenerateNewResults(SearchSource.AppleMusic);
-            if (newAlbums == null)
+            if (! await GenerateNewResults(SearchSource.AppleMusic))
             {
-                return;
+                App.GetVM().GetToastManager().CreateToast()
+                    .WithTitle("Error")
+                    .WithContent("No Albums Found on Apple Music")
+                    .OfType(NotificationType.Error)
+                    .Dismiss()
+                    .After(TimeSpan.FromSeconds(5))
+                    .Queue();
             }
-            CurrentContent = newAlbums;
         }
         #endregion
         
@@ -295,7 +293,7 @@ namespace MVNFOEditor.ViewModels
             Album album;
             if (!_dbContext.Album.Any(a => a.AlbumBrowseID == newAlbum.browseId))
             {
-                album = new Album(newAlbum);
+                album = await Album.CreateAlbum(newAlbum, SearchSource.AppleMusic);
                 _dbContext.Album.Add(album);
                 await _dbContext.SaveChangesAsync();
                 _parentVM.RefreshDetails();
@@ -344,7 +342,7 @@ namespace MVNFOEditor.ViewModels
             Album album;
             if (!_dbContext.Album.Any(a => a.AlbumBrowseID == newAlbum.browseId))
             {
-                album = new Album(newAlbum);
+                album = await Album.CreateAlbum(newAlbum, SearchSource.YouTubeMusic);
                 _dbContext.Album.Add(album);
                 await _dbContext.SaveChangesAsync();
                 _parentVM.RefreshDetails();
@@ -434,7 +432,7 @@ namespace MVNFOEditor.ViewModels
 
                 waveVM.HeaderText = headerText;
                 var progressTest = new ProgressBar() { Value = 0, ShowProgressText = true };
-                var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress, progressTest));
+                var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress, ref progressTest));
                 var toastTest = App.GetVM().GetToastManager().CreateToast()
                     .WithTitle(headerText)
                     .WithContent(progressTest)
@@ -503,7 +501,7 @@ namespace MVNFOEditor.ViewModels
                 var downResult = await _ytDLHelper.DownloadVideo(currResult.VideoID, $"{_settings.RootFolder}/{currResult.Artist.Name}", currResult.Title, progress);
                 if (downResult.Success)
                 {
-                    _syncVM.SelectedVideos[i].GenerateNFO(downResult.Data).ContinueWith(t =>
+                    _syncVM.SelectedVideos[i].GenerateNFO(downResult.Data, SearchSource.YouTubeMusic).ContinueWith(t =>
                     {
                         if (t.IsCompletedSuccessfully)
                         {

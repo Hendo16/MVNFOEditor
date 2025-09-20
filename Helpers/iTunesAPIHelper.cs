@@ -300,6 +300,13 @@ public class iTunesAPIHelper
             doc.LoadHtml(source);
             
             var element = doc.DocumentNode.SelectSingleNode("//div[contains(@class, 'artist-header')]");
+            var sources = doc.DocumentNode.SelectNodes("//source");
+            string srcset = sources[1].GetAttributeValue("srcset", string.Empty);
+            if (!string.IsNullOrEmpty(srcset))
+            {
+                urls[0] = srcset.Split(',').Select(url => url.Split(' ')[0]).ElementAt(1);
+                urls[1] = srcset.Split(',').Select(url => url.Split(' ')[0]).ElementAt(0);
+            }
             if (element != null)
             {
                 string style = element.GetAttributeValue("style", "");

@@ -40,14 +40,6 @@ namespace MVNFOEditor.Views
                         return;
                     }
                 }
-
-                if (viewModel.StepIndex == 3)
-                {
-                    if (AdvancedView.YTDLFormat.Text == null)
-                    {
-                        AdvancedView.YTDLFormat.Text = "";
-                    }
-                }
                 viewModel.HandleForward(settingsPages);
             }
         }

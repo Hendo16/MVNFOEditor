@@ -99,7 +99,7 @@
                 <controls:SettingsLayoutItem Header="YTDL Options">
                     <controls:SettingsLayoutItem.Content>
                         <StackPanel Orientation="Vertical">
-                            <ComboBox PlaceholderText="Resolution" ItemsSource="{Binding Resolutions}" SelectedItem="{Binding SelectedResolution}"/>
+                            <ComboBox PlaceholderText="Resolution" ItemsSource="{Binding Resolutions}"/>
                         </StackPanel>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>

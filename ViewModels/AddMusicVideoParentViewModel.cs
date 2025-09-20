@@ -79,7 +79,8 @@ namespace MVNFOEditor.ViewModels
             AppleMusicDownloadResponse result = await _amDLHelper.DownloadVideo(selectedVideo, waveVM);
             if (result == AppleMusicDownloadResponse.Success)
             {
-                await selectedVideo.GenerateNFO($"{_settings.RootFolder}/{selectedVideo.Artist.Name}/{selectedVideo.Title}.mp4");
+                await selectedVideo.GenerateNFO($"{_settings.RootFolder}/{selectedVideo.Artist.Name}/{selectedVideo.Title}.mp4",
+                    SearchSource.AppleMusic);
                 selectedVideo.HandleDownload();
                 CurrentContent = _resultsVM;
                 NavVisible = true;
@@ -107,7 +108,7 @@ namespace MVNFOEditor.ViewModels
             RunResult<string> downloadResult = await _ytDLHelper.DownloadVideo(_result.VideoID, $"{_settings.RootFolder}/{_result.Artist.Name}", _result.Title, progress);
             if (downloadResult.Success)
             {
-                await _resultVM.GenerateNFO(downloadResult.Data);
+                await _resultVM.GenerateNFO(downloadResult.Data, SearchSource.YouTubeMusic);
                 RefreshAlbumEvent?.Invoke(sender, true);
                 CurrentContent = _resultsVM;
                 NavVisible = true;
@@ -210,7 +211,8 @@ namespace MVNFOEditor.ViewModels
             AppleMusicDownloadResponse result = await _amDLHelper.DownloadVideo(selectedVideo, waveVM);
             if (result == AppleMusicDownloadResponse.Success)
             {
-                await selectedVideo.GenerateNFO($"{_settings.RootFolder}/{selectedVideo.Artist.Name}/{selectedVideo.Title}.mp4");
+                await selectedVideo.GenerateNFO($"{_settings.RootFolder}/{selectedVideo.Artist.Name}/{selectedVideo.Title}.mp4",
+                    SearchSource.AppleMusic);
                 selectedVideo.HandleDownload();
                 CurrentContent = _resultsVM;
                 NavVisible = true;
@@ -237,7 +239,7 @@ namespace MVNFOEditor.ViewModels
 
                 waveVM.HeaderText = headerText;
                 var progressTest = new ProgressBar() { Value = 0, ShowProgressText = true };
-                var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress, progressTest));
+                var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress, ref progressTest));
                 var toastTest = App.GetVM().GetToastManager().CreateToast()
                     .WithTitle(headerText)
                     .WithContent(progressTest)
@@ -317,7 +319,7 @@ namespace MVNFOEditor.ViewModels
 
                 waveVM.HeaderText = headerText;
                 var progressTest = new ProgressBar() { Value = 0, ShowProgressText = true };
-                var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress, progressTest));
+                var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress, ref progressTest));
                 var currResult = _resultsVM.SelectedVideos[i].HandleDownload();
                 var toastTest = App.GetVM().GetToastManager().CreateToast()
                     .WithTitle(headerText)
@@ -328,7 +330,7 @@ namespace MVNFOEditor.ViewModels
                 if (downResult.Success)
                 {
                     RefreshAlbumEvent?.Invoke(null, true);
-                    _resultsVM.SelectedVideos[i].GenerateNFO(downResult.Data).ContinueWith(t =>
+                    _resultsVM.SelectedVideos[i].GenerateNFO(downResult.Data, SearchSource.YouTubeMusic).ContinueWith(t =>
                     {
                         if (t.IsCompletedSuccessfully)
                         {

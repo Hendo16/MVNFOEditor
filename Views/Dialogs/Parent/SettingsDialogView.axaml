@@ -5,6 +5,7 @@
              xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
              xmlns:objectModel="clr-namespace:System.Collections.ObjectModel;assembly=System.ObjectModel"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:rc="using:Responsive.Avalonia"
              xmlns:vm="using:MVNFOEditor.ViewModels"
              xmlns:views="using:MVNFOEditor.Views"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
@@ -23,7 +24,7 @@
                 </objectModel:ObservableCollection>
             </controls:Stepper.Steps>
         </controls:Stepper>
-        <Carousel Width="600" Height="500" Grid.Row="1" Name="settingsPages">
+        <Carousel Width="600" Height="{Binding CarouselHeight}" Grid.Row="1" Name="settingsPages">
             <Carousel.PageTransition >
                 <CompositePageTransition>
                     <PageSlide Duration="0:00:00.500" Orientation="Horizontal" />

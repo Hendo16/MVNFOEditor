@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.Interface;
 using MVNFOEditor.ViewModels;
@@ -16,13 +17,15 @@ public class ArtistMetadata : IMetadata
 {
     public ArtistMetadata() { } // Parameterless constructor required by EF Core
 
-    public ArtistMetadata(SearchSource source, string browse, string? artworkUrl)
+    public ArtistMetadata(ArtistResultCard resultCard, string artURL, Artist _artist)
     {
-        SourceId = source;
-        BrowseId = browse;
-        ArtworkUrl = artworkUrl;
+        SourceId = SearchSource.AppleMusic;
+        BrowseId = resultCard.browseId;
+        OriginalTitle = resultCard.Name;
+        ArtworkUrl = artURL;
+        Artist = _artist;
     }
-    public ArtistMetadata(YtMusicNet.Models.Artist ytArtist)
+    public ArtistMetadata(YtMusicNet.Models.Artist ytArtist, Artist _artist)
     {
         ArtworkUrl = ytArtist.Thumbnails.Last().URL;
         BrowseId = ytArtist.ChannelId;
@@ -30,6 +33,25 @@ public class ArtistMetadata : IMetadata
         YTAlbumBrowseId = ytArtist.Albums.BrowseId;
         YTAlbumParams = ytArtist.Albums.Params;
         YTVideoId = ytArtist.Videos.BrowseId;
+        OriginalTitle = ytArtist.Name;
+        Artist = _artist;
+    }
+    public static async Task<ArtistMetadata?> GetNewMetadata(ArtistResultCard card, Artist artist)
+    {
+        switch (card.Source)
+        {
+            case SearchSource.YouTubeMusic:
+                YtMusicNet.Models.Artist? fullArtistInfo = await App.GetYTMusicHelper().GetArtist(card.browseId);
+                if (fullArtistInfo == null)
+                {
+                    return null;
+                }
+                return new ArtistMetadata(fullArtistInfo, artist);
+            case SearchSource.AppleMusic:
+                string[] banners = App.GetiTunesHelper().GetArtistBannerLinks(card.artistLinkURL);
+                return new ArtistMetadata(card, banners[0], artist);
+        }
+        return null;
     }
 
     public int Id { get; set; }
@@ -59,6 +81,10 @@ public class ArtistMetadata : IMetadata
     
     [MaxLength(255)]
     public string? ArtworkUrl { get; set; }
+    
+    [MaxLength(100)]
+    public string? OriginalTitle { get; set; }
+    public string? Description { get; set; }
     
     [MaxLength(100)]
     public string? YTVideoId { get; set; }

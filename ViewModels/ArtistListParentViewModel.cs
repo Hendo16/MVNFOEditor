@@ -27,7 +27,7 @@ namespace MVNFOEditor.ViewModels
                 OnPropertyChanged(nameof(CurrentContent));
             }
         }
-
+        
         public ArtistListParentViewModel() : base("Artist List", MaterialIconKind.AccountMusic, 1)
         {
             ArtistListViewModel currView = new ArtistListViewModel();
@@ -35,7 +35,7 @@ namespace MVNFOEditor.ViewModels
             _listVM = currView;
             _dbHelper = App.GetDBHelper();
         }
-
+        
         public void SetDetailsVM(ArtistDetailsViewModel vm)
         {
             _detailsVM = vm;
@@ -62,9 +62,9 @@ namespace MVNFOEditor.ViewModels
             _listVM.InitData();
         }
 
-        public async void BackToList(bool reload = false)
+        public void BackToList(bool reload = false)
         {
-            if (reload){ await _listVM.LoadArtists();}
+            if (reload){ _listVM.LoadArtists();}
 
             if (_detailsVM != null)
             {

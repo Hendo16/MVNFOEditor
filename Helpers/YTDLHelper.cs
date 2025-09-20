@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime;
-using System.Text;
 using System.Threading.Tasks;
-using Avalonia.Controls;
-using MVNFOEditor.DB;
 using MVNFOEditor.Models;
 using MVNFOEditor.Settings;
-using Newtonsoft.Json;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Metadata;
 using YoutubeDLSharp.Options;
@@ -26,8 +19,8 @@ namespace MVNFOEditor.Helpers
             ytdl = new YoutubeDL();
             _settings = new OptionSet();
             _settingsData = App.GetSettings();
-            ytdl.FFmpegPath = _settingsData.FFMPEGPath;
-            ytdl.YoutubeDLPath = _settingsData.YTDLPath;
+            ytdl.FFmpegPath = $"{_settingsData.FFMPEGPath}\\ffmpeg.exe";
+            ytdl.YoutubeDLPath = $"{_settingsData.YTDLPath}\\yt-dlp.exe";
         }
 
         public static YTDLHelper CreateHelper()
@@ -56,18 +49,21 @@ namespace MVNFOEditor.Helpers
             var formatString = "";
             if (_settingsData.YTDLFormat == "")
             {
-                switch (_settingsData.YTDLResolution)
+                switch (_settingsData.Resolution)
                 {
-                    case "720p":
+                    case Resolution.SD:
+                        formatString = "bestvideo[width<=576]+bestaudio/best[width<=576]";
+                        break;
+                    case Resolution.HD:
                         formatString = "bestvideo[width<=1280]+bestaudio/best[width<=1280]";
                         break;
-                    case "1080p":
+                    case Resolution.FHD:
                         formatString = "bestvideo[width<=1920]+bestaudio/best[width<=1920]";
                         break;
-                    case "1440p":
+                    case Resolution.WQHD:
                         formatString = "bestvideo[width<=2560]+bestaudio/best[width<=2560]";
                         break;
-                    case "4k":
+                    case Resolution.UHD:
                         formatString = "bestvideo[width<=3840]+bestaudio/best[width<=3840]";
                         break;
                 }

@@ -45,31 +45,14 @@ namespace MVNFOEditor.Helpers
 
         public async Task<ObservableCollection<ArtistViewModel>> GenerateArtists()
         {
-            List<ArtistViewModel> artists = new List<ArtistViewModel>();
-            foreach (Artist artist in _db.Artist.Include(a => a.Metadata).ToList())
-            {
-                ArtistViewModel newVM = new ArtistViewModel(artist);
-                artists.Add(newVM);
-                await newVM.LoadCover();
-                newVM.LoadSourceIcons();
-
-                if (!artist.IsCardSaved())
-                {
-                    await newVM.SaveCoverAsync();
-                }
-
-                if (!artist.IsBannerSaved())
-                {
-                    await newVM.SaveLargeBannerAsync();
-                }
-            }
+            IEnumerable<ArtistViewModel> artists = await ArtistViewModel.GenerateViewModels(_db.Artist.Include(a => a.Metadata));
             return new ObservableCollection<ArtistViewModel>(artists.OrderBy(a => a.Name));
         }
 
         public async Task<ObservableCollection<AlbumViewModel>> GenerateAlbums(Artist artist)
         {
             List<AlbumViewModel> albums = new List<AlbumViewModel>();
-            List<Album> albumList = _db.Album.Where(e => e.Artist.Id == artist.Id).ToList();
+            List<Album> albumList = _db.Album.Include(a => a.Metadata).Where(e => e.Artist.Id == artist.Id).ToList();
             foreach (Album album in albumList)
             {
                 AlbumViewModel newVM = new AlbumViewModel(album);
@@ -108,7 +91,7 @@ namespace MVNFOEditor.Helpers
 
         public List<Album> GetAlbums(int artistId)
         {
-            return _db.Album.Where(a => a.Artist.Id == artistId).ToList();
+            return _db.Album.Include(a => a.Metadata).Where(a => a.Artist.Id == artistId).ToList();
         }
 
         public async Task<int> UpdateMusicVideo(MusicVideo vid)

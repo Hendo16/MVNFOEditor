@@ -1,15 +1,18 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using MVNFOEditor.Models;
 
 namespace MVNFOEditor.ViewModels
 {
     public partial class AlbumResultsViewModel : ObservableObject
     {
-        private ObservableCollection<AlbumResultViewModel> _results;
-        private ObservableCollection<AlbumResultViewModel> _fullResults;
+        [ObservableProperty] private ObservableCollection<AlbumResultViewModel> _results;
+        [ObservableProperty] private ObservableCollection<AlbumResultViewModel> _fullResults;
+        [ObservableProperty] private ObservableCollection<AlbumResultViewModel> _searchResults;
         [ObservableProperty] private bool _isBusy;
         [ObservableProperty] private string _busyText;
         [ObservableProperty] private AlbumResultViewModel _selectedAlbum;
@@ -27,26 +30,16 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
-        public ObservableCollection<AlbumResultViewModel> SearchResults
+        public AlbumResultsViewModel(SearchSource source)
         {
-            get { return _results; }
-            set
-            {
-                _results = value;
-                OnPropertyChanged(nameof(SearchResults));
-            }
-        }
-
-        public AlbumResultsViewModel(ObservableCollection<AlbumResultViewModel> results, SearchSource source)
-        {
-            _results = results;
-            _fullResults = results;
+            //Results = results;
+            //FullResults = results;
             selectedSource = source;
         }
 
         public async void LoadCovers()
         {
-            foreach (var result in _results)
+            foreach (var result in Results)
             {
                 await result.LoadThumbnail();
             }
@@ -56,17 +49,30 @@ namespace MVNFOEditor.ViewModels
         {
             if (string.IsNullOrEmpty(SearchText))
             {
-                SearchResults = _fullResults;
+                SearchResults = FullResults;
                 return;
             }
             SearchResults = new ObservableCollection<AlbumResultViewModel>(
-                _fullResults.Where(item => item.Title?.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0)
+                FullResults.Where(item => item.Title?.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0)
             );
-        }
-
-        public void HandleSelection()
+        }        
+        public void GenerateNewResults(List<AlbumResult> albumResults)
         {
-
+            ObservableCollection<AlbumResultViewModel> resultCards = new ObservableCollection<AlbumResultViewModel>(albumResults.ConvertAll(AlbumResultToVM));
+            /*
+            for (int i = 0; i < resultCards.Count; i++)
+            {
+                var albumVM = resultCards[i];
+                albumVM.NextPage += async (a, ar) => { await parentRef.NextStep(a, ar); };
+            }
+            */
+            Results = FullResults = resultCards;
+            LoadCovers();
+        }
+        
+        private AlbumResultViewModel AlbumResultToVM(AlbumResult result)
+        {
+            return new AlbumResultViewModel(result);
         }
     }
 }

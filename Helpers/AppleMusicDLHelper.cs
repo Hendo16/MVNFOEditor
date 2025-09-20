@@ -90,6 +90,8 @@ public class AppleMusicDLHelper
     private AppleMusicDLHelper(){
         _db = App.GetDBContext();
         _settings = App.GetSettings();
+        GlobalFFOptions.Configure(new FFOptions { BinaryFolder = "./Assets", TemporaryFilesFolder = "/Cache/FFMPEG/tmp" });
+        
     }
 
     public static async Task<AppleMusicDLHelper> CreateHelper()
@@ -218,15 +220,15 @@ public class AppleMusicDLHelper
             return AppleMusicDownloadResponse.InvalidUserToken;
         }
 
-        if (!File.Exists("./Assets/device_client_id_blob") ||
-            !File.Exists("./Assets/device_private_key"))
+        if (!File.Exists(_settings.AM_DeviceId) ||
+            !File.Exists(_settings.AM_DeviceKey))
         {
             return AppleMusicDownloadResponse.InvalidDeviceFiles;
         }
 
         int id = int.Parse(videoResult.VideoURL.Split('/')[^1]);
         //Get Video Metadata
-        AMVideoMetadata? data = _db.AppleMusicVideoMetadata.Where(am => am.id == id).FirstOrDefault();
+        AMVideoMetadata? data = _db.AppleMusicVideoMetadata.FirstOrDefault(am => am.id == id);
         wavevm.HeaderText = "Getting Video Metadata...";
         if (data == null)
         {
@@ -236,6 +238,7 @@ public class AppleMusicDLHelper
             await _db.AppleMusicVideoMetadata.AddAsync(data);
             await _db.SaveChangesAsync();
         }
+        
         wavevm.HeaderText = "Getting Encryption Keys...";
         //Get all available streams and encryption keys
         (List<AppleMusicStreamList> streams, List<PsshKey> keys) = await get_content(data);
@@ -402,8 +405,8 @@ public class AppleMusicDLHelper
         long totalSize = vidSize + audSize;
         Console.WriteLine($"Total Size: {totalSize / 1024 / 1024} MB");
         
-        string decryptFileName = Path.GetFileName("./Assets/mp4decrypt.exe");
-        string decryptWorking = Path.GetDirectoryName("./Assets/" + "mp4decrypt.exe");
+        string decryptToolFileName = Path.GetFullPath("./Assets/mp4decrypt.exe");
+        string decryptWorking = Path.GetDirectoryName(decryptToolFileName);
         wavevm.HeaderText = $"Downloading {videoResult.Title} {totalSize / 1024 / 1024} MB - ";
         await DownloadWithProgressAsync(vidStream.Uris, vidStream.BaseUri, enc_v, wavevm, totalSize);
         
@@ -419,7 +422,7 @@ public class AppleMusicDLHelper
                 RedirectStandardError = true,
                 CreateNoWindow = true,
                 Arguments = arg_v,
-                FileName = decryptFileName,
+                FileName = decryptToolFileName,
                 WorkingDirectory = decryptWorking
             }
         };
@@ -447,7 +450,7 @@ public class AppleMusicDLHelper
                 RedirectStandardError = true,
                 CreateNoWindow = true,
                 Arguments = "--key 1:" + decKey_a + " \"" + enc_a + "\" \"" + dec_a + "\"",
-                FileName = decryptFileName,
+                FileName = decryptToolFileName,
                 WorkingDirectory = decryptWorking
             }
         };
@@ -520,8 +523,8 @@ public class AppleMusicDLHelper
     private async Task<string> getMVKeys(string pssh, string id)
     {
         string base64_key = $"data:text/plain;base64,{pssh}";
-        var ClientIdFile = new FileInfo("./Assets/device_client_id_blob");
-        var PrivateKeyFile = new FileInfo("./Assets/device_private_key");
+        var ClientIdFile = new FileInfo(_settings.AM_DeviceId);
+        var PrivateKeyFile = new FileInfo(_settings.AM_DeviceKey);
         
         string resp1 = await LicenseUrl
             .WithHeaders(headers)

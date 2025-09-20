@@ -27,6 +27,7 @@
     <PackageReference Include="Avalonia.Diagnostics" Version="11.2.1" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.1" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.1" />
+    <PackageReference Include="BouncyCastle.NetCore" Version="2.2.1" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="Config.Net" Version="5.2.1" />
 
@@ -44,7 +45,9 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NUnit" Version="4.2.2" />
+    <PackageReference Include="protobuf-net" Version="3.2.56" />
     <PackageReference Include="pythonnet" Version="3.1.0-preview2024-09-06" />
+    <PackageReference Include="Responsive.Avalonia" Version="0.1.1" />
     <PackageReference Include="SimpleInjector" Version="5.5.0" />
     <PackageReference Include="SukiUI" Version="6.0.1" />
     <PackageReference Include="YoutubeDLSharp" Version="1.1.2" />

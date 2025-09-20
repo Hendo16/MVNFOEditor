@@ -138,16 +138,10 @@ namespace MVNFOEditor.ViewModels
             int limit = results.Count < 10 ? results.Count : 10;
             for (int i = 0; i < limit; i++)
             {
-                JObject result = results[i].ToObject<JObject>();
-                ArtistResultCard arrResultCard = new ArtistResultCard();
-
-                arrResultCard.Name = result.Value<string>("artistName");
-                arrResultCard.browseId = result.Value<int>("artistId").ToString();
-                
+                JObject result = results[i].ToObject<JObject>();                
                 //Some results return outdated iTunes based links - so we need to fix these
-                arrResultCard.artistLinkURL = result.Value<string>("artistLinkUrl").Replace("itunes.apple.com", "music.apple.com");
-                arrResultCard.thumbURL =  itunesHelper.GetArtistThumb(arrResultCard.artistLinkURL);
-
+                string artisturl = result.Value<string>("artistLinkUrl").Replace("itunes.apple.com", "music.apple.com");
+                ArtistResultCard arrResultCard = new ArtistResultCard(result, artisturl);
                 ArtistResultViewModel newVM = new ArtistResultViewModel(arrResultCard);
                 newVM.NextPage += NextPage;
                 await newVM.LoadThumbnail();

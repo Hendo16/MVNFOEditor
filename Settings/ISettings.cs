@@ -2,6 +2,7 @@
 using Config.Net;
 using M3U8Parser.Attributes;
 using SukiUI.Models;
+using Resolution = MVNFOEditor.Models.Resolution;
 
 namespace MVNFOEditor.Settings;
 
@@ -9,7 +10,8 @@ public interface ISettings
 {
     [Option(Alias = "VideoFolder", DefaultValue = "n/a")]
     public string RootFolder { get; set; }
-    
+    [Option(Alias = "Resolution", DefaultValue = "n/a")]
+    public Resolution Resolution { get; set; }
     #region AppleMusic
     [Option(Alias = "AM.AccessToken", DefaultValue = "n/a")]
     public string AM_MediaBearerToken { get; set; }
@@ -19,26 +21,30 @@ public interface ISettings
     public string AM_Storefront { get; set; }
     [Option(Alias = "AM.Language", DefaultValue = "n/a")]
     public string AM_Language { get; set; }
+    
+    [Option(Alias = "AM.DeviceId", DefaultValue = "./Assets/device_client_id_blob")]
+    public string AM_DeviceId { get; set; }
+    
+    [Option(Alias = "AM.DeviceKey", DefaultValue = "./Assets/device_private_key")]
+    public string AM_DeviceKey { get; set; }
     #endregion
 
     #region YTDL
         [Option(Alias = "YTDL.Format", DefaultValue = "n/a")]
         public string YTDLFormat { get; set; }
-        [Option(Alias = "YTDL.Path", DefaultValue = "n/a")]
+        [Option(Alias = "YTDL.Path", DefaultValue = "./Assets")]
         public string YTDLPath { get; set; }
-        [Option(Alias = "YTDL.Res", DefaultValue = "n/a")]
-        public string YTDLResolution { get; set; }
     #endregion
     
     #region FFMPEG
-    [Option(Alias = "FFMPEG.Path", DefaultValue = "n/a")]
+    [Option(Alias = "FFMPEG.Path", DefaultValue = "./Assets")]
     public string FFMPEGPath { get; set; }
     #endregion
     
     #region FFPROBE
     [Option(Alias = "FFPROBE.ScreenshotSeconds", DefaultValue = "20")]
     public int ScreenshotSecond { get; set; }
-    [Option(Alias = "FFPROBE.Path", DefaultValue = "n/a")]
+    [Option(Alias = "FFPROBE.Path", DefaultValue = "./Assets")]
     public string FFPROBEPath { get; set; }
     #endregion
 

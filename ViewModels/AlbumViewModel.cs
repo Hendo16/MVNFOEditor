@@ -18,8 +18,9 @@ namespace MVNFOEditor.ViewModels
     public partial class AlbumViewModel : ObservableObject
     {
         //Show/Hide Source Options
-        [ObservableProperty] private bool _isYTMusic;
-        [ObservableProperty] private bool _isAppleMusic;
+        [ObservableProperty] private List<Bitmap> _sourceIcons = new();
+        [ObservableProperty] private bool _hasYTMusic;
+        [ObservableProperty] private bool _hasAppleMusic;
         private ArtistListParentViewModel _parentVM;
         private readonly Album _album;
         public event EventHandler<bool> SyncStarted;
@@ -35,8 +36,21 @@ namespace MVNFOEditor.ViewModels
             _album = album;
             ytMusicHelper = App.GetYTMusicHelper();
             _iTunesApiHelper = App.GetiTunesHelper();
-            _isYTMusic = _album.Artist.Metadata.Any(am => am.SourceId == SearchSource.YouTubeMusic);
-            _isAppleMusic = _album.Artist.Metadata.Any(am => am.SourceId == SearchSource.AppleMusic);
+            
+            foreach (var metadata in album.Metadata)
+            {
+                string path = metadata.SourceIconPath;
+                SourceIcons.Add(new Bitmap(path));
+                if (metadata.SourceId == SearchSource.YouTubeMusic)
+                {
+                    HasYTMusic = true;
+                }
+                if (metadata.SourceId == SearchSource.AppleMusic)
+                {
+                    HasAppleMusic = true;
+                }
+            }
+            
         }
 
         public Artist Artist => _album.Artist;

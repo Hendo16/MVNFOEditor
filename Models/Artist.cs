@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Linq;
+using Avalonia.Platform.Storage;
 
 namespace MVNFOEditor.Models
 {
@@ -18,12 +13,17 @@ namespace MVNFOEditor.Models
     {
         public Artist() { } // Parameterless constructor required by EF Core
 
-        public Artist(ArtistMetadata metadata, YtMusicNet.Models.Artist ytArtist)
+        public void AddMetadata(ArtistMetadata metadata)
         {
-            Description = ytArtist.Description;
-            Name = ytArtist.Name;
-            CardBannerURL = LargeBannerURL = ytArtist.Thumbnails.Last().URL;
-            Metadata = new List<ArtistMetadata>() { metadata };
+            if (Metadata == null)
+            {
+                Metadata = new List<ArtistMetadata>();
+                //First metadata should be used to set the default values for the Artist
+                Description = metadata.Description;
+                Name = metadata.OriginalTitle;
+                CardBannerURL = LargeBannerURL = metadata.ArtworkUrl;
+            }
+            Metadata.Add(metadata);
         }
         
         public int Id { get; set; }
@@ -50,7 +50,7 @@ namespace MVNFOEditor.Models
                         newArtist.CardBannerURL = banners[1];
                     }
                     newArtist.Name = resultCardInfo.Name;
-                    newArtist.Metadata = new List<ArtistMetadata>() { new (source, resultCardInfo.browseId, banners[0]) };
+                    newArtist.AddMetadata(new (resultCardInfo, banners[0], newArtist));
                     break;
                 case SearchSource.YouTubeMusic:
                     YtMusicNet.Models.Artist? fullArtistInfo = await App.GetYTMusicHelper().GetArtist(resultCardInfo.browseId);
@@ -58,7 +58,7 @@ namespace MVNFOEditor.Models
                     {
                         return null;
                     }
-                    newArtist = new Artist(new ArtistMetadata(fullArtistInfo), fullArtistInfo);
+                    newArtist.AddMetadata(new ArtistMetadata(fullArtistInfo, newArtist));
                     break;
             }
             return newArtist;
@@ -106,7 +106,12 @@ namespace MVNFOEditor.Models
                 return File.OpenRead(CachePath + "/cardBanner.jpg");
             }
             if (CardBannerURL == "") return File.OpenRead("./Assets/defaultBanner.png");
+            
             var data = await s_httpClient.GetByteArrayAsync(CardBannerURL);
+            Directory.CreateDirectory(CachePath);
+            var openStream = File.OpenWrite(CachePath + "/cardBanner.jpg");
+            openStream.Write(data, 0, data.Length);
+            openStream.Close();
             return new MemoryStream(data);
         }
         public async Task<Stream> LoadLocalCardBannerBitmapAsync()
@@ -123,25 +128,23 @@ namespace MVNFOEditor.Models
             {
                 return File.OpenRead(CachePath + "/largeBanner.jpg");
             }
-            else
+
+            if (LargeBannerURL != "")
             {
-                if (LargeBannerURL != "")
-                {
-                    var data = await s_httpClient.GetByteArrayAsync(LargeBannerURL);
-                    return new MemoryStream(data);
-                }
-                //Default to smaller image if Large doesn't exist
-                else if (CardBannerURL != "")
-                {
-                    var data = await s_httpClient.GetByteArrayAsync(CardBannerURL);
-                    return new MemoryStream(data);
-                }
-                //If no banner is found, return default banner
-                else
-                {
-                    return File.OpenRead("./Assets/defaultBanner.png");
-                }
+                var data = await s_httpClient.GetByteArrayAsync(LargeBannerURL);
+                var openStream = File.OpenWrite(CachePath + "/largeBanner.jpg");
+                openStream.Write(data, 0, data.Length);
+                openStream.Close();
+                return new MemoryStream(data);
             }
+            //Default to smaller image if Large doesn't exist
+            if (CardBannerURL != "")
+            {
+                var data = await s_httpClient.GetByteArrayAsync(CardBannerURL);
+                return new MemoryStream(data);
+            }
+            //If no banner is found, return default banner
+            return File.OpenRead("./Assets/defaultBanner.png");
         }
         public async Task<Stream> LoadLocalLargeBannerBitmapAsync()
         {

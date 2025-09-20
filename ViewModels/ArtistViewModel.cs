@@ -26,6 +26,20 @@ namespace MVNFOEditor.ViewModels
             SourceIcons = new List<Bitmap>();
         }
 
+        public async static Task<List<ArtistViewModel>> GenerateViewModels(IEnumerable<Artist> artists)
+        {
+            List<ArtistViewModel> artistsModels = new List<ArtistViewModel>();
+            for (int i = 0; i < artists.Count(); i++)
+            {
+                ArtistViewModel artVM =  new ArtistViewModel(artists.ElementAt(i));
+                await artVM.LoadCover();
+                artVM.LoadSourceIcons();
+                artistsModels.Add(artVM);
+            }
+
+            return artistsModels;
+        }
+
         public string Name => _artist.Name;
         
         public void LoadSourceIcons()
