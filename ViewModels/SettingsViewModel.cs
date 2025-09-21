@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Material.Icons;
 using MVNFOEditor.Features;
@@ -44,9 +45,11 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private string _ytdlText;
         [ObservableProperty] private string _screenshotSecond;
         [ObservableProperty] private string _ytdlFormat;
+        [ObservableProperty] private string _appleMusicToken;
+        [ObservableProperty] private string _userId;
+        [ObservableProperty] private string _userKey;
 
         [ObservableProperty] private SettingsItemViewModel _activeVm;
-        [ObservableProperty] private AdvSettingsViewModel? _advSettings = new();
         [ObservableProperty] private int _limit = 5;
         
         [ObservableProperty] [property: Category("Download"), DisplayName("Desired Resolution")]
@@ -65,7 +68,12 @@ namespace MVNFOEditor.ViewModels
             
             ScreenshotSecond = _settings.ScreenshotSecond.ToString();
             YtdlFormat = _settings.YTDLFormat;
-            
+
+            AppleMusicToken = _settings.AM_AccessToken;
+            UserId = _settings.AM_DeviceId;
+            UserKey = _settings.AM_DeviceKey;
+
+            //Resolutions = AdvSettings.Resolution;
             //SelectedResolution = Resolutions.FirstOrDefault(r => r == _settings.YTDLResolution);
         }
 
@@ -105,6 +113,25 @@ namespace MVNFOEditor.ViewModels
                 .TryShow();
         }
 
+        public void AMNFOTest()
+        {
+            
+        }
+
+        public void UpdateAMToken()
+        {
+            App.GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => new AMUserSubmissionViewModel(dialog))
+                .TryShow();
+        }
+
+        public void GenerateYTMHeaders()
+        {
+            App.GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => new YTMHeaderSubmissionViewModel(dialog))
+                .TryShow();
+        }
+        
         public async Task DownloadViewTesting(string url, string filename, WaveProgressViewModel wavevm)
         {
             using HttpClient client = new HttpClient();

@@ -23,8 +23,8 @@
         <!--<ToggleSwitch Grid.Row="2" IsVisible="{Binding ToggleVisible}" IsEnabled="{Binding ToggleEnable}" IsChecked="{Binding ToggleValue}" IsCheckedChanged="ModeToggleChange" Margin="150,0" HorizontalAlignment="Center" OffContent="Manual" OnContent="YouTube" />-->
         <StackPanel Grid.Row="2" IsVisible="{Binding ToggleVisible}"  HorizontalAlignment="Center"  Orientation="Horizontal" Spacing="10">
             <RadioButton Height="40" Classes="Chips" Content="Manual" GroupName="VideoType" IsCheckedChanged="ManualVideoClicked"/>
-            <RadioButton Height="40" Classes="Chips" Content="Youtube Music" GroupName="VideoType" IsChecked="True" IsCheckedChanged="YTMusicClicked"/>
-            <RadioButton Height="40" Classes="Chips" Content="Apple Music" GroupName="VideoType" IsCheckedChanged="AppleMusicClicked"/>
+            <RadioButton Height="40" Classes="Chips" Content="Youtube Music" GroupName="VideoType" IsChecked="True" IsEnabled="{Binding YtEnabled}" IsCheckedChanged="YTMusicClicked"/>
+            <RadioButton Height="40" Classes="Chips" Content="Apple Music" GroupName="VideoType" IsEnabled="{Binding AmEnabled}" IsCheckedChanged="AppleMusicClicked"/>
         </StackPanel>
         <controls:BusyArea Grid.Row="3" BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
             <ContentControl Content="{Binding CurrentContent}" />

@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Controls.Shapes;
-using System.Xml.Linq;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,12 +10,29 @@ using FFMpegCore;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
 using MVNFOEditor.Settings;
-using SukiUI.Controls;
+using NUnit.Framework;
 using SukiUI.Dialogs;
 using SukiUI.Toasts;
+using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MVNFOEditor.ViewModels
 {
+    
+    public partial class NFODetails : ObservableObject
+    {
+        [ObservableProperty] [property: DisplayName("Title")]
+        private string? _title;
+    
+        [ObservableProperty] [property: DisplayName("Year")]
+        private int? _year;
+    
+        [ObservableProperty] [property: DisplayName("Source")]
+        private SearchSource _source;
+    
+        [ObservableProperty] [property: DisplayName("Genre Test")]
+        private List<SearchSource> _genres;
+    }
     public partial class MusicVideoDetailsViewModel : ObservableObject
     {
         private ArtistListParentViewModel _parentVM;
@@ -36,6 +50,7 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private string _bitrate;
         [ObservableProperty] private string _aspectRatio;
         [ObservableProperty] List<Album> _albums;
+        [ObservableProperty] private NFODetails _nfoDetails;
 
         public MusicVideoDetailsViewModel()
         {
@@ -46,6 +61,7 @@ namespace MVNFOEditor.ViewModels
                 BinaryFolder = System.IO.Path.GetFullPath(settingsData.FFPROBEPath),
                 TemporaryFilesFolder = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Cache", "FFPROBE", "tmp") 
             });
+            _nfoDetails = new NFODetails();
         }
 
         public Bitmap? Thumbnail
@@ -125,10 +141,13 @@ namespace MVNFOEditor.ViewModels
         public void SetVideo(MusicVideo video)
         {
             _musicVideo = video;
-            Title = _musicVideo.title;
-            Year = _musicVideo.year;
-            Source = _musicVideo.source;
+            NfoDetails.Title = _musicVideo.title;
+            NfoDetails.Year = int.Parse(_musicVideo.year);
             Albums = DBHelper.GetAlbums(video.artist.Id);
+            if (Enum.TryParse<SearchSource>(_musicVideo.source, out var source))
+            {
+                NfoDetails.Source = source;
+            }
             if (video.album != null)
             {
                 CurrAlbum = Albums.Find(a => a.Id == video.album.Id);

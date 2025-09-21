@@ -40,7 +40,7 @@ namespace MVNFOEditor.ViewModels
         private AppleMusicDLHelper _amDLHelper;
         private MusicDbContext _dbContext;
         private static ISettings _settings;
-        private Artist _artist;
+        private Artist? _artist;
 
         [ObservableProperty] private int _stepIndex;
         [ObservableProperty] private bool _toggleEnable;
@@ -56,6 +56,8 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private string _backButtonText;
         [ObservableProperty] private string _nextButtonText;
         [ObservableProperty] private object _currentContent;
+        [ObservableProperty] private bool _ytEnabled;
+        [ObservableProperty] private bool _amEnabled;
         [ObservableProperty] private ObservableCollection<string> _steps;
         public event EventHandler<bool> ClosePageEvent;
 
@@ -81,6 +83,8 @@ namespace MVNFOEditor.ViewModels
             NavVisible = true;
             ToggleValue = true;
             IsAlbumView = false;
+            _ytEnabled = true;
+            _amEnabled = _settings.AM_AccessToken != "n/a";
             CurrentContent = _resultVM;
         }
 
@@ -239,9 +243,12 @@ namespace MVNFOEditor.ViewModels
                 //AlbumResults -> ArtistResults
                 else
                 {
-                    //Re-enable source selector
+                    //Reset source options
                     StepperEnabled = true;
                     CurrentContent = _resultVM;
+                    YtEnabled = true;
+                    AmEnabled = _settings.AM_AccessToken != "n/a";
+                    _artist = null;
                 }
             }
 
@@ -295,9 +302,11 @@ namespace MVNFOEditor.ViewModels
             switch (_resultVM.selectedSource)
             {
                 case SearchSource.YouTubeMusic:
+                    AmEnabled = false;
                     YTMusicGetAlbums(newArtist);
                     return;
                 case SearchSource.AppleMusic:
+                    YtEnabled = false;
                     AppleMusicGetAlbums(newArtist);
                     return;
             }
@@ -417,8 +426,8 @@ namespace MVNFOEditor.ViewModels
             }
             */
             AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(SearchSource.AppleMusic);
+            resultsVM.GenerateNewResults(AlbumList);
             _albumResultsVM = resultsVM;
-            _albumResultsVM.GenerateNewResults(AlbumList);
             /*
             for (int i = 0; i < results.Count; i++)
             {
@@ -532,6 +541,7 @@ namespace MVNFOEditor.ViewModels
                 results.Add(newVM);
             }
             AlbumResultsViewModel resultsVM = new AlbumResultsViewModel(SearchSource.YouTubeMusic);
+            resultsVM.GenerateNewResults(AlbumList);
             _albumResultsVM = resultsVM;
             for (int i = 0; i < results.Count; i++)
             {
@@ -607,7 +617,7 @@ namespace MVNFOEditor.ViewModels
         }
         private async void SaveMultipleVideos()
         {
-            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            WaveProgressViewModel waveVM = new WaveProgressViewModel(isIndeterminate: true, circleVisible: true);
             IsAlbumView = false;
             NavVisible = false;
             CurrentContent = waveVM;
@@ -643,12 +653,14 @@ namespace MVNFOEditor.ViewModels
                                 .WithTitle("Error")
                                 .WithContent($"Something went wrong with downloading {_videoResultsParentVM.SelectedVideos[i].Title}")
                                 .OfType(NotificationType.Error)
+                                .Dismiss().ByClicking()
                                 .Queue();
                             Log.Error($"Error in NewArtist->SaveMultipleVideos: {currResult.VideoID} failed");
                             foreach (var err in downResult.ErrorOutput)
                             {
                                 Log.Error(err);
                             }
+                            HandleExit();
                         }
                     }, TaskScheduler.FromCurrentSynchronizationContext());
                 }
@@ -658,12 +670,14 @@ namespace MVNFOEditor.ViewModels
                         .WithTitle("Error")
                         .WithContent($"Something went wrong with downloading {_videoResultsParentVM.SelectedVideos[i].Title}")
                         .OfType(NotificationType.Error)
+                        .Dismiss().ByClicking()
                         .Queue();
                     Log.Error($"Error in NewArtist->SaveMultipleVideos: {currResult.VideoID} failed");
                     foreach (var err in downResult.ErrorOutput)
                     {
                         Log.Error(err);
                     }
+                    HandleExit();
                     break;
                 }
             }
@@ -723,7 +737,7 @@ namespace MVNFOEditor.ViewModels
         public async void ManualSaveVideo()
         {
             NavVisible = false;
-            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            WaveProgressViewModel waveVM = new WaveProgressViewModel(isIndeterminate: true, circleVisible: true);
             waveVM.HeaderText = "Downloading " + _manualMusicVideoVM.Title;
             CurrentContent = waveVM;
             var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress));

@@ -20,7 +20,6 @@ namespace MVNFOEditor.Models
         public string? thumb { get; set; }
         public string nfoPath { get; set; }
         public string year { get; set; }
-        public List<MusicVideoGenre> MusicVideoGenres { get; set; }
         public string? videoID { get; set; }
         public string? userrating { get; set; }
         public string? track { get; set; }
@@ -28,6 +27,7 @@ namespace MVNFOEditor.Models
         public string? premiered { get; set; }
         public string? source { get; set; }
         public string? musicBrainzArtistID { get; set; }
+        public List<Genre> Genres { get; } = [];
 
         public async Task<Stream?> LoadThumbnailBitmapAsync()
         {
@@ -82,6 +82,13 @@ namespace MVNFOEditor.Models
             XElement videoIDEl = new XElement("videoID");
             videoIDEl.Value = videoID != null ? videoID : "null";
             parentEl.Add(videoIDEl);
+
+            foreach (Genre genre in Genres)
+            {
+                XElement genreEl = new XElement("genre");
+                genreEl.Value = genre.Name;
+                parentEl.Add(genreEl);
+            }
 
             xDoc.Add(parentEl);
             xDoc.Save(nfoPath);

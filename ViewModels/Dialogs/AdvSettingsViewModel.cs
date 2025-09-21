@@ -22,6 +22,9 @@ public partial class AdvSettingsViewModel : ObservableObject
     [ObservableProperty] [property: Category("YouTube Music"), DisplayName("YTDL Format")]
     private string? _ytdlFormat;
     
+    [ObservableProperty] [property: Category("YouTube Music"), DisplayName("Browser Headers File")]
+    private string? _ytMusicAuthFile;
+    
     [ObservableProperty] [property: Category("Local"), DisplayName("Screenshot Timestamp")]
     private int _screenshotSecond = 20;
     

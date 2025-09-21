@@ -15,6 +15,7 @@ namespace MVNFOEditor.ViewModels
 {
     public partial class ArtistViewModel : ObservableObject
     {
+        [ObservableProperty] private bool _sourcesAvailable;
         [ObservableProperty] private Bitmap? _cover;
         [ObservableProperty] private Bitmap? _largeBanner;
         [ObservableProperty] private List<Bitmap> _sourceIcons;
@@ -24,6 +25,8 @@ namespace MVNFOEditor.ViewModels
         {
             _artist = artist;
             SourceIcons = new List<Bitmap>();
+            //Bit hacky, would love something more dynamic but we're likely only ever going to have 2 sources anyway...
+            SourcesAvailable = artist.Metadata.Count(am => am.SourceId is SearchSource.YouTubeMusic or SearchSource.AppleMusic) == 1;
         }
 
         public async static Task<List<ArtistViewModel>> GenerateViewModels(IEnumerable<Artist> artists)

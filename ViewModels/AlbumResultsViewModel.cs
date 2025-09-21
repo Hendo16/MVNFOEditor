@@ -30,11 +30,10 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
-        public AlbumResultsViewModel(SearchSource source)
+        public AlbumResultsViewModel(SearchSource source, string searchText = "")
         {
-            //Results = results;
-            //FullResults = results;
             selectedSource = source;
+            SearchText = searchText;
         }
 
         public async void LoadCovers()
@@ -47,7 +46,7 @@ namespace MVNFOEditor.ViewModels
 
         public void FilterResults()
         {
-            if (string.IsNullOrEmpty(SearchText))
+            if (string.IsNullOrEmpty(SearchText) || SearchResults == null)
             {
                 SearchResults = FullResults;
                 return;
@@ -59,15 +58,9 @@ namespace MVNFOEditor.ViewModels
         public void GenerateNewResults(List<AlbumResult> albumResults)
         {
             ObservableCollection<AlbumResultViewModel> resultCards = new ObservableCollection<AlbumResultViewModel>(albumResults.ConvertAll(AlbumResultToVM));
-            /*
-            for (int i = 0; i < resultCards.Count; i++)
-            {
-                var albumVM = resultCards[i];
-                albumVM.NextPage += async (a, ar) => { await parentRef.NextStep(a, ar); };
-            }
-            */
             Results = FullResults = resultCards;
             LoadCovers();
+            FilterResults();
         }
         
         private AlbumResultViewModel AlbumResultToVM(AlbumResult result)

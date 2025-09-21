@@ -13,6 +13,13 @@
     <controls:GlassCard Margin="0,0,0,15">
       <controls:GlassCard.ContextMenu>
         <ContextMenu>
+          <MenuItem IsVisible="{Binding SourcesAvailable}" Command="{Binding AddSource}" Header="Add Another Source">
+            <MenuItem.Icon>
+              <PathIcon Width="15"
+                        Height="15"
+                        Data="{x:Static sukiContent:Icons.Plus}" />
+            </MenuItem.Icon>
+          </MenuItem>
           <MenuItem Command="{Binding AddAlbum}"
                     Header="Add Album">
             <MenuItem.Icon>

@@ -92,6 +92,7 @@ namespace MVNFOEditor.ViewModels
                     .WithTitle("Download Failed")
                     .WithContent("Error downloading video, please check logs")
                     .OfType(NotificationType.Error)
+                    .Dismiss().ByClicking()
                     .Queue();
                 Log.Error($"Error in AddMusicVideo->SaveAMVideo: Download failed");
             }
@@ -101,7 +102,7 @@ namespace MVNFOEditor.ViewModels
         {
             NavVisible = false;
             VideoResult _result = _resultVM.GetResult();
-            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            WaveProgressViewModel waveVM = new WaveProgressViewModel(isIndeterminate: true, circleVisible: true);
             waveVM.HeaderText = $"Downloading {_result.Title} - ";
             CurrentContent = waveVM;
             var progress = new Progress<DownloadProgress>(p => waveVM.UpdateProgress(p.Progress));
@@ -121,6 +122,7 @@ namespace MVNFOEditor.ViewModels
                     .WithTitle("Download Error")
                     .WithContent(errorContent[0])
                     .OfType(NotificationType.Error)
+                    .Dismiss().ByClicking()
                     .Queue();
                 Log.Error($"Error in AddMusicVideo->SaveYTMVideo: {_result.VideoID} failed");
                 foreach (var err in downloadResult.ErrorOutput)
@@ -151,6 +153,7 @@ namespace MVNFOEditor.ViewModels
                                 .WithTitle("Download Error")
                                 .WithContent("Failure to download. Please check logs")
                                 .OfType(NotificationType.Error)
+                                .Dismiss().ByClicking()
                                 .Queue();
                             Log.Error($"Error in AddMusicVideo->HandleSave: {_resultsVM.SelectedVideos[0]} failed");
                             Console.WriteLine("Failure to download");
@@ -161,6 +164,7 @@ namespace MVNFOEditor.ViewModels
                                 .WithTitle("Download Error")
                                 .WithContent("Invalid user token provided! Please update token in config")
                                 .OfType(NotificationType.Error)
+                                .Dismiss().ByClicking()
                                 .Queue();
                             Log.Error($"Error in AddMusicVideo->HandleSave: Invalid user token");
                             Console.WriteLine("Invalid user token provided!");
@@ -171,6 +175,7 @@ namespace MVNFOEditor.ViewModels
                                 .WithTitle("Download Error")
                                 .WithContent("Invalid or missing device files! Please store these in assets folder")
                                 .OfType(NotificationType.Error)
+                                .Dismiss().ByClicking()
                                 .Queue();
                             Log.Error($"Error in AddMusicVideo->HandleSave: Invalid device files");
                             Console.WriteLine("Invalid device files provided!");
@@ -200,7 +205,7 @@ namespace MVNFOEditor.ViewModels
 
         public async Task<AppleMusicDownloadResponse> SaveAppleMusicVideo()
         {
-            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            WaveProgressViewModel waveVM = new WaveProgressViewModel(circleVisible:true);
             VideoResultViewModel selectedVideo = _resultsVM.SelectedVideos[0];
             CurrentContent = waveVM;
             //If the artist folder doesn't exist yet, create it
@@ -222,7 +227,7 @@ namespace MVNFOEditor.ViewModels
 
         public async Task<bool> SaveMultipleManualVideos()
         {
-            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            WaveProgressViewModel waveVM = new WaveProgressViewModel(isIndeterminate: true, circleVisible: true);
             CurrentContent = waveVM;
             NavVisible = false;
             for (int i = 0; i < _manualVM.ManualItems.Count; i++)
@@ -265,6 +270,7 @@ namespace MVNFOEditor.ViewModels
                         .WithTitle("Error")
                         .WithContent($"Something went wrong with downloading {_manualVM.ManualItems[i].Title}")
                         .OfType(NotificationType.Error)
+                        .Dismiss().ByClicking()
                         .Queue();
                     Log.Error($"Error in AddMusicVideo->SaveMultipleManualVideos: {_manualVM.ManualItems[i].VidID} failed");
                     foreach (var err in downResult.ErrorOutput)
@@ -291,6 +297,7 @@ namespace MVNFOEditor.ViewModels
                     .WithTitle("Error")
                     .WithContent($"Something went wrong with downloading {_manualVM.ManualItems[i].Title}")
                     .OfType(NotificationType.Error)
+                    .Dismiss().ByClicking()
                     .Queue();
                 Log.Error($"Error in AddMusicVideo->SaveMultipleManualVideos: {_manualVM.ManualItems[i].VidID} failed");
                 foreach (var err in downResult.ErrorOutput)
@@ -302,7 +309,7 @@ namespace MVNFOEditor.ViewModels
 
         public async Task<bool> SaveMultipleVideos()
         {
-            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            WaveProgressViewModel waveVM = new WaveProgressViewModel(isIndeterminate: true, circleVisible: true);
             CurrentContent = waveVM;
             NavVisible = false;
             for (int i = 0; i < _resultsVM.SelectedVideos.Count; i++)
@@ -340,10 +347,11 @@ namespace MVNFOEditor.ViewModels
                         {
                             ToastManager.CreateToast()
                                 .WithTitle("Error")
-                                .WithContent($"Something went wrong with downloading {_resultsVM.SelectedVideos[i].Title}")
+                                .WithContent($"Something went wrong with generating the NFO for {currResult.Title}")
                                 .OfType(NotificationType.Error)
+                                .Dismiss().ByClicking()
                                 .Queue();
-                            Log.Error($"Error in AddMusicVideo->SaveMultipleVideos: {currResult.VideoID} failed");
+                            Log.Error($"Error in AddMusicVideo->SaveMultipleVideos->GenerateNFO: {currResult.VideoID} failed");
                             foreach (var err in downResult.ErrorOutput)
                             {
                                 Log.Error(err);
@@ -357,6 +365,7 @@ namespace MVNFOEditor.ViewModels
                         .WithTitle("Error")
                         .WithContent($"Something went wrong with downloading {_resultsVM.SelectedVideos[i].Title}")
                         .OfType(NotificationType.Error)
+                        .Dismiss().ByClicking()
                         .Queue();
                     Log.Error($"Error in AddMusicVideo->SaveMultipleVideos: {currResult.VideoID} failed");
                     foreach (var err in downResult.ErrorOutput)

@@ -118,18 +118,20 @@ public partial class App : Application
         #if WINDOWS
         if (!File.Exists($"{_settings.YTDLPath}/yt-dlp.exe"))
         {
+            Console.WriteLine("Downloading YT-DLP...");
             await YoutubeDLSharp.Utils.DownloadYtDlp(_settings.YTDLPath);
         }
         if (!File.Exists($"{_settings.FFMPEGPath}/ffmpeg.exe"))
         {  
+            Console.WriteLine("Downloading FFMPEG...");
             await YoutubeDLSharp.Utils.DownloadFFmpeg(_settings.FFMPEGPath);
         }
         if (!File.Exists($"{_settings.FFMPEGPath}/ffprobe.exe"))
         {  
+            Console.WriteLine("Downloading FFPROBE...");
             await YoutubeDLSharp.Utils.DownloadFFprobe(_settings.FFPROBEPath);
         }
         #endif
-        await YoutubeDLSharp.Utils.DownloadFFprobe(_settings.FFPROBEPath);
     }
 
     private static ServiceProvider ConfigureServices()
@@ -170,6 +172,11 @@ public partial class App : Application
     public static YTDLHelper GetYTDLHelper()
     {
         return _ytdlHelper;
+    }
+
+    public static async void RefreshYTMusicHelper()
+    {
+        _ytmHelper = await YTMusicHelper.CreateHelper("./Assets/browser.json");
     }
 
     public static YTMusicHelper GetYTMusicHelper()

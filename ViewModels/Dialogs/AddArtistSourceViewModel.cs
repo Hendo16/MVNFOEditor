@@ -37,7 +37,7 @@ public partial class AddArtistSourceViewModel : ObservableObject
             CloseDialog();
             return;
         }
-        _resultsVM = new ArtistResultsViewModel((SearchSource)newSource, existingArtist.Name);
+        ResultsVM = new ArtistResultsViewModel((SearchSource)newSource, existingArtist.Name);
     }
 
     public SearchSource? SetupSources()
@@ -64,20 +64,21 @@ public partial class AddArtistSourceViewModel : ObservableObject
     
     public void YouTubeChecked()
     {
-        _resultsVM.selectedSource = SearchSource.YouTubeMusic;
-        _resultsVM.SearchResults.Clear();
+        ResultsVM.selectedSource = SearchSource.YouTubeMusic;
+        ResultsVM.SearchResults.Clear();
     }
     public void AppleMusicChecked()
     {
-        _resultsVM.selectedSource = SearchSource.AppleMusic;
-        _resultsVM.SearchResults.Clear();
+        ResultsVM.selectedSource = SearchSource.AppleMusic;
+        ResultsVM.SearchResults.Clear();
     }
     public async void SaveSource()
     {
-        var resultCard = _resultsVM.SelectedArtist.GetResult();
+        var resultCard = ResultsVM.SelectedArtist.GetResult();
         ArtistMetadata? newMetadata = await ArtistMetadata.GetNewMetadata(resultCard, currentArtist);
         App.GetDBContext().ArtistMetadata.Add(newMetadata);
         await App.GetDBContext().SaveChangesAsync();
+        App.GetVM().GetParentView().RefreshList();
         CloseDialog();
     }
     

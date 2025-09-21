@@ -5,8 +5,8 @@
              xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
              xmlns:vm="using:MVNFOEditor.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="MVNFOEditor.Views.AddArtistSourceView"
-             x:DataType="vm:AddArtistSourceViewModel">
+             x:Class="MVNFOEditor.Views.AddAlbumSourceView"
+             x:DataType="vm:AddAlbumSourceViewModel">
     <Grid RowDefinitions="Auto,Auto,*,Auto">
         <controls:GlassCard Grid.Row="0" IsVisible="{Binding ShowError}">
             <controls:GroupBox Header="Error">

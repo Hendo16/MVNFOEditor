@@ -203,8 +203,12 @@ public class iTunesAPIHelper
             newVideo.Title = (string)video["trackCensoredName"];
             newVideo.VideoID = (string)video["trackId"];
             newVideo.VideoURL = ((string)video["trackViewUrl"]).Split('?')[0];
-            newVideo.Duration = TimeSpan.FromMilliseconds((double)video["trackTimeMillis"])
-                .ToString(@"mm\:ss");
+            JToken? trackTime = video["trackTimeMillis"];
+            if (trackTime != null)
+            {
+                newVideo.Duration = TimeSpan.FromMilliseconds(trackTime.ToObject<Double>())
+                    .ToString(@"mm\:ss");
+            }
             newVideo.Explicit = (string)video["trackExplicitness"] == "explicit";
             newVideo.Year = DateTime.Parse((string)video["releaseDate"]).Year.ToString();
             newVideo.thumbURL = GetHighQualityArt((JObject)video);
@@ -236,10 +240,11 @@ public class iTunesAPIHelper
     {
             ObservableCollection<VideoResultViewModel> results = new ObservableCollection<VideoResultViewModel>();
             ArtistMetadata artistMetadata = album.Artist.GetArtistMetadata(SearchSource.AppleMusic);
+            AlbumMetadata albumMetadata = album.GetAlbumMetadata(SearchSource.AppleMusic);
             //Get a list of music videos from the artist available
             JArray currentVideos = await GetVideosByArtistId(artistMetadata.BrowseId);
             //Get a list of songs from the album
-            JArray albumTracks = await GetTrackListByAlbumID(album.AlbumBrowseID);
+            JArray albumTracks = await GetTrackListByAlbumID(albumMetadata.BrowseId);
             //Match videos with the song tracks
             for (int i = 0; i < albumTracks.Count; i++)
             {

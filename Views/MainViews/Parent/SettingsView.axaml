@@ -12,6 +12,10 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="vm:SettingsViewModel"
              x:Class="MVNFOEditor.Views.SettingsView">
+
+    <UserControl.Resources>
+        <controls:PropertyGridTemplateSelector x:Key="PropertyGridTemplateSelector" UseSukiHost="True" />
+    </UserControl.Resources>
     <controls:SettingsLayout>
         <controls:SettingsLayout.Items>
             <objectModel:ObservableCollection x:TypeArguments="controls:SettingsLayoutItem">
@@ -96,18 +100,46 @@
                         </StackPanel>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>
-                <controls:SettingsLayoutItem Header="YTDL Options">
+                <controls:SettingsLayoutItem Header="Download Options">
                     <controls:SettingsLayoutItem.Content>
                         <StackPanel Orientation="Vertical">
                             <ComboBox PlaceholderText="Resolution" ItemsSource="{Binding Resolutions}"/>
                         </StackPanel>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>
-              <controls:SettingsLayoutItem Header="Advanced Options">
+                <controls:SettingsLayoutItem Header="Apple Music">
+                    <controls:SettingsLayoutItem.Content>
+                        <StackPanel Orientation="Vertical">
+                            <UniformGrid Rows="1" Columns="2">
+                                <TextBox theme:TextBoxExtensions.Prefix="User Media Token:  " Text="{Binding AppleMusicToken}"/>
+                                <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Update" Command="{Binding UpdateAMToken}" />
+                            </UniformGrid>
+                            <UniformGrid Rows="1" Columns="2">
+                                <TextBox theme:TextBoxExtensions.Prefix="Device ID Path:  " Width="600" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="device_client_id_blob" Name="blobinput" Text="{Binding UserId}" />
+                                <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Save" Click="BrowseDeviceId" />
+                            </UniformGrid>
+                            <UniformGrid Rows="1" Columns="2">
+                                <TextBox theme:TextBoxExtensions.Prefix="Device Private Key Path:  " Width="600" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="device_private_key" Name="keyinput" Text="{Binding UserKey}" />
+                                <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Save" Click="BrowseDeviceKey" />
+                            </UniformGrid>
+                        </StackPanel>
+                    </controls:SettingsLayoutItem.Content>
+                </controls:SettingsLayoutItem>
+                <controls:SettingsLayoutItem Header="YouTube Music">
+                    <controls:SettingsLayoutItem.Content>
+                        <StackPanel Orientation="Vertical">
+                            <TextBox theme:TextBoxExtensions.Prefix="YTDL Options:  " Text="{Binding YtdlFormat}"/>
+                            <UniformGrid Rows="1" Columns="2">
+                                <TextBlock HorizontalAlignment="Left" Text="Generate New YouTube Music Headers" />
+                                <Button Classes="Outlined" Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Save" Command="{Binding GenerateYTMHeaders}" />
+                            </UniformGrid>
+                        </StackPanel>
+                    </controls:SettingsLayoutItem.Content>
+                </controls:SettingsLayoutItem>
+              <controls:SettingsLayoutItem Header="FFProbe Options">
                 <controls:SettingsLayoutItem.Content>
                   <StackPanel Orientation="Vertical">
                     <TextBox theme:TextBoxExtensions.Prefix="Screenshot Second:  " Text="{Binding ScreenshotSecond}"/>
-                    <TextBox theme:TextBoxExtensions.Prefix="YTDL Options:  " Text="{Binding YtdlFormat}"/>
                   </StackPanel>
                 </controls:SettingsLayoutItem.Content>
               </controls:SettingsLayoutItem>
@@ -116,7 +148,7 @@
                         <Grid ColumnDefinitions="*,*,*">
                             <Button Grid.Column="0" Width="100" Content="Save" Command="{Binding SaveChanges}" />
                             <Button Grid.Column="1" Width="300" Content="Download Popup Test" Command="{Binding AppleMusicDownloadTesting}" />
-                            <Button Grid.Column="2" Width="300" Content="Artist Merge Test" Command="{Binding ArtistMergeTest}" />
+                            <Button Grid.Column="2" Width="200" Content="AM NFO Save Test" Command="{Binding AMNFOTest}" />
                         </Grid>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>

@@ -12,8 +12,11 @@ using NUnit.Framework.Internal;
 
 namespace MVNFOEditor.ViewModels
 {
-    public class WaveProgressViewModel : ObservableObject
+    public partial class WaveProgressViewModel : ObservableObject
     {
+        [ObservableProperty] private bool _isIndeterminate;
+        [ObservableProperty] private bool _waveVisible;
+        [ObservableProperty] private bool _circleVisible;
         private double _progressValue;
         private string? _headerText;
         public double ProgressValue
@@ -35,13 +38,22 @@ namespace MVNFOEditor.ViewModels
             }
         }
 
+        public WaveProgressViewModel(bool isIndeterminate = false, bool waveVisible = false, bool circleVisible = false)
+        {
+            IsIndeterminate = isIndeterminate;
+            CircleVisible = circleVisible && !waveVisible;
+            WaveVisible = waveVisible && !circleVisible;
+
+            if (!circleVisible && !waveVisible)
+            {
+                WaveVisible = true;
+            }
+        }
         public void UpdateDownloadSpeed(string speed)
         {
             string main_header = HeaderText.Split(" - ")[0];
             HeaderText = $"{main_header} - {speed}";
         }
-
-
         public void UpdateProgress(double value)
         {
             ProgressValue = value;

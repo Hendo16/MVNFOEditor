@@ -14,7 +14,7 @@ public interface ISettings
     public Resolution Resolution { get; set; }
     #region AppleMusic
     [Option(Alias = "AM.AccessToken", DefaultValue = "n/a")]
-    public string AM_MediaBearerToken { get; set; }
+    public string AM_AccessToken { get; set; }
     [Option(Alias = "AM.UserToken", DefaultValue = "n/a")]
     public string AM_UserToken { get; set; }
     [Option(Alias = "AM.Region", DefaultValue = "n/a")]
@@ -27,6 +27,11 @@ public interface ISettings
     
     [Option(Alias = "AM.DeviceKey", DefaultValue = "./Assets/device_private_key")]
     public string AM_DeviceKey { get; set; }
+    #endregion
+    
+    #region YouTubeMusic
+    [Option(Alias = "YTM.AuthPath", DefaultValue = "N/A")]
+    public string YTM_AuthHeaders { get; set; }
     #endregion
 
     #region YTDL

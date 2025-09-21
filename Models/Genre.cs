@@ -11,6 +11,15 @@ namespace MVNFOEditor.Models
         public int Id { get; set; }
         public string Name { get; set; }
 
-        public List<MusicVideoGenre> MusicVideoGenres { get; set; }
+        public List<MusicVideo> MusicVideos { get; } = [];
+
+        public Genre() {}
+
+        public Genre(string name, MusicVideo newVm)
+        {
+            Name = name;
+            MusicVideos.Add(newVm);
+        }
+
     }
 }

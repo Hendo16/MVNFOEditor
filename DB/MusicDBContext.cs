@@ -25,18 +25,9 @@ namespace MVNFOEditor.DB
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<MusicVideoGenre>()
-                .HasKey(mvg => new { mvg.MusicVideoID, mvg.GenreID });
-
-            modelBuilder.Entity<MusicVideoGenre>()
-                .HasOne(mvg => mvg.MusicVideo)
-                .WithMany(mv => mv.MusicVideoGenres)
-                .HasForeignKey(mvg => mvg.MusicVideoID);
-
-            modelBuilder.Entity<MusicVideoGenre>()
-                .HasOne(mvg => mvg.Genre)
-                .WithMany(g => g.MusicVideoGenres)
-                .HasForeignKey(mvg => mvg.GenreID);
+            modelBuilder.Entity<MusicVideo>()
+                .HasMany(mv => mv.Genres)
+                .WithMany(e => e.MusicVideos);
 
             modelBuilder.Entity<Artist>()
                 .HasMany(a => a.Metadata)

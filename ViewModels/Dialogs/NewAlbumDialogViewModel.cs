@@ -415,7 +415,7 @@ namespace MVNFOEditor.ViewModels
         }
         public async void SaveMultipleManualVideos()
         {
-            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            WaveProgressViewModel waveVM = new WaveProgressViewModel(isIndeterminate: true, circleVisible: true);
             CurrentContent = waveVM;
             NavVisible = false;
             for (int i = 0; i < _manualMVVM.ManualItems.Count; i++)
@@ -454,6 +454,7 @@ namespace MVNFOEditor.ViewModels
                                 .WithTitle("Error")
                                 .WithContent($"Something went wrong with downloading {_manualMVVM.ManualItems[i].Title}")
                                 .OfType(NotificationType.Error)
+                                .Dismiss().ByClicking()
                                 .Queue();
                             Log.Error($"Error in AddMusicVideo->SaveMultipleManualVideos: {_manualMVVM.ManualItems[i].VidID} failed");
                             foreach (var err in downResult.ErrorOutput)
@@ -469,6 +470,7 @@ namespace MVNFOEditor.ViewModels
                         .WithTitle("Error")
                         .WithContent($"Something went wrong with downloading {_manualMVVM.ManualItems[i].Title}")
                         .OfType(NotificationType.Error)
+                        .Dismiss().ByClicking()
                         .Queue();
                     Log.Error($"Error in AddMusicVideo->SaveMultipleManualVideos: {_manualMVVM.ManualItems[i].VidID} failed");
                     foreach (var err in downResult.ErrorOutput)
@@ -484,7 +486,7 @@ namespace MVNFOEditor.ViewModels
         private async void SaveMultipleVideos()
         {
             NavVisible = false;
-            WaveProgressViewModel waveVM = new WaveProgressViewModel();
+            WaveProgressViewModel waveVM = new WaveProgressViewModel(isIndeterminate: true, circleVisible: true);
             CurrentContent = waveVM;
             for (int i = 0; i < _syncVM.SelectedVideos.Count; i++)
             {

@@ -37,5 +37,35 @@ namespace MVNFOEditor.Views
                 MVInput.Text = folder[0].TryGetLocalPath();
             }
         }
+
+        public async void BrowseDeviceId(object sender, RoutedEventArgs e)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            var file = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            {
+                Title = "Select device_client_id_blob",
+                AllowMultiple = false
+            });
+            if (file.Count > 0)
+            {
+                _settings.AM_DeviceId = file[0].TryGetLocalPath();
+                MVInput.Text = file[0].TryGetLocalPath();
+            }
+        }
+        
+        public async void BrowseDeviceKey(object sender, RoutedEventArgs e)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            var file = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            {
+                Title = "Select device_private_key",
+                AllowMultiple = false
+            });
+            if (file.Count > 0)
+            {
+                _settings.AM_DeviceKey = file[0].TryGetLocalPath();
+                MVInput.Text = file[0].TryGetLocalPath();
+            }
+        }
     }
 }

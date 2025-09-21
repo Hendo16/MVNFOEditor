@@ -21,6 +21,7 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private List<Bitmap> _sourceIcons = new();
         [ObservableProperty] private bool _hasYTMusic;
         [ObservableProperty] private bool _hasAppleMusic;
+        [ObservableProperty] private bool _sourceAvailable;
         private ArtistListParentViewModel _parentVM;
         private readonly Album _album;
         public event EventHandler<bool> SyncStarted;
@@ -36,7 +37,9 @@ namespace MVNFOEditor.ViewModels
             _album = album;
             ytMusicHelper = App.GetYTMusicHelper();
             _iTunesApiHelper = App.GetiTunesHelper();
-            
+            //Bit hacky, would love something more dynamic but we're likely only ever going to have 2 sources anyway...
+            SourceAvailable = album.Artist.Metadata.Count > 1 &&
+                               album.Metadata.Count(am => am.SourceId is SearchSource.YouTubeMusic or SearchSource.AppleMusic) == 1;
             foreach (var metadata in album.Metadata)
             {
                 string path = metadata.SourceIconPath;
@@ -50,7 +53,6 @@ namespace MVNFOEditor.ViewModels
                     HasAppleMusic = true;
                 }
             }
-            
         }
 
         public Artist Artist => _album.Artist;
@@ -100,6 +102,22 @@ namespace MVNFOEditor.ViewModels
                     bitmap.Save(fs);
                 }
             });
+        }
+
+        public void AddSource()
+        {
+            AddAlbumSourceViewModel newVM = new AddAlbumSourceViewModel(_album);
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(_ => newVM)
+                .TryShow();
+        }
+        
+        public  void EditAlbum()
+        {
+            EditAlbumDialogViewModel editVM = new EditAlbumDialogViewModel(_album, Cover);
+            App.GetVM().GetDialogManager().CreateDialog()
+                .WithViewModel(dialog => editVM)
+                .TryShow();
         }
 
         public void GenerateSongs()
@@ -216,14 +234,6 @@ namespace MVNFOEditor.ViewModels
             App.GetVM().GetDialogManager().CreateDialog()
                 .WithViewModel(dialog => parentVM)
                 .Dismiss().ByClickingBackground()
-                .TryShow();
-        }
-
-        public async void EditAlbum()
-        {
-            EditAlbumDialogViewModel editVM = new EditAlbumDialogViewModel(_album, Cover);
-            App.GetVM().GetDialogManager().CreateDialog()
-                .WithViewModel(dialog => editVM)
                 .TryShow();
         }
 

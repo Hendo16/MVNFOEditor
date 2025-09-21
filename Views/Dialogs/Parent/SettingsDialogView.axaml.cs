@@ -27,18 +27,15 @@ namespace MVNFOEditor.Views
         {
             if (DataContext is SettingsDialogViewModel viewModel)
             {
-                if (viewModel.StepIndex == 1)
+                if (viewModel.StepIndex == 1 && FolderView.MVInput.Text == "n/a")
                 {
-                    if (FolderView.MVInput.Text == null)
-                    {
-                        App.GetVM().GetToastManager().CreateToast()
-                            .WithTitle("Error!")
-                            .WithContent($"Music Video Folder Missing!")
-                            .OfType(NotificationType.Error)
-                            .Dismiss().After(TimeSpan.FromSeconds(3))
-                            .Queue();
-                        return;
-                    }
+                    App.GetVM().GetToastManager().CreateToast()
+                        .WithTitle("Error!")
+                        .WithContent($"Music Video Folder Missing!")
+                        .OfType(NotificationType.Error)
+                        .Dismiss().After(TimeSpan.FromSeconds(3))
+                        .Queue();
+                    return;
                 }
                 viewModel.HandleForward(settingsPages);
             }

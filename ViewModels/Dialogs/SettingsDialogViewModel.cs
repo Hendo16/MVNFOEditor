@@ -25,7 +25,7 @@ namespace MVNFOEditor.ViewModels
         [ObservableProperty] private bool _nextVisible;
         [ObservableProperty] private int _stepIndex;
         [ObservableProperty] private int _carouselHeight;
-        [ObservableProperty] private AdvSettingsViewModel? _advSettings = new();
+        [ObservableProperty] private AdvSettingsViewModel _advSettings = new();
 
         public SettingsDialogViewModel()
         {
@@ -35,19 +35,40 @@ namespace MVNFOEditor.ViewModels
             NextVisible = true;
             IsLightTheme = _settings.LightMode;
 
-            CarouselHeight = 300;
+            CarouselHeight = 350;
         }
 
-        public void HandleFinish()
+        public async void HandleFinish()
         {
             _settings.Resolution = AdvSettings.Resolution;
-            _settings.ScreenshotSecond = AdvSettings.ScreenshotSecond == null ? 20 : AdvSettings.ScreenshotSecond;
-            _settings.YTDLFormat = AdvSettings.YtdlFormat == null ? "" : AdvSettings.YtdlFormat;
-            _settings.AM_DeviceId = AdvSettings.DeviceId;
-            _settings.AM_DeviceKey = AdvSettings.DeviceKey;
-            _settings.YTDLPath = AdvSettings.YtDLPath;
-            _settings.FFMPEGPath = AdvSettings.FfmpegPath;
-            App.GetDBContext().Database.EnsureCreated();
+            _settings.YTDLFormat = AdvSettings.YtdlFormat ?? "";
+            _settings.ScreenshotSecond = AdvSettings.ScreenshotSecond;
+            if (AdvSettings.DeviceId != null)
+            {
+                _settings.AM_DeviceId = AdvSettings.DeviceId;
+            }
+            if (AdvSettings.DeviceKey != null)
+            {
+                _settings.AM_DeviceKey = AdvSettings.DeviceKey;
+            }
+            if (AdvSettings.YtDLPath != null)
+            {
+                _settings.YTDLPath = AdvSettings.YtDLPath;
+            }
+            if (AdvSettings.FfmpegPath != null)
+            {
+                _settings.FFMPEGPath = AdvSettings.FfmpegPath;
+            }
+            if (AdvSettings.YtMusicAuthFile != null)
+            {
+                _settings.YTM_AuthHeaders = AdvSettings.YtMusicAuthFile;
+            }
+            if (AdvSettings.AppleMusicToken != null)
+            {
+                _settings.AM_UserToken = AdvSettings.AppleMusicToken;
+                await App.GetAppleMusicDLHelper().UpdateUserToken(AdvSettings.AppleMusicToken);
+            }
+            await App.GetDBContext().Database.EnsureCreatedAsync();
             App.GetVM().GetDialogManager().DismissDialog();
             //Task.Run(() => { App.GetVM().GetParentView().InitList(); });
         }

@@ -10,7 +10,18 @@
     <controls:GlassCard>
         <controls:GroupBox Header="{Binding HeaderText}">
             <Grid>
-                <controls:WaveProgress Value="{Binding ProgressValue}" />
+                <controls:WaveProgress IsVisible="{Binding WaveVisible}" Value="{Binding ProgressValue}" />
+                <controls:CircleProgressBar Width="130"
+                                            Height="130"
+                                            IsIndeterminate="{Binding IsIndeterminate}"
+                                            IsVisible="{Binding CircleVisible}" 
+                                            StrokeWidth="11"
+                                            Value="{Binding ProgressValue}">                                    
+                    <TextBlock Margin="0,2,0,0"
+                               Classes="h3"
+                               Text="{Binding ProgressValue, StringFormat={}{0:#0}%}" />
+                </controls:CircleProgressBar>
+
             </Grid>
         </controls:GroupBox>
     </controls:GlassCard>

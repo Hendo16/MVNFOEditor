@@ -16,8 +16,8 @@ using Flurl.Http;
 using HtmlAgilityPack;
 using log4net;
 using M3U8Parser;
-using M3U8Parser.Attributes.BaseAttribute;
-using M3U8Parser.ExtXType;
+using M3U8Parser.Attributes.ValueType;
+using M3U8Parser.Tags.MultivariantPlaylist;
 using MVNFOEditor.DB;
 using MVNFOEditor.Models;
 using MVNFOEditor.Settings;
@@ -159,9 +159,9 @@ public class AppleMusicDLHelper
             _settings.AM_Storefront = "us";
         }
         //Check if token has been set before
-        if (_settings.AM_MediaBearerToken == "n/a")
+        if (_settings.AM_AccessToken == "n/a")
         {
-            _settings.AM_MediaBearerToken = GetAccessToken();
+            _settings.AM_AccessToken = GetAccessToken();
         }
         //Check if we can make a valid request with the token
         try
@@ -169,13 +169,13 @@ public class AppleMusicDLHelper
             await BaseApiUrl()
                 .AppendPathSegment("281899913")
                 .WithHeaders(headers)
-                .WithOAuthBearerToken(_settings.AM_MediaBearerToken)
+                .WithOAuthBearerToken(_settings.AM_AccessToken)
                 .GetStringAsync();
         }
         catch (FlurlHttpException e)
         {
             //Invalid/Expired media access token
-            _settings.AM_MediaBearerToken = GetAccessToken();
+            _settings.AM_AccessToken = GetAccessToken();
         }
     }
 
@@ -186,7 +186,7 @@ public class AppleMusicDLHelper
             string response = await "https://amp-api.music.apple.com/v1/me/storefront"
                 .WithHeaders(headers)
                 .WithHeader("media-user-token", _settings.AM_UserToken)
-                .WithOAuthBearerToken(_settings.AM_MediaBearerToken)
+                .WithOAuthBearerToken(_settings.AM_AccessToken)
                 .GetStringAsync();
             
             //Get account region information
@@ -275,7 +275,7 @@ public class AppleMusicDLHelper
             })
             .WithHeaders(headers)
             .WithHeader("media-user-token", _settings.AM_UserToken)
-            .WithOAuthBearerToken(_settings.AM_MediaBearerToken)
+            .WithOAuthBearerToken(_settings.AM_AccessToken)
             .GetStringAsync();
         JObject objResult = JsonConvert.DeserializeObject<JObject> ( result, new JsonSerializerSettings() { DateParseHandling = DateParseHandling.None });
         AMVideoMetadata loaded = new AMVideoMetadata(objResult.Value<JArray>("data")[0], artistId);
@@ -303,7 +303,7 @@ public class AppleMusicDLHelper
         
         //Check pssh keys in DB
         List<PsshKey> keys = new List<PsshKey>();
-        if (_db.PsshKeys.Where(p => psshs.Contains(p.pssh)).Any())
+        if (_db.PsshKeys.Any(p => psshs.Contains(p.pssh)))
         {
             //get keys from db
             keys = _db.PsshKeys.Where(p => psshs.Contains(p.pssh)).ToList();
@@ -355,6 +355,11 @@ public class AppleMusicDLHelper
         for (int i = 0; i < playlist.Medias.Count; i++)
         {
             Media info = playlist.Medias[i];
+            //For some reason a type comparison no longer works so string comparison is needed
+            if (info.Type.ToString() != "AUDIO")
+            {
+                continue;
+            }
             AppleMusicStreamList encContent = await getMediaMetadata(info.Uri);
             encContent.Codec = info.GroupId.Contains("HE") ? "HE-AAC" : "AAC";
             encContent.AverageBitrate = decimal.Parse(info.GroupId.Split("-").Last());
@@ -529,7 +534,7 @@ public class AppleMusicDLHelper
         string resp1 = await LicenseUrl
             .WithHeaders(headers)
             .WithHeader("media-user-token", _settings.AM_UserToken)
-            .WithOAuthBearerToken(_settings.AM_MediaBearerToken)
+            .WithOAuthBearerToken(_settings.AM_AccessToken)
             .PostJsonAsync(new AppleMusicDataPayload(){AdamId = id, Challenge = "CAQ=", IsLibrary = false, KeySystem = "com.widevine.alpha", Uri = base64_key, UserInitiated = true})
             .ReceiveString();
 
@@ -540,7 +545,7 @@ public class AppleMusicDLHelper
         string resp2 = await LicenseUrl
             .WithHeaders(headers)
             .WithHeader("media-user-token", _settings.AM_UserToken)
-            .WithOAuthBearerToken(_settings.AM_MediaBearerToken)
+            .WithOAuthBearerToken(_settings.AM_AccessToken)
             .PostJsonAsync(new AppleMusicDataPayload(){AdamId = id, Challenge = challengeB64, IsLibrary = false, KeySystem = "com.widevine.alpha", Uri = base64_key, UserInitiated = true})
             .ReceiveString();
         
@@ -606,7 +611,7 @@ public class AppleMusicDLHelper
         string result = await WebplaybackUrl
             .WithHeaders(headers)
             .WithHeader("media-user-token", _settings.AM_UserToken)
-            .WithOAuthBearerToken(_settings.AM_MediaBearerToken)
+            .WithOAuthBearerToken(_settings.AM_AccessToken)
             .PostJsonAsync(new {salableAdamId = id.ToString()})
             .ReceiveString();
         JObject output = JsonConvert.DeserializeObject<JObject> ( result, new JsonSerializerSettings() { DateParseHandling = DateParseHandling.None });

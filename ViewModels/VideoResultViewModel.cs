@@ -1,6 +1,7 @@
 ﻿using Avalonia.Media.Imaging;
 using MVNFOEditor.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MVNFOEditor.Helpers;
@@ -134,7 +135,15 @@ namespace MVNFOEditor.ViewModels
             newMV.thumb = $"{newMV.title}.jpg";
 
             newMV.vidPath = filePath;
-
+            
+            //Handle Genres
+            string? baseGenre = _dbContext.AppleMusicVideoMetadata.First(am => am.id == int.Parse(_result.VideoID)).genre;
+            if (!_dbContext.Genres.Any(g => g.Name == baseGenre))
+            {
+                Genre newGenre = new Genre(baseGenre, newMV);
+                _dbContext.Genres.Add(newGenre);
+            }
+            
             newMV.SaveToNFO();
             _dbContext.MusicVideos.Add(newMV);
             return await _dbContext.SaveChangesAsync();

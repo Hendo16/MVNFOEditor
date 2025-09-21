@@ -26,6 +26,7 @@ namespace MVNFOEditor.Models
         public List<AlbumMetadata> Metadata { get; set; }
         public bool? IsExplicit { get; set; }
         public Artist Artist { get; set; }
+        private static HttpClient s_httpClient = new();
         public Album() { } // Parameterless constructor required by EF Core
 
         public Album(Artist _artist)
@@ -44,7 +45,11 @@ namespace MVNFOEditor.Models
             }
             Metadata.Add(metadata);
         }
-        private static HttpClient s_httpClient = new();
+        
+        public AlbumMetadata GetAlbumMetadata(SearchSource? source = null)
+        {
+            return source != null ? Metadata.First(am => am.SourceId == source) : Metadata.First();
+        }
 
         public static async Task<Album?> CreateAlbum(AlbumResult resultCardInfo, SearchSource source)
         {

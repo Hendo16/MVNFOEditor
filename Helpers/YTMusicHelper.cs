@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using log4net;
 using MVNFOEditor.Models;
 using MVNFOEditor.ViewModels;
 using MVNFOEditor.DB;
+using MVNFOEditor.Settings;
 using YtMusicNet;
 using YtMusicNet.Constants;
+using YtMusicNet.Handlers;
 using YtMusicNet.Records;
 using AlbumResult = MVNFOEditor.Models.AlbumResult;
 using VideoResult = MVNFOEditor.Models.VideoResult;
@@ -17,6 +21,8 @@ namespace MVNFOEditor.Helpers
 {
     public class YTMusicHelper
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(YTMusicHelper));
+        private static ISettings settings;
         private static YtMusicClient api;
         
         private dynamic _ytMusic;
@@ -24,18 +30,42 @@ namespace MVNFOEditor.Helpers
         public YTMusicHelper()
         {
             _dbContext = App.GetDBContext();
+            settings = App.GetSettings();
         }
         
-        public static async Task<YTMusicHelper> CreateHelper()
+        public static async Task<YTMusicHelper> CreateHelper(string? authFile = null)
         {
             YTMusicHelper newHelper = new YTMusicHelper();
-            await newHelper.InitClient();
+            if (File.Exists("./Assets/browser.json"))
+            {
+                authFile = "./Assets/browser.json";
+            }
+            await newHelper.InitClient(authFile);
             return newHelper;
         }
 
-        public async Task InitClient()
+        private async Task InitClient(string? authFile = null)
         {
-            api = await YtMusicClient.CreateAsync();
+            api = await YtMusicClient.CreateAsync(authFilePath:authFile);
+        }
+
+        public bool SetupBrowserHeaders(string headers)
+        {
+            try
+            {
+                var json = NetworkHandler.BrowserSetup(headers);
+                if (json != "{}")
+                {
+                    File.WriteAllText("./Assets/browser.json", json);
+                    return File.Exists("./Assets/browser.json");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Error in YTMusicHelper->SetupBrowserHeaders: Exception in Setting Up Browser.json");
+                Log.Error(ex);
+            }
+            return false;
         }
 
         public async Task<List<ArtistResult?>?> searchArtists(string artistStr)

@@ -1,0 +1,27 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             xmlns:vm="using:MVNFOEditor.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MVNFOEditor.Views.YTMHeaderSubmissionView"
+             x:DataType="vm:YTMHeaderSubmissionViewModel">
+    <suki:GroupBox Header="YouTube Music Headers">
+        <StackPanel Orientation="Vertical" Spacing="10">
+            <TextBlock HorizontalAlignment="Center" Classes="h3" Text="Headers missing or expired!"/>
+            <TextBlock xml:space="preserve" Classes="h4" >Please provide new headers. Click <HyperlinkButton NavigateUri="https://ytmusicapi.readthedocs.io/en/stable/setup/browser.html" Content="Here" /> for a guide on how to get your authenticated headers.</TextBlock>
+            <TextBlock HorizontalAlignment="Center" Classes="h5 Danger" Text="{Binding ErrorText}"/>
+            <TextBox AcceptsReturn="True" AcceptsTab="True" Text="{Binding Headers}" Watermark="POST /youtubei/v1/browse?ctoken=..." />
+            <StackPanel Orientation="Horizontal">
+                <Button Width="200"
+                        Command="{Binding GenerateHeadersCommand}" 
+                        Content="Submit"/>
+                <Button Width="200"
+                        Name="CloseBtn"
+                        Command="{Binding CloseDialogCommand}"
+                        Content="Close" />
+            </StackPanel>
+        </StackPanel>
+    </suki:GroupBox>
+</UserControl>

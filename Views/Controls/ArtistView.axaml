@@ -12,7 +12,7 @@
     <StackPanel Spacing="5" Width="540">
         <StackPanel.ContextMenu>
             <ContextMenu>
-                <MenuItem Command="{Binding AddSource}" Header="Add Another Source">
+                <MenuItem IsVisible="{Binding SourcesAvailable}" Command="{Binding AddSource}" Header="Add Another Source">
                     <MenuItem.Icon>
                         <PathIcon Width="15"
                                   Height="15"

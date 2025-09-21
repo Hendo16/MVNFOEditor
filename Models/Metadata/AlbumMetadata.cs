@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using MVNFOEditor.Interface;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -15,16 +17,24 @@ public class AlbumMetadata : IMetadata
 
     public AlbumMetadata(AlbumResult resultCard, Album _album)
     {
+        Album = _album;
         SourceId = SearchSource.AppleMusic;
         BrowseId = resultCard.browseId;
         ArtworkUrl = resultCard.thumbURL;
         OriginalTitle = resultCard.Title;
-        Album = _album;
+        IsExplicit = resultCard.isExplicit;
+        if (int.TryParse(resultCard.Year, out var year))
+        {
+            Year = year;
+        }
     }
-    public AlbumMetadata(YtMusicNet.Models.Album ytAlbum, Album _album, string browseId)
+    public AlbumMetadata(YtMusicNet.Models.Album ytAlbum, Album album, string browseId)
     {
         SourceId = SearchSource.YouTubeMusic;
-        ArtworkUrl = ytAlbum.Thumbnails.Last().URL;
+        if (ytAlbum.Thumbnails != null)
+        {
+            ArtworkUrl = ytAlbum.Thumbnails.Last().URL;
+        }
         BrowseId = browseId;
         Description = ytAlbum.Description;
         DurationTime =  ytAlbum.DurationTime;
@@ -32,7 +42,24 @@ public class AlbumMetadata : IMetadata
         TrackCount = ytAlbum.TrackCount;
         OriginalTitle = ytAlbum.Title;
         IsExplicit = ytAlbum.IsExplicit;
-        Album = _album;
+        Album = album;
+    }
+    public static async Task<AlbumMetadata?> GetNewMetadata(AlbumResult card, Album album)
+    {
+        switch (card.SearchSource)
+        {
+            case SearchSource.YouTubeMusic:
+                YtMusicNet.Models.Album? fullAlbumInfo = await App.GetYTMusicHelper().GetAlbum(card.browseId);
+                if (fullAlbumInfo == null)
+                {
+                    return null;
+                }
+                return new AlbumMetadata(fullAlbumInfo, album, card.browseId);
+            case SearchSource.AppleMusic:
+                //string[] banners = App.GetiTunesHelper().GetArtistBannerLinks(card.artistLinkURL);
+                return new AlbumMetadata(card, album);
+        }
+        return null;
     }
     
     public int Id { get; set; }
