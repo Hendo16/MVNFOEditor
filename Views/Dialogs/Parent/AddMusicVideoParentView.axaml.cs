@@ -1,14 +1,11 @@
 using Avalonia.Controls;
-using Avalonia.Interactivity;
-using MVNFOEditor.ViewModels;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class AddMusicVideoParentView : UserControl
 {
-    public partial class AddMusicVideoParentView : UserControl
+    public AddMusicVideoParentView()
     {
-        public AddMusicVideoParentView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

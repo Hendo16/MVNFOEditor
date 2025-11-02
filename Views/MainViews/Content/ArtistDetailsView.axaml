@@ -6,17 +6,15 @@
              xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
              xmlns:views="clr-namespace:MVNFOEditor.Views"
              xmlns:sukiContent="clr-namespace:SukiUI.Content;assembly=SukiUI"
-             xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.ArtistDetailsView"
              x:DataType="vm:ArtistDetailsViewModel">
     <controls:BusyArea BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
             <Grid RowDefinitions="Auto, Auto, *">
-                <ContentControl Grid.Row ="0" Content="{Binding BannerVM}"/>
+                <ContentControl Grid.Row="0" Content="{Binding BannerVM}" />
                 <controls:GlassCard IsAnimated="True" Margin="15 15 15 15" Grid.Row="1" IsVisible="{Binding HasAlbums}">
                     <controls:GlassCard.Resources>
-                        <system:Double x:Key="GlassOpacity">0.2</system:Double>
                     </controls:GlassCard.Resources>
                     <controls:GlassCard.ContextMenu>
                         <ContextMenu>
@@ -34,7 +32,7 @@
                         <ItemsControl ItemsSource="{Binding AlbumCards}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <WrapPanel/>
+                                    <WrapPanel />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
@@ -45,9 +43,9 @@
                         </ItemsControl>
                     </controls:GroupBox>
                 </controls:GlassCard>
-                <controls:GlassCard IsAnimated="True" Margin="10 10 10 10" Grid.Row="2" IsVisible="{Binding HasSingles}">
+                <controls:GlassCard IsAnimated="True" Margin="10 10 10 10" Grid.Row="2"
+                                    IsVisible="{Binding HasSingles}">
                     <controls:GlassCard.Resources>
-                        <system:Double x:Key="GlassOpacity">0.2</system:Double>
                     </controls:GlassCard.Resources>
                     <controls:GlassCard.ContextMenu>
                         <ContextMenu>
@@ -73,7 +71,7 @@
                         <ItemsControl ItemsSource="{Binding SingleCards}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <WrapPanel/>
+                                    <WrapPanel />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>

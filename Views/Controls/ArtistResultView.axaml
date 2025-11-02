@@ -7,17 +7,13 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.ArtistResultView"
              x:DataType="vm:ArtistResultViewModel">
-    <UserControl.Styles>
-        <Style Selector="Button">
-            <Setter Property="theme:ButtonExtensions.ShowProgress" Value="{Binding Loading}" />
-        </Style>
-    </UserControl.Styles>
     <Grid ColumnDefinitions="Auto,Auto,*" VerticalAlignment="Center">
-        <Image Grid.Column="0" Margin="0 10 0 0" Width="120" Stretch="Uniform" Source="{Binding Thumbnail}"/>
+        <Image Grid.Column="0" Margin="0 10 0 0" Width="120" Stretch="Uniform" Source="{Binding Thumbnail}" />
         <Border Grid.Column="1">
             <Grid Margin="10 0 0 0" RowDefinitions="Auto,Auto,*" VerticalAlignment="Center">
-                <TextBlock Grid.Row="0" Margin="10 10 0 0" Classes="h4" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{Binding Name}"/>
+                <TextBlock Grid.Row="0" Margin="10 10 0 0" Classes="h4" HorizontalAlignment="Left"
+                           VerticalAlignment="Center" Text="{Binding Name}" />
             </Grid>
-          </Border>
-      </Grid>
+        </Border>
+    </Grid>
 </UserControl>

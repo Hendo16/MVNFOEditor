@@ -22,15 +22,16 @@
         </StackPanel.ContextMenu>
         <Border CornerRadius="10" ClipToBounds="True">
             <Panel Height="56" Width="120" Background="#7FFF22DD">
-                <Image Width="120" Stretch="Uniform" Source="{Binding Thumbnail}"/>
-                <Panel Height="56" Width="120" IsVisible="{Binding Thumbnail, Converter={x:Static ObjectConverters.IsNull}}">
+                <Image Width="120" Stretch="Uniform" Source="{Binding Thumbnail}" />
+                <Panel Height="56" Width="120"
+                       IsVisible="{Binding Thumbnail, Converter={x:Static ObjectConverters.IsNull}}">
                     <PathIcon Height="38" Width="38" Data="{StaticResource music_regular}" />
                 </Panel>
             </Panel>
         </Border>
         <StackPanel Spacing="3">
-            <TextBlock Classes="h4" HorizontalAlignment="Center" Text="{Binding Title}"/>
-            <TextBlock Classes="Caption" HorizontalAlignment="Center" Text="{Binding Year}"/>
+            <TextBlock Classes="h4" HorizontalAlignment="Center" Text="{Binding Title}" />
+            <TextBlock Classes="Caption" HorizontalAlignment="Center" Text="{Binding Year}" />
         </StackPanel>
     </StackPanel>
 </UserControl>

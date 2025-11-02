@@ -14,9 +14,9 @@
                 <controls:CircleProgressBar Width="130"
                                             Height="130"
                                             IsIndeterminate="{Binding IsIndeterminate}"
-                                            IsVisible="{Binding CircleVisible}" 
+                                            IsVisible="{Binding CircleVisible}"
                                             StrokeWidth="11"
-                                            Value="{Binding ProgressValue}">                                    
+                                            Value="{Binding ProgressValue}">
                     <TextBlock Margin="0,2,0,0"
                                Classes="h3"
                                Text="{Binding ProgressValue, StringFormat={}{0:#0}%}" />

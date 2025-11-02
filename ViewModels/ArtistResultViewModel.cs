@@ -1,96 +1,50 @@
-﻿using Avalonia.Media.Imaging;
-using MVNFOEditor.DB;
-using MVNFOEditor.Models;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using MVNFOEditor.Models;
 
-namespace MVNFOEditor.ViewModels
+namespace MVNFOEditor.ViewModels;
+
+public class ArtistResultViewModel : ObservableObject
 {
-    public class ArtistResultViewModel : ObservableObject
+    private readonly ArtistResult _result;
+    private Bitmap? _thumbnail;
+
+    internal ArtistResultViewModel(ArtistResult result)
     {
-        private readonly ArtistResultCard _resultCard;
-        private Bitmap? _thumbnail;
-        private string _borderColor;
-        private bool _loading;
-        private string _selectText;
-        
-        public string? Name => _resultCard.Name;
+        _result = result;
+    }
 
-        public bool Loading
+    public static async Task<ArtistResultViewModel> CreateViewModel(ArtistResult result)
+    {
+        ArtistResultViewModel newVm = new ArtistResultViewModel(result);
+        await newVm.LoadThumbnail();
+        return newVm;
+    }
+
+    public string? Name => _result.Name;
+
+    public Bitmap? Thumbnail
+    {
+        get => _thumbnail;
+        set
         {
-            get { return _loading; }
-            set
-            {
-                _loading = value;
-                OnPropertyChanged(nameof(Loading));
-            }
+            _thumbnail = value;
+            OnPropertyChanged();
         }
+    }
 
-        public string SelectButtonText
+    public ArtistResult GetResult()
+    {
+        return _result;
+    }
+
+    public async Task LoadThumbnail()
+    {
+        await using (var imageStream = await _result.LoadCoverBitmapAsync())
         {
-            get { return _selectText; }
-            set
-            {
-                _selectText = value;
-                OnPropertyChanged(nameof(SelectButtonText));
-            }
-        }
-
-        public event EventHandler<ArtistResultCard> NextPage;
-
-        public Bitmap? Thumbnail
-        {
-            get { return _thumbnail; }
-            set
-            {
-                _thumbnail = value;
-                OnPropertyChanged(nameof(Thumbnail));
-            }
-        }
-
-        public ArtistResultViewModel(ArtistResultCard resultCard)
-        {
-            Loading = false;
-            SelectButtonText = "Select";
-            _resultCard = resultCard;
-        }
-
-        public void GrabArtist()
-        {
-            Loading = true;
-            SelectButtonText = "Added";
-            TriggerNextPage();
-        }
-
-        public ArtistResultCard GetResult()
-        {
-            return _resultCard;
-        }
-
-        public async Task LoadThumbnail()
-        {
-            await using (var imageStream = await _resultCard.LoadCoverBitmapAsync())
-            {
-                Thumbnail = new Bitmap(imageStream);
-            }
-        }
-
-        public async Task SaveThumbnailAsync(string folderPath)
-        {
-            var bitmap = Thumbnail;
-            await Task.Run(() =>
-            {
-                using (var fs = _resultCard.SaveThumbnailBitmapStream(folderPath))
-                {
-                    bitmap.Save(fs);
-                }
-            });
-        }
-
-        protected virtual void TriggerNextPage()
-        {
-            NextPage?.Invoke(this, _resultCard);
+            Thumbnail = new Bitmap(imageStream);
         }
     }
 }

@@ -1,92 +1,86 @@
-﻿using MVNFOEditor.DB;
-using MVNFOEditor.Models;
-using System.Collections.ObjectModel;
-using System.Linq;
-using Material.Icons;
-using MVNFOEditor.Features;
-using MVNFOEditor.Helpers;
-using MVNFOEditor.Views;
-using SimpleInjector.Advanced;
-using SukiUI.Controls;
-using CommunityToolkit.Mvvm.Input;
+﻿using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Threading;
+using CommunityToolkit.Mvvm.Input;
+using MVNFOEditor.Models;
 using SukiUI.Dialogs;
 
-namespace MVNFOEditor.ViewModels
+namespace MVNFOEditor.ViewModels;
+
+public partial class ArtistListViewModel : ObservableValidator
 {
-    public partial class ArtistListViewModel : ObservableValidator
+    private ObservableCollection<ArtistViewModel> _artistCards;
+    [ObservableProperty] private string _busyText;
+    [ObservableProperty] private bool _isBusy;
+
+    public ArtistListViewModel()
     {
-        [ObservableProperty] private bool _isBusy;
-        [ObservableProperty] private string _busyText;
-        private ObservableCollection<ArtistViewModel> _artistCards;
-        public ObservableCollection<ArtistViewModel> ArtistCards
-        {
-            get { return _artistCards; }
-            set
-            {
-                _artistCards = value;
-                OnPropertyChanged(nameof(ArtistCards));
-            }
-        }
+        if (App.GetDBContext().Exists()) LoadArtists();
+    }
 
-        public ArtistListViewModel()
+    public ObservableCollection<ArtistViewModel> ArtistCards
+    {
+        get => _artistCards;
+        set
         {
-            if (App.GetDBContext().Exists())
-            {
-                LoadArtists();
-            }
+            _artistCards = value;
+            OnPropertyChanged();
         }
+    }
 
-        public void AddArtist()
-        {
-            NewArtistDialogViewModel newVM = new NewArtistDialogViewModel();
-            newVM.ClosePageEvent += RefreshArtists;
-            App.GetVM().GetDialogManager().CreateDialog()
-                .WithViewModel(dialog => newVM)
-                .TryShow();
-        }
+    public void AddArtist()
+    {
+        /*
+        var newVM = new NewArtistDialogViewModel();
+        newVM.ClosePageEvent += RefreshArtists;
+        */
+        var newVm = NewResultDialogViewModel.CreateResultSearch(typeof(ArtistResult));
+        //var newVM = new NewArtistDialogViewModel();
+        newVm.ClosePageEvent += RefreshArtists;
+        App.GetVM().GetDialogManager().CreateDialog()
+            .WithViewModel(dialog => newVm)
+            .TryShow();
+    }
 
-        public async void InitData()
-        {
-            BusyText = "Building Database...";
-            IsBusy = true;
-            App.GetDBHelper().ProgressUpdate += UpdateInitProgressText;
-            bool textTest = false; 
-            LoadArtists();
-        }
+    public async void InitData()
+    {
+        BusyText = "Building Database...";
+        IsBusy = true;
+        App.GetDBHelper().ProgressUpdate += UpdateInitProgressText;
+        var textTest = false;
+        LoadArtists();
+    }
 
-        public async void LoadArtists()
-        {
-            BusyText = "Loading Artists...";
-            IsBusy = true;
-            if (ArtistCards != null)
-            {
-                ArtistCards.Clear();
-            }
-            ArtistCards = await App.GetDBHelper().GenerateArtists();
-            IsBusy = false;
-        }
-        public void RefreshArtists(object? sender, bool t)
-        {
-            LoadArtists();
-        }
+    public async void LoadArtists()
+    {
+        BusyText = "Loading Artists...";
+        IsBusy = true;
+        if (ArtistCards != null) ArtistCards.Clear();
+        ArtistCards = await App.GetDBHelper().GenerateArtists();
+        IsBusy = false;
+    }
 
-        public void UpdateInitProgressText(int progress)
-        {
-            BusyText = $"Building Database...\n\t\t  {progress}/100";
-        }
+    public void AddArtistToList(Artist newArtist)
+    {
+        ArtistCards.Add(new ArtistViewModel(newArtist));
+    }
 
-        [RelayCommand]
-        private async Task ToggleBusy()
-        {
-            BusyText = "Testing Busy Window..";
-            IsBusy = true;
-            await Task.Delay(3000);
-            IsBusy = false;
-        }
+    private void RefreshArtists(object? sender, bool t)
+    {
+        LoadArtists();
+    }
+
+    public void UpdateInitProgressText(int progress)
+    {
+        BusyText = $"Building Database...\n\t\t  {progress}/100";
+    }
+
+    [RelayCommand]
+    private async Task ToggleBusy()
+    {
+        BusyText = "Testing Busy Window..";
+        IsBusy = true;
+        await Task.Delay(3000);
+        IsBusy = false;
     }
 }

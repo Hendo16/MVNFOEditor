@@ -11,36 +11,39 @@
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Grid.Row="0" Width="600" ColumnDefinitions="Auto,Auto,Auto,*">
             <Grid Grid.Column="0" MaxWidth="200" RowDefinitions="Auto, Auto,*">
-                <TextBox Width="150" Grid.Row="0" Watermark="Title" Text="{Binding Title}"/>
-                <TextBox Width="150" Grid.Row="1" Watermark="Year" Text="{Binding Year}"/>
+                <TextBox Width="150" Grid.Row="0" Watermark="Title" Text="{Binding Title}" />
+                <TextBox Width="150" Grid.Row="1" Watermark="Year" Text="{Binding Year}" />
             </Grid>
             <Grid Grid.Column="1" MaxWidth="200" RowDefinitions="Auto, Auto">
                 <StackPanel IsVisible="{Binding URLRadio}" Grid.Row="0">
-                    <TextBox Width="150" Watermark="URL" Text="{Binding CoverURL}"/>
-                    <Button Width="150" Content="Get" Command="{Binding GrabURL}"/>
+                    <TextBox Width="150" Watermark="URL" Text="{Binding CoverURL}" />
+                    <Button Width="150" Content="Get" Command="{Binding GrabURL}" />
                 </StackPanel>
-                <Button Width="150" IsVisible="{Binding LocalRadio}" Grid.Row="0" Content="Browse" Click="CoverSearch"/>
-              <suki:GroupBox Margin="10 10 10 0" Grid.Row="2" Header="Cover Source">
-                <StackPanel Orientation="Horizontal">
-                  <RadioButton Classes="GigaChips" Content="URL" GroupName="SourceGroup" IsChecked="{Binding URLRadio}" />
-                  <RadioButton Classes="GigaChips" Content="Local" GroupName="SourceGroup" IsChecked="{Binding LocalRadio}"/>
-                </StackPanel>
-              </suki:GroupBox>
+                <Button Width="150" IsVisible="{Binding LocalRadio}" Grid.Row="0" Content="Browse" Click="CoverSearch" />
+                <suki:GroupBox Margin="10 10 10 0" Grid.Row="2" Header="Cover Source">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Classes="GigaChips" Content="URL" GroupName="SourceGroup"
+                                     IsChecked="{Binding URLRadio}" />
+                        <RadioButton Classes="GigaChips" Content="Local" GroupName="SourceGroup"
+                                     IsChecked="{Binding LocalRadio}" />
+                    </StackPanel>
+                </suki:GroupBox>
             </Grid>
             <Border Margin="0 0 0 10" Grid.Column="2" CornerRadius="10" ClipToBounds="True">
                 <Panel>
-                    <Image Width="200" Stretch="Uniform" Source="{Binding Cover}"/>
-                    <Panel Background="#7FFF22DD" Height="200" Width="200" IsVisible="{Binding Cover, Converter={x:Static ObjectConverters.IsNull}}">
+                    <Image Width="200" Stretch="Uniform" Source="{Binding Cover}" />
+                    <Panel Background="#7FFF22DD" Height="200" Width="200"
+                           IsVisible="{Binding Cover, Converter={x:Static ObjectConverters.IsNull}}">
                         <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
                     </Panel>
                 </Panel>
             </Border>
-          <Button Grid.Column="3" Command="{Binding CloseDialog}" VerticalAlignment="Top" Margin="10 0 0 0">
-            <PathIcon Data="{x:Static content:Icons.Cross}"/>
-          </Button>
+            <Button Grid.Column="3" Command="{Binding CloseDialog}" VerticalAlignment="Top" Margin="10 0 0 0">
+                <PathIcon Data="{x:Static content:Icons.Cross}" />
+            </Button>
         </Grid>
 
-      <!--
+        <!--
         <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*" RowDefinitions="Auto,Auto,*">
             <Panel Height="200" Grid.Column="0" Grid.Row="0">
                 <TextBox VerticalAlignment="Top" HorizontalAlignment="Left" Text="{Binding Title}" Watermark="Title" />
@@ -54,8 +57,10 @@
         </Grid>
         -->
         <Grid Grid.Row="1" VerticalAlignment="Center">
-          <Button VerticalAlignment="Center" HorizontalAlignment="Left" Classes="Flat Accent" Content="Delete" Command="{Binding DeleteAlbum}"/>
-          <Button VerticalAlignment="Center" HorizontalAlignment="Right" Classes="Flat Accent" Content="Save" Command="{Binding UpdateAlbum}"/>
+            <Button VerticalAlignment="Center" HorizontalAlignment="Left" Classes="Flat Accent" Content="Delete"
+                    Command="{Binding DeleteAlbum}" />
+            <Button VerticalAlignment="Center" HorizontalAlignment="Right" Classes="Flat Accent" Content="Save"
+                    Command="{Binding UpdateAlbum}" />
         </Grid>
     </Grid>
 </UserControl>

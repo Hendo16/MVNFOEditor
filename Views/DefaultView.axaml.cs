@@ -1,12 +1,11 @@
 using SukiUI.Controls;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class DefaultView : SukiWindow
 {
-    public partial class DefaultView : SukiWindow
+    public DefaultView()
     {
-        public DefaultView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

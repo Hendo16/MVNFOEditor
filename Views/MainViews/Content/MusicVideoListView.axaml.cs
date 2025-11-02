@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class MusicVideoListView : UserControl
 {
-    public partial class MusicVideoListView : UserControl
+    public MusicVideoListView()
     {
-        public MusicVideoListView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

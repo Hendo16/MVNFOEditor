@@ -7,12 +7,12 @@
              xmlns:vm="using:MVNFOEditor.ViewModels"
              xmlns:sukiContent="clr-namespace:SukiUI.Content;assembly=SukiUI"
              x:DataType="vm:ArtistViewModel"
-             Width="540"
              PointerPressed="ArtistClick">
-    <StackPanel Spacing="5" Width="540">
+    <StackPanel Spacing="5">
         <StackPanel.ContextMenu>
             <ContextMenu>
-                <MenuItem IsVisible="{Binding SourcesAvailable}" Command="{Binding AddSource}" Header="Add Another Source">
+                <MenuItem IsVisible="{Binding SourcesAvailable}" Command="{Binding AddSource}"
+                          Header="Add Another Source">
                     <MenuItem.Icon>
                         <PathIcon Width="15"
                                   Height="15"
@@ -30,24 +30,24 @@
         </StackPanel.ContextMenu>
         <Border CornerRadius="10" ClipToBounds="True">
             <Panel Background="#7FFF22DD">
-                <Image Width="540" Stretch="Uniform" Source="{Binding Cover}"/>
+                <Image Width="{Binding CoverWidth}" Stretch="Uniform" Source="{Binding Cover}" />
                 <Panel Height="200" IsVisible="{Binding Cover, Converter={x:Static ObjectConverters.IsNull}}">
                     <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
                 </Panel>
                 <ItemsControl ItemsSource="{Binding SourceIcons}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal"/>
+                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Image Source="{Binding}" Width="48"/>
+                            <Image Source="{Binding}" Width="48" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </Panel>
         </Border>
-        <TextBlock HorizontalAlignment="Center" Text="{Binding Name}"/>
+        <TextBlock HorizontalAlignment="Center" Text="{Binding Name}" />
     </StackPanel>
 </UserControl>

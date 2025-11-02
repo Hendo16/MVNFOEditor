@@ -1,71 +1,81 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
+using MVNFOEditor.Factories;
 using MVNFOEditor.Models;
 
-namespace MVNFOEditor.ViewModels
+namespace MVNFOEditor.ViewModels;
+
+public partial class AlbumResultsViewModel : ObservableObject
 {
-    public partial class AlbumResultsViewModel : ObservableObject
+    [ObservableProperty] private string _busyText;
+    [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private ObservableCollection<AlbumResultViewModel> _fullResults;
+    [ObservableProperty] private ObservableCollection<AlbumResultViewModel> _searchResults;
+    public Artist CurrentArtist;
+    private string _searchText;
+    [ObservableProperty] private AlbumResultViewModel _selectedAlbum;
+    public string ArtistBrowseId { get; set; }
+    public event EventHandler<bool> ShowNav;
+
+    internal AlbumResultsViewModel() {}
+
+    public async static Task<AlbumResultsViewModel> CreateViewModel(Artist artist, SearchSource source = SearchSource.YouTubeMusic, string searchText = "")
     {
-        [ObservableProperty] private ObservableCollection<AlbumResultViewModel> _results;
-        [ObservableProperty] private ObservableCollection<AlbumResultViewModel> _fullResults;
-        [ObservableProperty] private ObservableCollection<AlbumResultViewModel> _searchResults;
-        [ObservableProperty] private bool _isBusy;
-        [ObservableProperty] private string _busyText;
-        [ObservableProperty] private AlbumResultViewModel _selectedAlbum;
-        
-        public SearchSource selectedSource;
+        AlbumResultsViewModel newVm = new AlbumResultsViewModel();
+        newVm.SearchText = searchText;
+        newVm.CurrentArtist = artist;
+        await newVm.GenerateNewResults(source);
+        return newVm;
+    }
 
-        private string _searchText;
-        public string SearchText
+    public string SearchText
+    {
+        get => _searchText;
+        set
         {
-            get => _searchText;
-            set
-            {
-                _searchText = value;
-                FilterResults();
-            }
-        }
-
-        public AlbumResultsViewModel(SearchSource source, string searchText = "")
-        {
-            selectedSource = source;
-            SearchText = searchText;
-        }
-
-        public async void LoadCovers()
-        {
-            foreach (var result in Results)
-            {
-                await result.LoadThumbnail();
-            }
-        }
-
-        public void FilterResults()
-        {
-            if (string.IsNullOrEmpty(SearchText) || SearchResults == null)
-            {
-                SearchResults = FullResults;
-                return;
-            }
-            SearchResults = new ObservableCollection<AlbumResultViewModel>(
-                FullResults.Where(item => item.Title?.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0)
-            );
-        }        
-        public void GenerateNewResults(List<AlbumResult> albumResults)
-        {
-            ObservableCollection<AlbumResultViewModel> resultCards = new ObservableCollection<AlbumResultViewModel>(albumResults.ConvertAll(AlbumResultToVM));
-            Results = FullResults = resultCards;
-            LoadCovers();
+            _searchText = value;
             FilterResults();
         }
-        
-        private AlbumResultViewModel AlbumResultToVM(AlbumResult result)
+    }
+
+    private void FilterResults()
+    {
+        if (string.IsNullOrEmpty(SearchText))
         {
-            return new AlbumResultViewModel(result);
+            SearchResults = FullResults;
+            return;
         }
+        SearchResults = new ObservableCollection<AlbumResultViewModel>(
+            FullResults.Where(item => item.Title?.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0)
+        );
+    }
+
+    public async Task<bool> GenerateNewResults(SearchSource source)
+    {
+        //IsBusy = true;
+        ShowNav?.Invoke(this, false);
+        SearchResults?.Clear();
+        FullResults?.Clear();
+        switch (source)
+        {
+            case SearchSource.YouTubeMusic:
+                var ytResults = await App.GetYouTubeFactory().GetAlbums(CurrentArtist);
+                if (ytResults.Count == 0) {return false;}
+                SearchResults = FullResults = ytResults;
+                break;
+            case SearchSource.AppleMusic:
+                var amResults = await App.GetAppleFactory().GetAlbums(CurrentArtist);
+                if (amResults.Count == 0) {return false;}
+                SearchResults = FullResults = amResults;
+                break;
+        }
+
+        //IsBusy = false;
+        ShowNav?.Invoke(this, true);
+        return true;
     }
 }

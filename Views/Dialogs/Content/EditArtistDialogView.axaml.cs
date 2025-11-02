@@ -1,12 +1,22 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class EditArtistDialogView : UserControl
 {
-    public partial class EditArtistDialogView : UserControl
+    public EditArtistDialogView()
     {
-        public EditArtistDialogView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+    }
+
+    public void Next(object? source, RoutedEventArgs routedEventArgs)
+    {
+        Banners.Next();
+    }
+
+    public void Previous(object source, RoutedEventArgs args)
+    {
+        Banners.Previous();
     }
 }

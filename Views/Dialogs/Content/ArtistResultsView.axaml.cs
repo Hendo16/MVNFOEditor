@@ -1,15 +1,11 @@
 using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Interactivity;
-using MVNFOEditor.ViewModels;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class ArtistResultsView : UserControl
 {
-    public partial class ArtistResultsView : UserControl
+    public ArtistResultsView()
     {
-        public ArtistResultsView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

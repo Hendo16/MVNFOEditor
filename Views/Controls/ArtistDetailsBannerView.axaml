@@ -9,82 +9,83 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.ArtistDetailsBannerView"
              x:DataType="vm:ArtistDetailsBannerViewModel">
-  <Grid>
-    <controls:GlassCard Margin="0,0,0,15">
-      <controls:GlassCard.ContextMenu>
-        <ContextMenu>
-          <MenuItem IsVisible="{Binding SourcesAvailable}" Command="{Binding AddSource}" Header="Add Another Source">
-            <MenuItem.Icon>
-              <PathIcon Width="15"
-                        Height="15"
-                        Data="{x:Static sukiContent:Icons.Plus}" />
-            </MenuItem.Icon>
-          </MenuItem>
-          <MenuItem Command="{Binding AddAlbum}"
-                    Header="Add Album">
-            <MenuItem.Icon>
-              <PathIcon Width="15"
-                        Height="15"
-                        Data="{x:Static sukiContent:Icons.Plus}" />
-            </MenuItem.Icon>
-          </MenuItem>
-          <MenuItem IsVisible="{Binding HasYTMusic}" Command="{Binding AddYTMVideo}"
-                    Header="Search YouTube Music">
-            <MenuItem.Icon>
-              <PathIcon Width="15"
-                        Height="15"
-                        Data="{x:Static sukiContent:Icons.Plus}" />
-            </MenuItem.Icon>
-          </MenuItem>
-          <MenuItem IsVisible="{Binding HasAppleMusic}" Command="{Binding AddAppleMusicVideo}"
-                    Header="Search Apple Music">
-            <MenuItem.Icon>
-              <PathIcon Width="15"
-                        Height="15"
-                        Data="{x:Static sukiContent:Icons.Plus}" />
-            </MenuItem.Icon>
-          </MenuItem>
-          <MenuItem Command="{Binding AddManualVideo}"
-                    Header="Add Manual Single">
-            <MenuItem.Icon>
-              <PathIcon Width="15"
-                        Height="15"
-                        Data="{x:Static sukiContent:Icons.CircleOutlinePlus}" />
-            </MenuItem.Icon>
-          </MenuItem>
-        </ContextMenu>
-      </controls:GlassCard.ContextMenu>
-        <controls:GlassCard.Resources>
-            <system:Double x:Key="GlassOpacity">0.2</system:Double>
-        </controls:GlassCard.Resources>
-        <StackPanel>
-            <Border CornerRadius="10" ClipToBounds="True">
-              <Panel>
-                <Image Stretch="Uniform" Source="{Binding ArtistBanner}"/>
-                <ItemsControl ItemsSource="{Binding SourceIcons}">
-                  <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                      <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                  </ItemsControl.ItemsPanel>
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                      <Image Source="{Binding}" Width="48"/>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </Panel>
-            </Border>
-        </StackPanel>
-    </controls:GlassCard>
-      <Button Width="160"
-              Height="40"
-              Margin="0,7,0,0"
-              HorizontalAlignment="Center"
-              VerticalAlignment="Bottom"
-              Classes="Flat Rounded"
-              Command="{Binding NavigateBack}"
-              Content="Back"
-              FontWeight="DemiBold"/>
-  </Grid>
+    <Grid>
+        <controls:GlassCard Margin="0,0,0,15">
+            <controls:GlassCard.ContextMenu>
+                <ContextMenu>
+                    <MenuItem IsVisible="{Binding SourcesAvailable}" Command="{Binding AddSource}"
+                              Header="Add Another Source">
+                        <MenuItem.Icon>
+                            <PathIcon Width="15"
+                                      Height="15"
+                                      Data="{x:Static sukiContent:Icons.Plus}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding AddAlbum}"
+                              Header="Add Album">
+                        <MenuItem.Icon>
+                            <PathIcon Width="15"
+                                      Height="15"
+                                      Data="{x:Static sukiContent:Icons.Plus}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem IsVisible="{Binding HasYTMusic}" Command="{Binding AddYTMVideo}"
+                              Header="Search YouTube Music">
+                        <MenuItem.Icon>
+                            <PathIcon Width="15"
+                                      Height="15"
+                                      Data="{x:Static sukiContent:Icons.Plus}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem IsVisible="{Binding HasAppleMusic}" Command="{Binding AddAppleMusicVideo}"
+                              Header="Search Apple Music">
+                        <MenuItem.Icon>
+                            <PathIcon Width="15"
+                                      Height="15"
+                                      Data="{x:Static sukiContent:Icons.Plus}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding AddManualVideo}"
+                              Header="Add Manual Single">
+                        <MenuItem.Icon>
+                            <PathIcon Width="15"
+                                      Height="15"
+                                      Data="{x:Static sukiContent:Icons.CircleOutlinePlus}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </controls:GlassCard.ContextMenu>
+            <controls:GlassCard.Resources>
+            </controls:GlassCard.Resources>
+            <StackPanel>
+                <Border CornerRadius="10" ClipToBounds="True">
+                    <Panel>
+                        <Image Stretch="Uniform" Source="{Binding ArtistBanner}" />
+                        <ItemsControl ItemsSource="{Binding SourceIcons}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                                Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Image Source="{Binding}" Width="48" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Panel>
+                </Border>
+            </StackPanel>
+        </controls:GlassCard>
+        <Button Width="160"
+                Height="40"
+                Margin="0,7,0,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Classes="Flat Rounded"
+                Command="{Binding NavigateBack}"
+                Content="Back"
+                FontWeight="DemiBold" />
+    </Grid>
 </UserControl>

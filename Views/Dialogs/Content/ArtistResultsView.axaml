@@ -10,18 +10,21 @@
              x:Class="MVNFOEditor.Views.ArtistResultsView"
              x:DataType="vm:ArtistResultsViewModel">
     <controls:BusyArea BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
-      <Grid RowDefinitions="Auto,Auto,Auto">
-          <TextBox Grid.Row="0" Watermark="Search for Artist..." Text="{Binding SearchInput}"/>
-          <ListBox Margin="0 0 20 20" MaxHeight="250" Grid.Row="1" SelectionMode="Single" SelectedItem="{Binding SelectedArtist}" ItemsSource="{Binding SearchResults}">
-              <ListBox.ItemTemplate>
-                  <DataTemplate>
-                      <views:ArtistResultView />
-                  </DataTemplate>
-              </ListBox.ItemTemplate>
-          </ListBox>
-          <Grid ColumnDefinitions="300" HorizontalAlignment="Center" Grid.Row="2">
-              <Button Grid.Column="0" IsEnabled="{Binding !Searching}" theme:ButtonExtensions.ShowProgress="{Binding Searching}" Command="{Binding SearchArtist}" Content="Search" HotKey="Enter"/>
-          </Grid>
-      </Grid>
+        <Grid RowDefinitions="Auto,Auto,Auto">
+            <TextBox Grid.Row="0" Watermark="Search for Artist..." Text="{Binding SearchInput}" />
+            <ListBox Margin="0 0 20 20" MaxHeight="250" Grid.Row="1" SelectionMode="Single"
+                     SelectedItem="{Binding SelectedArtist}" ItemsSource="{Binding SearchResults}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <views:ArtistResultView />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Grid ColumnDefinitions="300" HorizontalAlignment="Center" Grid.Row="2">
+                <Button Grid.Column="0" IsEnabled="{Binding !Searching}"
+                        theme:ButtonExtensions.ShowProgress="{Binding Searching}" Command="{Binding SearchArtist}"
+                        Content="Search" HotKey="Enter" />
+            </Grid>
+        </Grid>
     </controls:BusyArea>
 </UserControl>

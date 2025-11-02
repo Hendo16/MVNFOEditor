@@ -6,35 +6,14 @@ namespace MVNFOEditor.Models;
 
 public class AMVideoMetadata
 {
-    public int id { get; set; }
-    public string href { get; set; }
-    public string genre { get; set; }
-    public int duration { get; set; }
-    public string releaseDate { get; set; }
-    public string isrc { get; set; }
-    public string artworkObj { get; set; }
-    public string has4K { get; set; }
-    public string hasHDR { get; set; }
-    public string name { get; set; }
-    public string previewObj { get; set; }
-    public string relationshipObj { get; set; }
-    public string playlistURL { get; set; }
-    public int artistId { get; set; }
-    
-    
-    [NotMapped]
-    public string coverURL { get; set; }
-    [NotMapped]
-    public string coverBGColor { get; set; }
-    [NotMapped]
-    public string[] coverTextColors { get; set; }
-    
-    public AMVideoMetadata(){}
+    public AMVideoMetadata()
+    {
+    }
 
     public AMVideoMetadata(JToken videoData, int artId)
     {
-        JObject attributes = (JObject)videoData["attributes"];
-        JObject artwork = (JObject)attributes["artwork"];
+        var attributes = (JObject)videoData["attributes"];
+        var artwork = (JObject)attributes["artwork"];
         id = (int)videoData["id"];
         href = (string)videoData["href"];
         genre = (string)(JValue)attributes["genreNames"][0];
@@ -61,4 +40,26 @@ public class AMVideoMetadata
             (string)artwork["textColor4"]
         ];
     }
+
+    public int id { get; set; }
+    public string href { get; set; }
+    public string genre { get; set; }
+    public int duration { get; set; }
+    public string releaseDate { get; set; }
+    public string isrc { get; set; }
+    public string artworkObj { get; set; }
+    public string has4K { get; set; }
+    public string hasHDR { get; set; }
+    public string name { get; set; }
+    public string previewObj { get; set; }
+    public string relationshipObj { get; set; }
+    public string playlistURL { get; set; }
+    public int artistId { get; set; }
+
+
+    [NotMapped] public string coverURL { get; set; }
+
+    [NotMapped] public string coverBGColor { get; set; }
+
+    [NotMapped] public string[] coverTextColors { get; set; }
 }

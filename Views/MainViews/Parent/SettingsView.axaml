@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:MVNFOEditor.ViewModels"
              xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
-             xmlns:system="clr-namespace:System;assembly=System.Runtime"
              xmlns:objectModel="clr-namespace:System.Collections.ObjectModel;assembly=System.ObjectModel"
              xmlns:views="clr-namespace:MVNFOEditor.Views"
              xmlns:models="clr-namespace:SukiUI.Models;assembly=SukiUI"
@@ -14,7 +13,6 @@
              x:Class="MVNFOEditor.Views.SettingsView">
 
     <UserControl.Resources>
-        <controls:PropertyGridTemplateSelector x:Key="PropertyGridTemplateSelector" UseSukiHost="True" />
     </UserControl.Resources>
     <controls:SettingsLayout>
         <controls:SettingsLayout.Items>
@@ -22,56 +20,59 @@
                 <controls:SettingsLayoutItem Header="Folder/App Locations">
                     <controls:SettingsLayoutItem.Content>
                         <UniformGrid Rows="1" Columns="2">
-                            <TextBox theme:TextBoxExtensions.Prefix="Music Video Folder Location:  " Width="800" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="Music Video Folder" Name="MVInput" Text="{Binding MvText}" />
-                          <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse" Click="BrowseMVFolder" />
+                            <TextBox theme:TextBoxExtensions.Prefix="Music Video Folder Location:  " Width="800"
+                                     VerticalAlignment="Center" HorizontalAlignment="Left"
+                                     Watermark="Music Video Folder" Name="MVInput" Text="{Binding MvText}" />
+                            <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Browse"
+                                    Click="BrowseMVFolder" />
                         </UniformGrid>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>
                 <controls:SettingsLayoutItem Header="Theme Options">
                     <controls:SettingsLayoutItem.Content>
                         <StackPanel>
-                          <StackPanel HorizontalAlignment="Center"
-                                      Orientation="Horizontal"
-                                      Spacing="20"
-                                      Margin="0 0 0 5">
-                            <RadioButton Width="180"
-                                         Height="160"
-                                         Padding="0"
-                                         Classes="GigaChips"
-                                         GroupName="RadioBaseTheme"
-                                         IsChecked="{Binding IsLightTheme}">
-                              <Border Margin="-50"
-                                      Background="#fafafa"
-                                      CornerRadius="{DynamicResource MediumCornerRadius}">
-                                <Grid>
-                                  <TextBlock Margin="42"
-                                             HorizontalAlignment="Center"
-                                             VerticalAlignment="Bottom"
-                                             FontWeight="DemiBold"
-                                             Foreground="#555555"
-                                             Text="Light Mode" />
-                                </Grid>
-                              </Border>
-                            </RadioButton>
-                            <RadioButton Width="180"
-                                         Height="160"
-                                         Classes="GigaChips"
-                                         GroupName="RadioBaseTheme"
-                                         IsChecked="{Binding !IsLightTheme}">
-                              <Border Margin="-50"
-                                      Background="#222222"
-                                      CornerRadius="{DynamicResource MediumCornerRadius}">
-                                <Grid>
-                                  <TextBlock Margin="42"
-                                             HorizontalAlignment="Center"
-                                             VerticalAlignment="Bottom"
-                                             FontWeight="DemiBold"
-                                             Foreground="#fafafa"
-                                             Text="Dark Mode" />
-                                </Grid>
-                              </Border>
-                            </RadioButton>
-                          </StackPanel>
+                            <StackPanel HorizontalAlignment="Center"
+                                        Orientation="Horizontal"
+                                        Spacing="20"
+                                        Margin="0 0 0 5">
+                                <RadioButton Width="180"
+                                             Height="160"
+                                             Padding="0"
+                                             Classes="GigaChips"
+                                             GroupName="RadioBaseTheme"
+                                             IsChecked="{Binding IsLightTheme}">
+                                    <Border Margin="-50"
+                                            Background="#fafafa"
+                                            CornerRadius="{DynamicResource MediumCornerRadius}">
+                                        <Grid>
+                                            <TextBlock Margin="42"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Bottom"
+                                                       FontWeight="DemiBold"
+                                                       Foreground="#555555"
+                                                       Text="Light Mode" />
+                                        </Grid>
+                                    </Border>
+                                </RadioButton>
+                                <RadioButton Width="180"
+                                             Height="160"
+                                             Classes="GigaChips"
+                                             GroupName="RadioBaseTheme"
+                                             IsChecked="{Binding !IsLightTheme}">
+                                    <Border Margin="-50"
+                                            Background="#222222"
+                                            CornerRadius="{DynamicResource MediumCornerRadius}">
+                                        <Grid>
+                                            <TextBlock Margin="42"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Bottom"
+                                                       FontWeight="DemiBold"
+                                                       Foreground="#fafafa"
+                                                       Text="Dark Mode" />
+                                        </Grid>
+                                    </Border>
+                                </RadioButton>
+                            </StackPanel>
                             <ItemsControl HorizontalAlignment="Center" ItemsSource="{Binding AvailableColors}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -103,7 +104,7 @@
                 <controls:SettingsLayoutItem Header="Download Options">
                     <controls:SettingsLayoutItem.Content>
                         <StackPanel Orientation="Vertical">
-                            <ComboBox PlaceholderText="Resolution" ItemsSource="{Binding Resolutions}"/>
+                            <ComboBox PlaceholderText="Resolution" ItemsSource="{Binding Resolutions}" />
                         </StackPanel>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>
@@ -111,16 +112,24 @@
                     <controls:SettingsLayoutItem.Content>
                         <StackPanel Orientation="Vertical">
                             <UniformGrid Rows="1" Columns="2">
-                                <TextBox theme:TextBoxExtensions.Prefix="User Media Token:  " Text="{Binding AppleMusicToken}"/>
-                                <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Update" Command="{Binding UpdateAMToken}" />
+                                <TextBox theme:TextBoxExtensions.Prefix="User Media Token:  "
+                                         Text="{Binding AppleMusicToken}" />
+                                <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                        Content="Update" Command="{Binding UpdateAMToken}" />
                             </UniformGrid>
                             <UniformGrid Rows="1" Columns="2">
-                                <TextBox theme:TextBoxExtensions.Prefix="Device ID Path:  " Width="600" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="device_client_id_blob" Name="blobinput" Text="{Binding UserId}" />
-                                <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Save" Click="BrowseDeviceId" />
+                                <TextBox theme:TextBoxExtensions.Prefix="Device ID Path:  " Width="600"
+                                         VerticalAlignment="Center" HorizontalAlignment="Left"
+                                         Watermark="device_client_id_blob" Name="blobinput" Text="{Binding UserId}" />
+                                <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                        Content="Save" Click="BrowseDeviceId" />
                             </UniformGrid>
                             <UniformGrid Rows="1" Columns="2">
-                                <TextBox theme:TextBoxExtensions.Prefix="Device Private Key Path:  " Width="600" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="device_private_key" Name="keyinput" Text="{Binding UserKey}" />
-                                <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Save" Click="BrowseDeviceKey" />
+                                <TextBox theme:TextBoxExtensions.Prefix="Device Private Key Path:  " Width="600"
+                                         VerticalAlignment="Center" HorizontalAlignment="Left"
+                                         Watermark="device_private_key" Name="keyinput" Text="{Binding UserKey}" />
+                                <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                        Content="Save" Click="BrowseDeviceKey" />
                             </UniformGrid>
                         </StackPanel>
                     </controls:SettingsLayoutItem.Content>
@@ -128,27 +137,32 @@
                 <controls:SettingsLayoutItem Header="YouTube Music">
                     <controls:SettingsLayoutItem.Content>
                         <StackPanel Orientation="Vertical">
-                            <TextBox theme:TextBoxExtensions.Prefix="YTDL Options:  " Text="{Binding YtdlFormat}"/>
+                            <TextBox theme:TextBoxExtensions.Prefix="YTDL Options:  " Text="{Binding YtdlFormat}" />
                             <UniformGrid Rows="1" Columns="2">
                                 <TextBlock HorizontalAlignment="Left" Text="Generate New YouTube Music Headers" />
-                                <Button Classes="Outlined" Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Content="Save" Command="{Binding GenerateYTMHeaders}" />
+                                <Button Classes="Outlined" Width="100" VerticalAlignment="Center"
+                                        HorizontalAlignment="Right" Content="Save"
+                                        Command="{Binding GenerateYTMHeaders}" />
                             </UniformGrid>
                         </StackPanel>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>
-              <controls:SettingsLayoutItem Header="FFProbe Options">
-                <controls:SettingsLayoutItem.Content>
-                  <StackPanel Orientation="Vertical">
-                    <TextBox theme:TextBoxExtensions.Prefix="Screenshot Second:  " Text="{Binding ScreenshotSecond}"/>
-                  </StackPanel>
-                </controls:SettingsLayoutItem.Content>
-              </controls:SettingsLayoutItem>
-              <controls:SettingsLayoutItem Header="Save">
+                <controls:SettingsLayoutItem Header="FFProbe Options">
+                    <controls:SettingsLayoutItem.Content>
+                        <StackPanel Orientation="Vertical">
+                            <TextBox theme:TextBoxExtensions.Prefix="Screenshot Second:  "
+                                     Text="{Binding ScreenshotSecond}" />
+                        </StackPanel>
+                    </controls:SettingsLayoutItem.Content>
+                </controls:SettingsLayoutItem>
+                <controls:SettingsLayoutItem Header="Save">
                     <controls:SettingsLayoutItem.Content>
                         <Grid ColumnDefinitions="*,*,*">
                             <Button Grid.Column="0" Width="100" Content="Save" Command="{Binding SaveChanges}" />
-                            <Button Grid.Column="1" Width="300" Content="Download Popup Test" Command="{Binding AppleMusicDownloadTesting}" />
-                            <Button Grid.Column="2" Width="200" Content="AM NFO Save Test" Command="{Binding AMNFOTest}" />
+                            <Button Grid.Column="1" Width="300" Content="Download Popup Test"
+                                    Command="{Binding AppleMusicDownloadTesting}" />
+                            <Button Grid.Column="2" Width="200" Content="AM NFO Save Test"
+                                    Command="{Binding AMNFOTest}" />
                         </Grid>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>

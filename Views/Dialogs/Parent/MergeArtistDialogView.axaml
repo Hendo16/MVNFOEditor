@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
              xmlns:content="https://github.com/kikipoulet/SukiUI"
-             xmlns:views="clr-namespace:MVNFOEditor.Views"
              xmlns:vm="using:MVNFOEditor.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="250"
              x:Class="MVNFOEditor.Views.MergeArtistDialogView"
@@ -15,23 +14,25 @@
             <Grid Name="ArtistGrid" ColumnDefinitions="Auto, 240, Auto" RowDefinitions="Auto, Auto, Auto" Margin="20">
                 <Border Grid.Row="0" Grid.Column="0" CornerRadius="10" ClipToBounds="True">
                     <Panel Background="#00000000">
-                        <Image Width="240" Stretch="Uniform" Source="{Binding Artist1.Cover}"/>
+                        <Image Width="240" Stretch="Uniform" Source="{Binding Artist1.Cover}" />
                     </Panel>
                 </Border>
-                <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" Classes="h4" Text="{Binding Artist1.Name}"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" Classes="h4"
+                           Text="{Binding Artist1.Name}" />
                 <PathIcon Grid.Row="1" Grid.Column="1" Data="{x:Static content:Icons.ArrowRight}" />
                 <Border Grid.Row="0" Grid.Column="2" CornerRadius="10" ClipToBounds="True">
                     <Panel Background="#00000000">
-                        <Image Width="240" Stretch="Uniform" Source="{Binding Artist2.Cover}"/>
+                        <Image Width="240" Stretch="Uniform" Source="{Binding Artist2.Cover}" />
                     </Panel>
                 </Border>
-                <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Classes="h4" Text="{Binding Artist2.Name}"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Classes="h4"
+                           Text="{Binding Artist2.Name}" />
             </Grid>
             <StackPanel Orientation="Horizontal">
                 <Button Width="200"
                         Name="MergeBtn"
-                        Command="{Binding HandleMerge}" 
-                        Content="Merge"/>
+                        Command="{Binding HandleMerge}"
+                        Content="Merge" />
                 <Button Width="200"
                         Name="CloseBtn"
                         Command="{Binding CloseDialogCommand}"

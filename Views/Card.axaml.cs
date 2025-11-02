@@ -1,13 +1,11 @@
 using Avalonia.Controls;
-using MVNFOEditor.ViewModels;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class Card : UserControl
 {
-    public partial class Card : UserControl
+    public Card()
     {
-        public Card()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

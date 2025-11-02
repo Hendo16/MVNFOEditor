@@ -1,196 +1,180 @@
-﻿using Avalonia.Media.Imaging;
-using MVNFOEditor.Models;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using MVNFOEditor.Helpers;
-using MVNFOEditor.DB;
-using YoutubeDLSharp.Metadata;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using MVNFOEditor.DB;
+using MVNFOEditor.Helpers;
+using MVNFOEditor.Models;
 using MVNFOEditor.Settings;
 
-namespace MVNFOEditor.ViewModels
+namespace MVNFOEditor.ViewModels;
+
+public partial class VideoResultViewModel : ObservableObject
 {
-    public partial class VideoResultViewModel : ObservableObject
+    private static ISettings _settings;
+    private readonly Album? _album;
+    private readonly MusicDbContext _dbContext;
+    private readonly VideoResult _result;
+    private readonly YTDLHelper _ytDLHelper;
+
+    [ObservableProperty] private string _borderColor;
+    [ObservableProperty] private string _downloadBtnText;
+    [ObservableProperty] private bool _downloadEnabled;
+    private iTunesAPIHelper _iTunesApiHelper;
+    private YTMusicHelper _musicHelper;
+    [ObservableProperty] private Bitmap? _thumbnail;
+
+    public VideoResultViewModel(VideoResult result)
     {
-        private readonly VideoResult _result;
-        private MusicDbContext _dbContext;
-        private static ISettings _settings;
-        private YTMusicHelper _musicHelper;
-        private YTDLHelper _ytDLHelper;
-        private iTunesAPIHelper _iTunesApiHelper;
-        private Album? _album;
+        _result = result;
+        _musicHelper = App.GetYTMusicHelper();
+        _ytDLHelper = App.GetYTDLHelper();
+        _iTunesApiHelper = App.GetiTunesHelper();
+        _dbContext = App.GetDBContext();
+        _settings = App.GetSettings();
+        _album = null;
+    }
 
-        [ObservableProperty] private string _borderColor;
-        [ObservableProperty] private string _downloadBtnText;
-        [ObservableProperty] private bool _downloadEnabled;
-        [ObservableProperty] private Bitmap? _thumbnail;
+    public VideoResultViewModel(VideoResult result, Album album)
+    {
+        _result = result;
+        _musicHelper = App.GetYTMusicHelper();
+        _ytDLHelper = App.GetYTDLHelper();
+        _iTunesApiHelper = App.GetiTunesHelper();
+        _dbContext = App.GetDBContext();
+        _settings = App.GetSettings();
+        _album = album;
+    }
 
-        public event EventHandler<VideoResultViewModel> ProgressStarted;
+    public string Title => _result.Name;
+    public Artist Artist => _result.Artist;
+    public string Duration => _result.Duration;
+    public string TopRes => _result.TopRes;
+    public string VideoURL => _result.VideoURL;
 
-        public string Title => _result.Title;
-        public Artist Artist => _result.Artist;
-        public string Duration => _result.Duration;
-        public string Year => _result.Year;
-        public string TopRes => _result.TopRes;
-        public string VideoURL => _result.VideoURL;
+    public event EventHandler<VideoResultViewModel> ProgressStarted;
 
-        public VideoResultViewModel(VideoResult result)
+    public VideoResult HandleDownload()
+    {
+        BorderColor = "Green";
+        DownloadEnabled = false;
+        DownloadBtnText = "Downloaded";
+        return _result;
+    }
+
+    public VideoResult GetResult()
+    {
+        return _result;
+    }
+
+    public async Task LoadThumbnail()
+    {
+        await using (var imageStream = await _result.LoadCoverBitmapAsync())
         {
-            _result = result;
-            _musicHelper = App.GetYTMusicHelper();
-            _ytDLHelper = App.GetYTDLHelper();
-            _iTunesApiHelper = App.GetiTunesHelper();
-            _dbContext = App.GetDBContext();
-            _settings = App.GetSettings();
-            _album = null;
+            Thumbnail = new Bitmap(imageStream);
         }
+    }
 
-        public VideoResultViewModel(VideoResult result, Album album)
+    public async Task SaveThumbnailAsync(string folderPath)
+    {
+        var bitmap = Thumbnail;
+        await Task.Run(() =>
         {
-            _result = result;
-            _musicHelper = App.GetYTMusicHelper();
-            _ytDLHelper = App.GetYTDLHelper();
-            _iTunesApiHelper = App.GetiTunesHelper();
-            _dbContext = App.GetDBContext();
-            _settings = App.GetSettings();
-            _album = album;
-        }
-
-        public VideoResult HandleDownload()
-        {
-            BorderColor = "Green";
-            DownloadEnabled = false;
-            DownloadBtnText = "Downloaded";
-            return _result;
-        }
-
-        public void OpenResult()
-        {
-            BorderColor = "Green";
-            DownloadEnabled = false;
-            DownloadBtnText = "Downloaded";
-            OnProgressTrigger();
-        }
-
-        public VideoResult GetResult()
-        {
-            return _result;
-        }
-
-        public async Task LoadThumbnail()
-        {
-            await using (var imageStream = await _result.LoadCoverBitmapAsync())
+            using (var fs = _result.SaveThumbnailBitmapStream(folderPath))
             {
-                Thumbnail = new Bitmap(imageStream);
+                bitmap.Save(fs);
             }
+        });
+    }
+
+    public async Task<int> GenerateNFO(string filePath, SearchSource source)
+    {
+        switch (source)
+        {
+            case SearchSource.YouTubeMusic:
+                return await GenerateNFO_YTM(filePath);
+            case SearchSource.AppleMusic:
+                return await GenerateNFO_AM(filePath);
         }
 
-        public async Task SaveThumbnailAsync(string folderPath)
+        return 0;
+    }
+
+    private async Task<int> GenerateNFO_AM(string filePath)
+    {
+        var newMV = new MusicVideo();
+        newMV.title = _result.Name;
+        newMV.videoID = _result.SourceId;
+        newMV.artist = _result.Artist;
+        if (_album != null)
         {
-            var bitmap = Thumbnail;
-            await Task.Run(() =>
-            {
-                using (var fs = _result.SaveThumbnailBitmapStream(folderPath))
-                {
-                    bitmap.Save(fs);
-                }
-            });
+            newMV.album = _album;
+            newMV.year = _album.Year;
+        }
+        else
+        {
+            newMV.year = _result.Year;
         }
 
-        public async Task<int> GenerateNFO(string filePath, SearchSource source)
-        {
-            switch (source)
-            {
-                case SearchSource.YouTubeMusic:
-                    return await GenerateNFO_YTM(filePath);
-                case SearchSource.AppleMusic:
-                    return await GenerateNFO_AM(filePath);
-            }
+        newMV.source = "Apple Music";
+        newMV.nfoPath = $"{_settings.RootFolder}/{newMV.artist.Name}/{newMV.title}.nfo";
 
-            return 0;
+        await SaveThumbnailAsync($"{_settings.RootFolder}/{newMV.artist.Name}");
+        newMV.thumb = $"{newMV.title}.jpg";
+
+        newMV.vidPath = filePath;
+
+        //Handle Genres
+        var baseGenre = _dbContext.AppleMusicVideoMetadata.First(am => am.id == int.Parse(_result.SourceId)).genre;
+        if (!_dbContext.Genres.Any(g => g.Name == baseGenre))
+        {
+            var newGenre = new Genre(baseGenre, newMV);
+            _dbContext.Genres.Add(newGenre);
         }
 
-        private async Task<int> GenerateNFO_AM(string filePath)
+        newMV.SaveToNFO();
+        _dbContext.MusicVideos.Add(newMV);
+        return await _dbContext.SaveChangesAsync();
+    }
+
+    private async Task<int> GenerateNFO_YTM(string filePath)
+    {
+        var newMV = new MusicVideo();
+        var vidData =
+            await _ytDLHelper.GetVideoInfo($"https://www.youtube.com/watch?v={_result.SourceId}");
+        newMV.title = _result.Name;
+        newMV.videoID = _result.SourceId;
+        newMV.artist = _result.Artist;
+        if (_album != null)
         {
-            MusicVideo newMV = new MusicVideo();
-            newMV.title = _result.Title;
-            newMV.videoID = _result.VideoID;
-            newMV.artist = _result.Artist;
-            if (_album != null)
-            {
-                newMV.album = _album;
-                newMV.year = _album.Year;
-            }
+            newMV.album = _album;
+            newMV.year = _album.Year;
+        }
+        else
+        {
+            newMV.album = null;
+            if (vidData.ReleaseYear != null)
+                newMV.year = vidData.ReleaseYear;
             else
-            {
-                newMV.year = _result.Year;
-            }
-
-            newMV.source = "Apple Music";
-            newMV.nfoPath = $"{_settings.RootFolder}/{newMV.artist.Name}/{newMV.title}.nfo";
-
-            await SaveThumbnailAsync($"{_settings.RootFolder}/{newMV.artist.Name}");
-            newMV.thumb = $"{newMV.title}.jpg";
-
-            newMV.vidPath = filePath;
-            
-            //Handle Genres
-            string? baseGenre = _dbContext.AppleMusicVideoMetadata.First(am => am.id == int.Parse(_result.VideoID)).genre;
-            if (!_dbContext.Genres.Any(g => g.Name == baseGenre))
-            {
-                Genre newGenre = new Genre(baseGenre, newMV);
-                _dbContext.Genres.Add(newGenre);
-            }
-            
-            newMV.SaveToNFO();
-            _dbContext.MusicVideos.Add(newMV);
-            return await _dbContext.SaveChangesAsync();
+                newMV.year = ((DateTime)vidData.UploadDate).Year.ToString();
         }
 
-        private async Task<int> GenerateNFO_YTM(string filePath)
-        {
-            MusicVideo newMV = new MusicVideo();
-            VideoData vidData =
-                await _ytDLHelper.GetVideoInfo($"https://www.youtube.com/watch?v={_result.VideoID}");
-            newMV.title = _result.Title;
-            newMV.videoID = _result.VideoID;
-            newMV.artist = _result.Artist;
-            if (_album != null)
-            {
-                newMV.album = _album;
-                newMV.year = _album.Year;
-            }
-            else
-            {
-                newMV.album = null;
-                if (vidData.ReleaseYear != null)
-                {
-                    newMV.year = vidData.ReleaseYear;
-                }
-                else
-                {
-                    newMV.year = ((DateTime)vidData.UploadDate).Year.ToString();
-                }
-            }
+        newMV.source = "youtube";
+        newMV.nfoPath = $"{_settings.RootFolder}/{newMV.artist.Name}/{newMV.title}.nfo";
 
-            newMV.source = "youtube";
-            newMV.nfoPath = $"{_settings.RootFolder}/{newMV.artist.Name}/{newMV.title}.nfo";
+        await SaveThumbnailAsync($"{_settings.RootFolder}/{newMV.artist.Name}");
+        newMV.thumb = $"{newMV.title}.jpg";
 
-            await SaveThumbnailAsync($"{_settings.RootFolder}/{newMV.artist.Name}");
-            newMV.thumb = $"{newMV.title}.jpg";
+        newMV.vidPath = filePath;
 
-            newMV.vidPath = filePath;
+        newMV.SaveToNFO();
+        _dbContext.MusicVideos.Add(newMV);
+        return await _dbContext.SaveChangesAsync();
+    }
 
-            newMV.SaveToNFO();
-            _dbContext.MusicVideos.Add(newMV);
-            return await _dbContext.SaveChangesAsync();
-        }
-
-        protected virtual void OnProgressTrigger()
-        {
-            ProgressStarted?.Invoke(this, this);
-        }
+    protected virtual void OnProgressTrigger()
+    {
+        ProgressStarted?.Invoke(this, this);
     }
 }

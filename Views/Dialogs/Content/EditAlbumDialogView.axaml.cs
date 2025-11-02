@@ -3,26 +3,24 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using MVNFOEditor.ViewModels;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class EditAlbumDialogView : UserControl
 {
-    public partial class EditAlbumDialogView : UserControl
+    public EditAlbumDialogView()
     {
-        public EditAlbumDialogView()
+        InitializeComponent();
+    }
+
+    public async void CoverSearch(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        var path = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            InitializeComponent();
-        }
-        public async void CoverSearch(object? sender, RoutedEventArgs e)
-        {
-            var topLevel = TopLevel.GetTopLevel(this);
-            var path = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
-            {
-                Title = "Select Album Cover",
-                AllowMultiple = false
-            });
-            if (path.Count > 0 && DataContext is ManualAlbumViewModel viewModel)
-            {
-                viewModel.LoadCover(path[0].TryGetLocalPath());
-            }
-        }
+            Title = "Select Album Cover",
+            AllowMultiple = false
+        });
+        if (path.Count > 0 && DataContext is ManualAlbumViewModel viewModel)
+            viewModel.LoadCover(path[0].TryGetLocalPath());
     }
 }

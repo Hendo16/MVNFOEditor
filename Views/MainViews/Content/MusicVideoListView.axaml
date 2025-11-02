@@ -14,7 +14,6 @@
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
             <controls:GlassCard IsAnimated="True">
                 <controls:GlassCard.Resources>
-                    <system:Double x:Key="GlassOpacity">0.2</system:Double>
                 </controls:GlassCard.Resources>
                 <controls:GlassCard.ContextMenu>
                     <ContextMenu>
@@ -30,11 +29,17 @@
                 </controls:GlassCard.ContextMenu>
                 <Grid RowDefinitions="Auto, Auto, *">
                     <Expander Grid.Row="0" Header="Filters">
-                      <StackPanel Orientation="Horizontal">
-                          <Button Margin="10 0 0 0" Command="{Binding ReverseNameOrder}" CommandParameter="true" Width="100">A-Z</Button>
-                          <Button Margin="10 0 0 0" Command="{Binding ReverseNameOrder}" CommandParameter="false" Width="100">Z-A</Button>
-                          <Button Margin="10 0 0 0" Command="{Binding CodecFilter}"  Width="100">Codec</Button>
-                      </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Margin="10 0 0 0" Command="{Binding ReverseNameOrder}" CommandParameter="true"
+                                    Width="100">
+                                A-Z
+                            </Button>
+                            <Button Margin="10 0 0 0" Command="{Binding ReverseNameOrder}" CommandParameter="false"
+                                    Width="100">
+                                Z-A
+                            </Button>
+                            <Button Margin="10 0 0 0" Command="{Binding CodecFilter}" Width="100">Codec</Button>
+                        </StackPanel>
                     </Expander>
                     <ItemsControl Grid.Row="1" Margin="0 10 0 0" ItemsSource="{Binding SingleCards}">
                         <ItemsControl.ItemsPanel>
@@ -48,7 +53,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                  <!--
+                    <!--
                   <ItemsControl Grid.Row="1" Margin="0 10 0 0" ItemsSource="{Binding SingleCards}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>

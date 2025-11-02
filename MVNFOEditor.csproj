@@ -69,9 +69,6 @@
     <Compile Update="Views\Dialogs\Content\ArtistResultsView.axaml.cs">
       <DependentUpon>ArtistResultsView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\SettingsItemView.axaml.cs">
-      <DependentUpon>SettingsItemView.axaml</DependentUpon>
-    </Compile>
     <Compile Update="Views\Dialogs\Parent\AddMusicVideoParentView.axaml.cs">
       <DependentUpon>AddMusicVideoParentView.axaml</DependentUpon>
     </Compile>

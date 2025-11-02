@@ -9,14 +9,16 @@
              x:DataType="vm:YTMHeaderSubmissionViewModel">
     <suki:GroupBox Header="YouTube Music Headers">
         <StackPanel Orientation="Vertical" Spacing="10">
-            <TextBlock HorizontalAlignment="Center" Classes="h3" Text="Headers missing or expired!"/>
-            <TextBlock xml:space="preserve" Classes="h4" >Please provide new headers. Click <HyperlinkButton NavigateUri="https://ytmusicapi.readthedocs.io/en/stable/setup/browser.html" Content="Here" /> for a guide on how to get your authenticated headers.</TextBlock>
-            <TextBlock HorizontalAlignment="Center" Classes="h5 Danger" Text="{Binding ErrorText}"/>
-            <TextBox AcceptsReturn="True" AcceptsTab="True" Text="{Binding Headers}" Watermark="POST /youtubei/v1/browse?ctoken=..." />
+            <TextBlock HorizontalAlignment="Center" Classes="h3" Text="Headers missing or expired!" />
+            <TextBlock xml:space="preserve" Classes="h4">Please provide new headers. Click <HyperlinkButton
+                NavigateUri="https://ytmusicapi.readthedocs.io/en/stable/setup/browser.html" Content="Here" /> for a guide on how to get your authenticated headers.</TextBlock>
+            <TextBlock HorizontalAlignment="Center" Classes="h5 Danger" Text="{Binding ErrorText}" />
+            <TextBox AcceptsReturn="True" AcceptsTab="True" Text="{Binding Headers}"
+                     Watermark="POST /youtubei/v1/browse?ctoken=..." />
             <StackPanel Orientation="Horizontal">
                 <Button Width="200"
-                        Command="{Binding GenerateHeadersCommand}" 
-                        Content="Submit"/>
+                        Command="{Binding GenerateHeadersCommand}"
+                        Content="Submit" />
                 <Button Width="200"
                         Name="CloseBtn"
                         Command="{Binding CloseDialogCommand}"

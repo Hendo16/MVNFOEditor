@@ -1,77 +1,77 @@
-﻿using Avalonia.Media.Imaging;
-using MVNFOEditor.Models;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using MVNFOEditor.Models;
 using SukiUI.Toasts;
 
-namespace MVNFOEditor.ViewModels
+namespace MVNFOEditor.ViewModels;
+
+public class SingleViewModel : ObservableObject
 {
-    public class SingleViewModel : ObservableObject
+    private readonly MusicVideo _video;
+
+    private Bitmap? _thumbnail;
+
+    public SingleViewModel(MusicVideo video)
     {
-        private readonly MusicVideo _video;
-        public string Title => _video.title;
-        public string Year => _video.year;
-        public Artist Artist => _video.artist;
+        _video = video;
+    }
 
-        private Bitmap? _thumbnail;
+    public string Title => _video.title;
+    public string Year => _video.year;
 
-        public Bitmap? Thumbnail
+    public Bitmap? Thumbnail
+    {
+        get => _thumbnail;
+        set
         {
-            get { return _thumbnail; }
-            set
-            {
-                _thumbnail = value;
-                OnPropertyChanged(nameof(Thumbnail));
-            }
+            _thumbnail = value;
+            OnPropertyChanged();
         }
+    }
 
-        public SingleViewModel(MusicVideo video)
+    public async Task LoadThumbnail()
+    {
+        await using (var imageStream = await _video.LoadThumbnailBitmapAsync())
         {
-            _video = video;
-        }
-
-        public async Task LoadThumbnail()
-        {
-            await using (var imageStream = await _video.LoadThumbnailBitmapAsync())
+            if (imageStream != null)
             {
-                if (imageStream != null)
+                try
                 {
-                    try
-                    {
-                        Thumbnail = Bitmap.DecodeToWidth(imageStream, 240);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.WriteLine($"Couldn't find {_video.thumb}");
-                    };
+                    Thumbnail = Bitmap.DecodeToWidth(imageStream, 240);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine($"Couldn't find {_video.thumb}");
                 }
             }
         }
+    }
 
-        public async void EditVideo()
+    public async void EditVideo()
+    {
+        if (File.Exists(_video.vidPath))
         {
-            if (File.Exists(_video.vidPath))
-            {
-                MusicVideoDetailsViewModel vidDetailsVM = new MusicVideoDetailsViewModel();
-                vidDetailsVM.SetVideo(_video);
-                vidDetailsVM.AnalyzeVideo();
-                await vidDetailsVM.LoadThumbnail();
-                App.GetVM().GetParentView().CurrentContent = vidDetailsVM;
-            }
-            else{
-                //Handle deleted video
-                App.GetVM().GetToastManager().CreateToast()
-                    .WithTitle("Error!")
-                    .WithContent($"{_video.title} has been deleted - removing from db...")
-                    .OfType(NotificationType.Error)
-                    .Queue();
-                App.GetDBContext().MusicVideos.Remove(_video);
-                App.GetDBContext().SaveChanges();
-            }
+            var vidDetailsVm = new MusicVideoDetailsViewModel();
+            vidDetailsVm.SetVideo(_video);
+            vidDetailsVm.AnalyzeVideo();
+            await vidDetailsVm.LoadThumbnail();
+            App.GetVM().GetParentView().CurrentContent = vidDetailsVm;
+        }
+        else
+        {
+            //Handle deleted video
+            App.GetVM().GetToastManager().CreateToast()
+                .WithTitle("Error!")
+                .WithContent($"{_video.title} has been deleted - removing from db...")
+                .OfType(NotificationType.Error)
+                .Queue();
+            App.GetDBContext().MusicVideos.Remove(_video);
+            App.GetDBContext().SaveChanges();
         }
     }
 }

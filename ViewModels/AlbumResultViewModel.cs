@@ -1,115 +1,74 @@
-﻿using Avalonia.Media.Imaging;
-using CommunityToolkit.Mvvm.ComponentModel;
-using MVNFOEditor.DB;
-using MVNFOEditor.Helpers;
-using MVNFOEditor.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Media.Imaging;
+using CommunityToolkit.Mvvm.ComponentModel;
+using MVNFOEditor.DB;
+using MVNFOEditor.Models;
 
-namespace MVNFOEditor.ViewModels
+namespace MVNFOEditor.ViewModels;
+
+public class AlbumResultViewModel : ObservableObject
 {
-    public class AlbumResultViewModel : ObservableObject
+    private readonly AlbumResult _result;
+    private string _borderColor;
+    private MusicDbContext _dbContext;
+    private Bitmap? _thumbnail;
+
+    internal AlbumResultViewModel(AlbumResult result)
     {
-        private readonly AlbumResult _result;
-        private Bitmap? _thumbnail;
-        private string _borderColor;
-        private string _selectBtnText;
-        private MusicDbContext _dbContext;
-        
-        public string Title => _result.Title;
-        public string Year => _result.Year;
-        public bool? IsExplicit => _result.isExplicit;
+        _result = result;
+    }
 
-        public string SelectBtnText
-        {
-            get { return _selectBtnText; }
-            set
-            {
-                _selectBtnText = value;
-                OnPropertyChanged(nameof(SelectBtnText));
-            }
-        }
+    public static async Task<AlbumResultViewModel> CreateAsync(AlbumResult result)
+    {
+        AlbumResultViewModel vm = new AlbumResultViewModel(result);
+        await vm.LoadThumbnail();
+        return vm;
+    }
 
-        public event EventHandler<AlbumResult> NextPage;
+    public string Title => _result.Name;
+    public string? Year => _result.Year;
+    public bool? IsExplicit => _result.IsExplicit;
 
-        public string BorderColor
+    public string BorderColor
+    {
+        get => _borderColor;
+        set
         {
-            get { return _borderColor; }
-            set
-            {
-                _borderColor = value;
-                OnPropertyChanged(nameof(BorderColor));
-            }
+            _borderColor = value;
+            OnPropertyChanged();
         }
-        
-        public Bitmap? Thumbnail
-        {
-            get { return _thumbnail; }
-            set
-            {
-                _thumbnail = value;
-                OnPropertyChanged(nameof(Thumbnail));
-            }
-        }
+    }
 
-        public AlbumResultViewModel(AlbumResult result)
+    public Bitmap? Thumbnail
+    {
+        get => _thumbnail;
+        set
         {
-            //_dbContext = App.GetDBContext();
-            _result = result;
-            SelectBtnText = "Select";
-            //SelectBtnText = _dbContext.Album.Any(a => a.AlbumBrowseID == result.browseId) ? "Open" : "Select";
+            _thumbnail = value;
+            OnPropertyChanged();
         }
+    }
 
-        public static async Task<ObservableCollection<AlbumResultViewModel>> GetAlbumResultVM(List<AlbumResult> results)
-        {
-            ObservableCollection<AlbumResultViewModel>
-                returnedModels = new ObservableCollection<AlbumResultViewModel>();
-            for (int i = 0; i < results.Count; i++)
-            {
-                AlbumResultViewModel newVM = new AlbumResultViewModel(results[i]);
-                await newVM.LoadThumbnail();
-                returnedModels.Add(newVM);
-            }
-            return returnedModels;
-        }
+    public event EventHandler<AlbumResult> NextPage;
 
-        public AlbumResult GetResult()
-        {
-            return _result;
-        }
+    public AlbumResult GetResult()
+    {
+        return _result;
+    }
 
-        public void GrabAlbum()
+    public async Task LoadThumbnail()
+    {
+        await using (var imageStream = await _result.LoadCoverBitmapAsync())
         {
-            SelectBtnText = "Open";
-            TriggerNextPage();
+            Thumbnail = new Bitmap(imageStream);
         }
+    }
 
-        public async Task LoadThumbnail()
-        {
-            await using (var imageStream = await _result.LoadCoverBitmapAsync())
-            {
-                Thumbnail = new Bitmap(imageStream);
-            }
-        }
-
-        public async Task SaveThumbnailAsync(string folderPath)
-        {
-            var bitmap = Thumbnail;
-            await Task.Run(() =>
-            {
-                using (var fs = _result.SaveThumbnailBitmapStream(folderPath))
-                {
-                    bitmap.Save(fs);
-                }
-            });
-        }
-
-        protected virtual void TriggerNextPage()
-        {
-            NextPage?.Invoke(this, _result);
-        }
+    protected virtual void TriggerNextPage()
+    {
+        NextPage?.Invoke(this, _result);
     }
 }

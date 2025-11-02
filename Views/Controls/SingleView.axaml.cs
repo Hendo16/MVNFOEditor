@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class SingleView : UserControl
 {
-    public partial class SingleView : UserControl
+    public SingleView()
     {
-        public SingleView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

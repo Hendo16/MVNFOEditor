@@ -1,97 +1,91 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using SukiUI.Controls;
 
-namespace MVNFOEditor.Models
+namespace MVNFOEditor.Models;
+
+public class MusicVideo
 {
-    public class MusicVideo
+    public int Id { get; set; }
+    public string title { get; set; }
+    public Artist artist { get; set; }
+    public Album? album { get; set; }
+    public string? vidPath { get; set; }
+    public string? thumb { get; set; }
+    public string nfoPath { get; set; }
+    public string year { get; set; }
+    public string? videoID { get; set; }
+    public string? userrating { get; set; }
+    public string? track { get; set; }
+    public string? studio { get; set; }
+    public string? premiered { get; set; }
+    public string? source { get; set; }
+    public string? musicBrainzArtistID { get; set; }
+    public List<Genre> Genres { get; } = [];
+
+    public async Task<Stream?> LoadThumbnailBitmapAsync()
     {
-        public int Id { get; set; }
-        public string title { get; set; }
-        public Artist artist { get; set; }
-        public Album? album { get; set; }
-        public string? vidPath { get; set; }
-        public string? thumb { get; set; }
-        public string nfoPath { get; set; }
-        public string year { get; set; }
-        public string? videoID { get; set; }
-        public string? userrating { get; set; }
-        public string? track { get; set; }
-        public string? studio { get; set; }
-        public string? premiered { get; set; }
-        public string? source { get; set; }
-        public string? musicBrainzArtistID { get; set; }
-        public List<Genre> Genres { get; } = [];
-
-        public async Task<Stream?> LoadThumbnailBitmapAsync()
-        {
-            var RootFolder = Path.GetDirectoryName(nfoPath);
-            if (thumb != "null" && thumb != "")
+        var RootFolder = Path.GetDirectoryName(nfoPath);
+        if (thumb != "null" && thumb != "")
+            try
             {
-                try
-                {
-                    return File.OpenRead(RootFolder + $"/{thumb}");
-                }
-                catch (FileNotFoundException e)
-                {
-                    Debug.WriteLine($"Couldn't find {thumb}");
-                }
+                return File.OpenRead(RootFolder + $"/{thumb}");
             }
-            return null;
+            catch (FileNotFoundException e)
+            {
+                Debug.WriteLine($"Couldn't find {thumb}");
+            }
+
+        return null;
+    }
+
+    public void SaveToNFO()
+    {
+        var xDoc = new XDocument();
+
+        var parentEl = new XElement("musicvideo");
+
+        var titleEl = new XElement("title");
+        titleEl.Value = title;
+        parentEl.Add(titleEl);
+
+        var artistEl = new XElement("artist");
+        artistEl.Value = artist.Name;
+        parentEl.Add(artistEl);
+
+        if (album != null)
+        {
+            var albumEl = new XElement("album");
+            albumEl.Value = album.Title;
+            parentEl.Add(albumEl);
         }
 
-        public void SaveToNFO()
+        var yearEl = new XElement("year");
+        yearEl.Value = year;
+        parentEl.Add(yearEl);
+
+        var thumbEl = new XElement("thumb");
+        thumbEl.Value = thumb != null ? thumb : "null";
+        parentEl.Add(thumbEl);
+
+        var sourceEl = new XElement("source");
+        sourceEl.Value = source;
+        parentEl.Add(sourceEl);
+
+        var videoIDEl = new XElement("videoID");
+        videoIDEl.Value = videoID != null ? videoID : "null";
+        parentEl.Add(videoIDEl);
+
+        foreach (var genre in Genres)
         {
-            XDocument xDoc = new XDocument();
-
-            XElement parentEl = new XElement("musicvideo");
-
-            XElement titleEl = new XElement("title");
-            titleEl.Value = title;
-            parentEl.Add(titleEl);
-
-            XElement artistEl = new XElement("artist");
-            artistEl.Value = artist.Name;
-            parentEl.Add(artistEl);
-
-            if (album != null)
-            {
-                XElement albumEl = new XElement("album");
-                albumEl.Value = album.Title;
-                parentEl.Add(albumEl);
-            }
-
-            XElement yearEl = new XElement("year");
-            yearEl.Value = year;
-            parentEl.Add(yearEl);
-
-            XElement thumbEl = new XElement("thumb");
-            thumbEl.Value = thumb != null ? thumb : "null";
-            parentEl.Add(thumbEl);
-
-            XElement sourceEl = new XElement("source");
-            sourceEl.Value = source;
-            parentEl.Add(sourceEl);
-
-            XElement videoIDEl = new XElement("videoID");
-            videoIDEl.Value = videoID != null ? videoID : "null";
-            parentEl.Add(videoIDEl);
-
-            foreach (Genre genre in Genres)
-            {
-                XElement genreEl = new XElement("genre");
-                genreEl.Value = genre.Name;
-                parentEl.Add(genreEl);
-            }
-
-            xDoc.Add(parentEl);
-            xDoc.Save(nfoPath);
+            var genreEl = new XElement("genre");
+            genreEl.Value = genre.Name;
+            parentEl.Add(genreEl);
         }
+
+        xDoc.Add(parentEl);
+        xDoc.Save(nfoPath);
     }
 }

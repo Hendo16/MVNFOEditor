@@ -1,64 +1,47 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
 using MVNFOEditor.Interface;
-using MVNFOEditor.ViewModels;
-using Newtonsoft.Json.Linq;
 
 namespace MVNFOEditor.Models;
 
 public class ArtistMetadata : IMetadata
 {
-    public ArtistMetadata() { } // Parameterless constructor required by EF Core
+    public ArtistMetadata()
+    {
+    } // Parameterless constructor required by EF Core
 
-    public ArtistMetadata(ArtistResultCard resultCard, string artURL, Artist _artist)
+    //Apple Music
+    public ArtistMetadata(ArtistResult result, Artist artist)
     {
         SourceId = SearchSource.AppleMusic;
-        BrowseId = resultCard.browseId;
-        OriginalTitle = resultCard.Name;
-        ArtworkUrl = artURL;
-        Artist = _artist;
-    }
-    public ArtistMetadata(YtMusicNet.Models.Artist ytArtist, Artist _artist)
-    {
-        ArtworkUrl = ytArtist.Thumbnails.Last().URL;
-        BrowseId = ytArtist.ChannelId;
-        SourceId = SearchSource.YouTubeMusic;
-        YTAlbumBrowseId = ytArtist.Albums.BrowseId;
-        YTAlbumParams = ytArtist.Albums.Params;
-        YTVideoId = ytArtist.Videos.BrowseId;
-        OriginalTitle = ytArtist.Name;
-        Artist = _artist;
-    }
-    public static async Task<ArtistMetadata?> GetNewMetadata(ArtistResultCard card, Artist artist)
-    {
-        switch (card.Source)
-        {
-            case SearchSource.YouTubeMusic:
-                YtMusicNet.Models.Artist? fullArtistInfo = await App.GetYTMusicHelper().GetArtist(card.browseId);
-                if (fullArtistInfo == null)
-                {
-                    return null;
-                }
-                return new ArtistMetadata(fullArtistInfo, artist);
-            case SearchSource.AppleMusic:
-                string[] banners = App.GetiTunesHelper().GetArtistBannerLinks(card.artistLinkURL);
-                return new ArtistMetadata(card, banners[0], artist);
-        }
-        return null;
+        BrowseId = result.SourceId;
+        OriginalTitle = result.Name;
+        ArtworkUrl = result.ArtUrl;
+        Artist = artist;
     }
 
-    public int Id { get; set; }
-    public int ArtistId { get; set; }
-    public Artist Artist { get; set; }
-    public SearchSource SourceId { get; set; }
-    
+    //YouTube Music
+    //Separate constructor with full 'Artist' model due to additional parameters needed above the ArtistResult card
+    public ArtistMetadata(YtMusicNet.Models.Artist ytArtist, Artist artist)
+    {
+        SourceId = SearchSource.YouTubeMusic;
+        ArtworkUrl = ytArtist.Thumbnails?.Last().URL;
+        BrowseId = ytArtist.ChannelId ?? throw new InvalidOperationException();
+        YtAlbumBrowseId = ytArtist.Albums?.BrowseId;
+        YtVideoId = ytArtist.Videos?.BrowseId;
+        YtAlbumParams = ytArtist.Albums?.Params;
+        OriginalTitle = ytArtist.Name;
+        Artist = artist;
+    }
+
+    public int Id { get; init; }
+    public int ArtistId { get; init; }
+    public Artist Artist { get; init; }
+    public SearchSource SourceId { get; init; }
+
     [NotMapped]
     public string SourceIconPath
     {
@@ -74,30 +57,25 @@ public class ArtistMetadata : IMetadata
                     return "";
             }
         }
-        
     }
-    [MaxLength(50)]
-    public string BrowseId { get; set; }
-    
-    [MaxLength(255)]
-    public string? ArtworkUrl { get; set; }
-    
-    [MaxLength(100)]
-    public string? OriginalTitle { get; set; }
-    public string? Description { get; set; }
-    
-    [MaxLength(100)]
-    public string? YTVideoId { get; set; }
-    
-    [MaxLength(100)]
-    public string? YTAlbumBrowseId { get; set; }
-    
-    [MaxLength(100)]
-    public string? YTAlbumParams { get; set; }
+
+    [MaxLength(50)] public string BrowseId { get; init; }
+
+    [MaxLength(255)] public string? ArtworkUrl { get; init; }
+
+    [MaxLength(100)] public string? OriginalTitle { get; init; }
+
+    public string? Description { get; init; }
+
+    [MaxLength(100)] public string? YtVideoId { get; init; }
+
+    [MaxLength(100)] public string? YtAlbumBrowseId { get; set; }
+
+    [MaxLength(100)] public string? YtAlbumParams { get; set; }
 
     public void GetBrowseData()
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public SearchSource GetSearchSource()
@@ -107,6 +85,21 @@ public class ArtistMetadata : IMetadata
 
     public string GetArtwork()
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
+    }
+
+    public static async Task<ArtistMetadata?> GetNewMetadata(ArtistResult card, Artist artist)
+    {
+        switch (card.Source)
+        {
+            case SearchSource.YouTubeMusic:
+                var fullArtistInfo = await App.GetYTMusicHelper().GetArtist(card.SourceId);
+                if (fullArtistInfo == null) return null;
+                return new ArtistMetadata(fullArtistInfo, artist);
+            case SearchSource.AppleMusic:
+                return new ArtistMetadata(card, artist);
+        }
+
+        return null;
     }
 }

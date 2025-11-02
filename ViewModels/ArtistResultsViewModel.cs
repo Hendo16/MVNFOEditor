@@ -1,153 +1,103 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using MVNFOEditor.Helpers;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
-using MVNFOEditor.Models;
-using Newtonsoft.Json.Linq;
-using Avalonia.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Flurl.Http;
 using log4net;
+using MVNFOEditor.Exceptions;
+using MVNFOEditor.Factories;
+using MVNFOEditor.Helpers;
+using MVNFOEditor.Models;
 using SukiUI.Toasts;
-using YtMusicNet.Records;
 
-namespace MVNFOEditor.ViewModels
+namespace MVNFOEditor.ViewModels;
+
+public partial class ArtistResultsViewModel : ObservableObject
 {
-    public partial class ArtistResultsViewModel : ObservableObject
+    private static readonly ILog Log = LogManager.GetLogger(typeof(ArtistResultsViewModel));
+    [ObservableProperty] private string _busyText;
+    [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private bool _searching;
+    [ObservableProperty] private string _searchInput;
+    [ObservableProperty] private ObservableCollection<ArtistResultViewModel> _searchResults;
+    [ObservableProperty] private ArtistResultViewModel _selectedArtist;
+    public SearchSource SelectedSource;
+
+    public ArtistResultsViewModel(SearchSource source = SearchSource.YouTubeMusic, string searchInput = "")
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(ArtistResultsViewModel));
-        [ObservableProperty] private ObservableCollection<ArtistResultViewModel> _searchResults;
-        [ObservableProperty] private bool _isBusy;
-        [ObservableProperty] private bool _searching;
-        [ObservableProperty] private string _busyText;
-        [ObservableProperty] private string _searchInput;
-        [ObservableProperty] private ArtistResultViewModel _selectedArtist;
-        private YTMusicHelper ytMusicHelper;
-        private iTunesAPIHelper itunesHelper;
+        SearchResults = new ObservableCollection<ArtistResultViewModel>();
+        Searching = false;
+        SelectedSource = source;
+        SearchInput = searchInput;
+    }
+    public event EventHandler<bool> ValidSearch;
+    public event EventHandler<bool> HideError;
+    public event EventHandler<string> DisplayError;
 
-        public event EventHandler<ArtistResultCard> NextPage;
-        public event EventHandler<bool> ValidSearch;
-        public SearchSource selectedSource;
-
-        public ArtistResultsViewModel(SearchSource _source, string searchInput = "")
+    public void SearchArtist()
+    {
+        HideError?.Invoke(this, false);
+        if (SearchInput == "")
         {
-            SearchResults = new ObservableCollection<ArtistResultViewModel>();
-            ytMusicHelper = App.GetYTMusicHelper();
-            itunesHelper = App.GetiTunesHelper();
-            Searching = false;
-            selectedSource = _source;
-            SearchInput = searchInput;
+            DisplayError?.Invoke(this, "Please enter search text");
+            return;
         }
+        Searching = true;
+        //ValidSearch(null, true);
+        SearchResults.Clear();
+        switch (SelectedSource)
+        {
+            case SearchSource.YouTubeMusic:
+                YouTubeSearch();
+                return;
+            case SearchSource.AppleMusic:
+                iTunesSearch();
+                return;
+        }
+    }
 
-        public void SearchArtist()
+    private async void YouTubeSearch()
+    {
+        try
         {
             Searching = true;
-            if (ValidSearch != null)
-            {
-                ValidSearch(null, true);
-            }
-            switch (selectedSource)
-            {
-                case SearchSource.YouTubeMusic:
-                    YouTubeSearch();
-                    return;
-                case SearchSource.AppleMusic:
-                    iTunesSearch();
-                    return;
-            }
-        }
-
-        private async void YouTubeSearch()
-        {
-            ObservableCollection<ArtistResultViewModel> _tempResults = new ObservableCollection<ArtistResultViewModel>();
-            //JArray results = new JArray();
-            List<ArtistResult> results = new List<ArtistResult>();
-            try
-            {
-                results = await ytMusicHelper.searchArtists(SearchInput);
-                
-                if (ValidSearch != null)
-                {
-                    ValidSearch(null, true);
-                }
-            }
-            catch (FlurlHttpException e)
-            {
-                Log.Error($"Error fetching results from service");
-                Log.Error(e);
-                App.GetToastManager().CreateToast()
-                    .OfType(NotificationType.Error)
-                    .WithContent("Error: Couldn't connect to server. Check logs")
-                    .Dismiss().ByClicking()
-                    .Queue();
-                return;
-            }
-            for (int i = 0; i < results.Count; i++)
-            {
-                /*
-                JObject result = results[i].ToObject<JObject>();
-                ArtistResultCard arrResultCard = new ArtistResultCard();
-
-                arrResultCard.Name = result["artist"].ToString();
-                arrResultCard.browseId = result["browseId"].ToString();
-                arrResultCard.thumbURL = ytMusicHelper.GetHighQualityArt(result);
-                */
-                ArtistResultCard arrResultCard = new ArtistResultCard(results[i]);
-                ArtistResultViewModel newVM = new ArtistResultViewModel(arrResultCard);
-                newVM.NextPage += NextPage;
-                await newVM.LoadThumbnail();
-                _tempResults.Add(newVM);
-            }
-            SearchResults = _tempResults;
+            YouTubeResultFactory newFactory =  new YouTubeResultFactory();
+            SearchResults = await newFactory.SearchArtists(SearchInput);
             Searching = false;
         }
+        catch (SearchExceptions.ResultsEmptyException ex)
+        {
+            ToastHelper.ShowError("Artist search", $"No results found for {SearchInput}");
+            Log.Error(ex.Message);
+            Searching = false;
+        }
+        catch (FlurlHttpException ex)
+        {
+            ToastHelper.ShowError("Artist search", "Couldn't connect to server. Check logs.");
+            Log.Error(ex.Message);
+            Searching = false;
+        }
+    }
 
-        private async void iTunesSearch()
+    private async void iTunesSearch()
+    {
+        try
         {
             Searching = true;
-            ObservableCollection<ArtistResultViewModel> _tempResults = new ObservableCollection<ArtistResultViewModel>();
-            JObject apiResults = new JObject();
-            try
-            {
-                apiResults = await itunesHelper.ArtistSearch(_searchInput);
-                if (ValidSearch != null)
-                {
-                    ValidSearch(null, true);
-                }
-            }
-            catch (FlurlHttpException e)
-            {
-                Log.Error($"Error fetching results from service");
-                Log.Error(e);
-                App.GetToastManager().CreateToast()
-                    .OfType(NotificationType.Error)
-                    .WithContent($"Error: Couldn't connect to server. {e.InnerException.Message}")
-                    .Dismiss().ByClicking()
-                    .Queue();
-                Searching = false;
-                return;
-            }
-            Console.WriteLine($"Total Results {apiResults.Value<int>("resultCount")}");
-            JArray results = apiResults.Value<JArray>("results");
-            //TODO: Handle search results greater than the first 10 artists
-            int limit = results.Count < 10 ? results.Count : 10;
-            for (int i = 0; i < limit; i++)
-            {
-                JObject result = results[i].ToObject<JObject>();                
-                //Some results return outdated iTunes based links - so we need to fix these
-                string artisturl = result.Value<string>("artistLinkUrl").Replace("itunes.apple.com", "music.apple.com");
-                ArtistResultCard arrResultCard = new ArtistResultCard(result, artisturl);
-                ArtistResultViewModel newVM = new ArtistResultViewModel(arrResultCard);
-                newVM.NextPage += NextPage;
-                await newVM.LoadThumbnail();
-                _tempResults.Add(newVM);
-            }
-            SearchResults = _tempResults;
+            AppleResultFactory newFactory =  new AppleResultFactory();
+            SearchResults = await newFactory.SearchArtists(SearchInput);
+            Searching = false;
+        }
+        catch (SearchExceptions.ResultsEmptyException ex)
+        {
+            ToastHelper.ShowError("Artist search", $"No results found for {SearchInput}");
+            Log.Error(ex.Message);
+            Searching = false;
+        }
+        catch (FlurlHttpException ex)
+        {
+            ToastHelper.ShowError("Artist search", "Couldn't connect to server. Check logs.");
+            Log.Error(ex.Message);
             Searching = false;
         }
     }

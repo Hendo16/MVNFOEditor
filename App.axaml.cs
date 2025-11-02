@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -12,40 +12,41 @@ using Avalonia.Markup.Xaml;
 using Config.Net;
 using log4net;
 using log4net.Config;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using MVNFOEditor.Common;
 using MVNFOEditor.DB;
+using MVNFOEditor.Factories;
 using MVNFOEditor.Features;
 using MVNFOEditor.Helpers;
-using MVNFOEditor.Models;
 using MVNFOEditor.Services;
 using MVNFOEditor.Settings;
 using MVNFOEditor.ViewModels;
 using SukiUI.Dialogs;
 using SukiUI.Toasts;
+using YoutubeDLSharp;
 
 namespace MVNFOEditor;
 
-public partial class App : Application
+public class App : Application
 {
     private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
     private static MusicDbContext _dbContext;
     private static MusicDBHelper _dbHelper;
     private static YTDLHelper _ytdlHelper;
     private static YTMusicHelper _ytmHelper;
+    private static HttpClient _httpClient;
     private static iTunesAPIHelper _iTunesHelper;
     private static AppleMusicDLHelper _appleMusicDLHelper;
     private static DefaultViewModel _mainViewModel;
+    private static YouTubeResultFactory _ytResultFactory;
+    private static AppleResultFactory _amResultFactory;
     private static IDataTemplate _viewLocater;
     private static ISukiToastManager _toastManager;
     private static ISukiDialogManager _dialogManager;
     private static ISettings _settings;
+    private readonly bool _enableAppleMusic = true;
     private IServiceProvider? _provider;
-    private bool _enableAppleMusic = true;
-    
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -56,10 +57,13 @@ public partial class App : Application
         _dbContext = new MusicDbContext();
         _toastManager = new SukiToastManager();
         _dialogManager = new SukiDialogManager();
+        _httpClient = new HttpClient();
+        _ytResultFactory = new YouTubeResultFactory();
+        _amResultFactory = new AppleResultFactory();
         ConfigureLogging();
         SetupHelpers();
     }
-    
+
     private void ConfigureLogging()
     {
         var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
@@ -73,10 +77,7 @@ public partial class App : Application
         _ytdlHelper = YTDLHelper.CreateHelper();
         _iTunesHelper = iTunesAPIHelper.CreateHelper();
         _ytmHelper = await YTMusicHelper.CreateHelper();
-        if (_enableAppleMusic)
-        {
-            _appleMusicDLHelper = await AppleMusicDLHelper.CreateHelper();
-        }
+        if (_enableAppleMusic) _appleMusicDLHelper = await AppleMusicDLHelper.CreateHelper();
         CheckSettings();
     }
 
@@ -95,43 +96,45 @@ public partial class App : Application
         // Without this line you will get duplicate validations from both Avalonia and CT
         base.OnFrameworkInitializationCompleted();
     }
+
     private async void CheckSettings()
     {
         if (!_dbContext.Exists())
         {
-            SettingsDialogViewModel newDialog = new SettingsDialogViewModel();
+            var newDialog = new SettingsDialogViewModel();
             GetVM().GetDialogManager().CreateDialog()
                 .WithViewModel(dialog => newDialog)
                 .TryShow();
         }
+
         //AM Check
         if (_enableAppleMusic && !_appleMusicDLHelper.IsValidToken())
-        {
             GetVM().GetDialogManager().CreateDialog()
                 .OfType(NotificationType.Warning)
                 .WithTitle("Apple Music Token Expired")
                 .WithViewModel(dialog => new AMUserSubmissionViewModel(dialog))
                 .TryShow();
-        }
-        
+
         //YTDL/FFMPEG Check
-        #if WINDOWS
+#if WINDOWS
         if (!File.Exists($"{_settings.YTDLPath}/yt-dlp.exe"))
         {
             Console.WriteLine("Downloading YT-DLP...");
-            await YoutubeDLSharp.Utils.DownloadYtDlp(_settings.YTDLPath);
+            await Utils.DownloadYtDlp(_settings.YTDLPath);
         }
+
         if (!File.Exists($"{_settings.FFMPEGPath}/ffmpeg.exe"))
-        {  
+        {
             Console.WriteLine("Downloading FFMPEG...");
-            await YoutubeDLSharp.Utils.DownloadFFmpeg(_settings.FFMPEGPath);
+            await Utils.DownloadFFmpeg(_settings.FFMPEGPath);
         }
+
         if (!File.Exists($"{_settings.FFMPEGPath}/ffprobe.exe"))
-        {  
+        {
             Console.WriteLine("Downloading FFPROBE...");
-            await YoutubeDLSharp.Utils.DownloadFFprobe(_settings.FFPROBEPath);
+            await Utils.DownloadFFprobe(_settings.FFPROBEPath);
         }
-        #endif
+#endif
     }
 
     private static ServiceProvider ConfigureServices()
@@ -152,7 +155,7 @@ public partial class App : Application
             services.AddSingleton(typeof(PageBase), type);
 
         return services.BuildServiceProvider();
-    } 
+    }
 
     public static ISettings GetSettings()
     {
@@ -172,6 +175,16 @@ public partial class App : Application
     public static YTDLHelper GetYTDLHelper()
     {
         return _ytdlHelper;
+    }
+
+    public static YouTubeResultFactory GetYouTubeFactory()
+    {
+        return _ytResultFactory;
+    }
+
+    public static AppleResultFactory GetAppleFactory()
+    {
+        return _amResultFactory;
     }
 
     public static async void RefreshYTMusicHelper()
@@ -197,6 +210,11 @@ public partial class App : Application
     public static DefaultViewModel GetVM()
     {
         return _mainViewModel;
+    }
+
+    public static HttpClient GetHttpClient()
+    {
+        return _httpClient;
     }
 
     public static ISukiToastManager GetToastManager()

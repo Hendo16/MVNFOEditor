@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MVNFOEditor.Models;
@@ -12,7 +10,7 @@ public partial class MergeArtistDialogViewModel(ISukiDialog dialog) : Observable
 {
     [ObservableProperty] private ArtistViewModel _artist1;
     [ObservableProperty] private ArtistViewModel _artist2;
-    
+
     public MergeArtistDialogViewModel(ISukiDialog dialog, Artist orig, Artist merge_target) : this(dialog)
     {
         Artist1 = new ArtistViewModel(orig);
@@ -20,12 +18,15 @@ public partial class MergeArtistDialogViewModel(ISukiDialog dialog) : Observable
         Artist1.LoadCover();
         Artist2.LoadCover();
     }
-    
+
     public void HandleMerge()
     {
         Console.WriteLine($"Merging {Artist1.Name} with {Artist2.Name}");
     }
-    
+
     [RelayCommand]
-    private void CloseDialog() => dialog.Dismiss();
+    private void CloseDialog()
+    {
+        dialog.Dismiss();
+    }
 }

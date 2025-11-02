@@ -8,6 +8,6 @@
              x:Class="MVNFOEditor.Views.ManualArtistView"
              x:DataType="vm:ManualArtistViewModel">
     <suki:GroupBox Height="150" Width="400" Header="Artist Name">
-        <TextBox Height="50" Watermark="Name" Text="{Binding ArtistNameText}"/>
+        <TextBox Height="50" Watermark="Name" Text="{Binding ArtistNameText}" />
     </suki:GroupBox>
-  </UserControl>
+</UserControl>

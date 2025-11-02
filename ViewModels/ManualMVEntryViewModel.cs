@@ -1,26 +1,17 @@
-﻿using Avalonia.Media.Imaging;
-using MVNFOEditor.Models;
-using System;
+﻿using System;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using MVNFOEditor.Models;
 using YoutubeDLSharp.Metadata;
 
 namespace MVNFOEditor.ViewModels;
 
 public class ManualMVEntryViewModel : ObservableObject
 {
-    public string Title { get; set; }
-    public string VidID { get; set; }
-    public Album Album { get; set; }
-    public string Year { get; set; }
-    public VideoData? VidData { get; set; }
-    public Bitmap? Thumbnail { get; set; }
-    
-    public event EventHandler RemoveCallback;
-
     public ManualMVEntryViewModel(string _title,
-        string _year, 
-        Bitmap? _thumbnail, 
-        string _vidID, 
+        string _year,
+        Bitmap? _thumbnail,
+        string _vidID,
         Album _album,
         VideoData _vidData)
     {
@@ -31,6 +22,15 @@ public class ManualMVEntryViewModel : ObservableObject
         Album = _album;
         VidData = _vidData;
     }
+
+    public string Title { get; set; }
+    public string VidID { get; set; }
+    public Album Album { get; set; }
+    public string Year { get; set; }
+    public VideoData? VidData { get; set; }
+    public Bitmap? Thumbnail { get; set; }
+
+    public event EventHandler RemoveCallback;
 
     public void RemoveListing()
     {

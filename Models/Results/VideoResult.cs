@@ -1,71 +1,40 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using YtMusicNet.Models;
 
-namespace MVNFOEditor.Models
+namespace MVNFOEditor.Models;
+
+public class VideoResult : Result
 {
-    public class VideoResult
+    public VideoResult(Track track, Artist artist) :
+        base(track.Title, track.Thumbnails.Last().URL, SearchSource.YouTubeMusic, track.VideoId)
     {
-        public VideoResult() { }
-        public VideoResult(YtMusicNet.Models.Track track, Artist artist)
+        Artist = artist;
+        Year = track.Year;
+        IsExplicit = track.IsExplicit;
+        Duration = track.Duration.ToString();
+    }
+
+    //Apple Music
+    //Use trackCensoredName instead of trackName, because only trackCensoredName seems to contain the ambiguations [(Live), (Directors Cut), etc.]
+    public VideoResult(JToken track, Artist artist, string artUrl) :
+        base((string)track["trackCensoredName"], artUrl, SearchSource.AppleMusic, (string)track["trackId"])
+    {
+        Artist = artist;
+        Year = DateTime.Parse((string)track["releaseDate"]).Year.ToString();
+        IsExplicit = (string)track["trackExplicitness"] == "explicit";
+        if (track["trackTimeMillis"] != null)
         {
-            Artist = artist;
-            Title = track.Title;
-            Year = track.Year;
-            Explicit = track.IsExplicit;
-            Duration = track.Duration.ToString();
-            VideoID = track.VideoId;
-            thumbURL = track.Thumbnails.Last().URL;
-            VideoURL = "";
-        }
-        public VideoResult(JToken track, Artist artist)
-        {
-            Artist = artist;
-            Title = (string)track["trackCensoredName"];
-            Year = DateTime.Parse((string)track["releaseDate"]).Year.ToString();
-            Explicit = (string)track["trackExplicitness"] == "explicit";
             Duration = TimeSpan.FromMilliseconds((double)track["trackTimeMillis"])
                 .ToString(@"mm\:ss");
-            VideoID = (string)track["trackId"];
-            VideoURL = "";
         }
-        public Artist Artist {get; set; }
-        public string Title { get; set; }
-        public string? Year { get; set; }
-        public bool? Explicit { get; set; }
-        public string? Duration { get; set; }
-        public string? TopRes { get; set; }
-        public string VideoID { get; set; }
-        public string VideoURL { get; set; }
-        public string thumbURL { get; set; }
-        private static HttpClient s_httpClient = new();
-
-        public async Task<Stream> LoadCoverBitmapAsync()
-        {
-            if (thumbURL != "")
-            {
-                var data = await s_httpClient.GetByteArrayAsync(thumbURL);
-                return new MemoryStream(data);
-            }
-            else
-            {
-                return File.OpenRead("./Assets/sddefault.jpg");
-            }
-        }
-
-        public Stream SaveThumbnailBitmapStream(string folderPath)
-        {
-            if (!Directory.Exists(folderPath))
-            {
-                Directory.CreateDirectory(folderPath);
-            }
-            return File.OpenWrite(folderPath + $"/{Title}.jpg");
-        }
-
     }
+
+    public Artist Artist { get; set; }
+    public string? Year { get; set; }
+    public bool? IsExplicit { get; set; }
+    public string? Duration { get; set; }
+    public string? TopRes { get; set; }
+    public string VideoURL { get; set; }
 }

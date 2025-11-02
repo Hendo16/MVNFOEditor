@@ -12,10 +12,9 @@
              x:DataType="vm:ArtistListViewModel">
     <sukiControls:BusyArea BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-            <sukiControls:GlassCard Margin="15,15,15,15" IsAnimated="True" >
-              <sukiControls:GlassCard.Resources>
-                <system:Double x:Key="GlassOpacity">0.2</system:Double>
-              </sukiControls:GlassCard.Resources>
+            <sukiControls:GlassCard Margin="15,15,15,15" IsAnimated="True">
+                <sukiControls:GlassCard.Resources>
+                </sukiControls:GlassCard.Resources>
                 <sukiControls:GlassCard.ContextMenu>
                     <ContextMenu>
                         <MenuItem Command="{Binding AddArtist}"
@@ -45,4 +44,4 @@
             </sukiControls:GlassCard>
         </ScrollViewer>
     </sukiControls:BusyArea>
-  </UserControl>
+</UserControl>

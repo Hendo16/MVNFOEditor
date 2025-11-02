@@ -8,17 +8,16 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MVNFOEditor.Views.VideoResultsView"
              x:DataType="vm:VideoResultsViewModel">
-  <suki:BusyArea BusyText="{Binding BusyText}" IsBusy="{Binding IsBusy}">
-    <Grid RowDefinitions="Auto,Auto,*">
-        <TextBox Grid.Row="0" Text="{Binding SearchText}" KeyUp="SearchText_KeyPressUp"
-                 Watermark="Search..." Margin="0,0,0,10"/>
-        <ListBox Name="VideoList" Margin="0 0 0 10" MaxHeight="300" Grid.Row="1" SelectionMode="Multiple" ItemsSource="{Binding SearchResults}" SelectedItems="{Binding SelectedVideos}">
-          <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <views:VideoResultView Margin="0 0 20 20" IsEnabled="{Binding DownloadEnabled}"/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-    </Grid>
-  </suki:BusyArea>
+        <Grid RowDefinitions="Auto,Auto,*">
+            <TextBox Grid.Row="0" Text="{Binding SearchText}" KeyUp="SearchText_KeyPressUp"
+                     Watermark="Search..." Margin="0,0,0,10" />
+            <ListBox Name="VideoList" Margin="0 0 0 10" MaxHeight="300" Grid.Row="1" SelectionMode="Multiple"
+                     ItemsSource="{Binding SearchResults}" SelectedItems="{Binding SelectedVideos}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <views:VideoResultView Margin="0 0 20 20" IsEnabled="{Binding DownloadEnabled}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
 </UserControl>

@@ -9,23 +9,26 @@
              x:Class="MVNFOEditor.Views.AddMusicVideoParentView"
              x:DataType="vm:AddMusicVideoParentViewModel">
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
-      <Border Grid.Row="0">
-        <Grid IsVisible="{Binding NavVisible}" Margin="0 5 0 5" VerticalAlignment="Center">
-            <Button Command="{Binding Close}" VerticalAlignment="Center" HorizontalAlignment="Right">
-                <PathIcon Data="{x:Static content:Icons.Cross}" />
-            </Button>
-          </Grid>
+        <Border Grid.Row="0">
+            <Grid IsVisible="{Binding NavVisible}" Margin="0 5 0 5" VerticalAlignment="Center">
+                <Button Command="{Binding Close}" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <PathIcon Data="{x:Static content:Icons.Cross}" />
+                </Button>
+            </Grid>
         </Border>
         <controls:GlassCard Grid.Row="1" IsVisible="{Binding ShowError}">
             <controls:GroupBox Header="Error">
-                <TextBlock Text="{Binding ErrorText}"/>
+                <TextBlock Text="{Binding ErrorText}" />
             </controls:GroupBox>
         </controls:GlassCard>
         <ContentControl Grid.Row="2" Content="{Binding CurrentContent}" />
         <Border Grid.Row="3">
             <Grid IsVisible="{Binding NavVisible}" Margin="0 10 0 10" VerticalAlignment="Center">
-                <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Left" Classes="Flat" Content="Exit" Command="{Binding Close}" IsVisible="{Binding NavVisible}" />
-                <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="Flat Accent" HorizontalContentAlignment="Center" Content="Download" Command="{Binding HandleSave}" IsVisible="{Binding NavVisible}"/>
+                <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Left" Classes="Flat"
+                        Content="Exit" Command="{Binding Close}" IsVisible="{Binding NavVisible}" />
+                <Button Height="40" Width="100" VerticalAlignment="Center" HorizontalAlignment="Right"
+                        Classes="Flat Accent" HorizontalContentAlignment="Center" Content="Download"
+                        Command="{Binding HandleSave}" IsVisible="{Binding NavVisible}" />
             </Grid>
         </Border>
     </Grid>

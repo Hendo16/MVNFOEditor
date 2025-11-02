@@ -1,89 +1,80 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MVNFOEditor.Helpers;
 using MVNFOEditor.Models;
-using SukiUI.Controls;
 
-namespace MVNFOEditor.ViewModels
+namespace MVNFOEditor.ViewModels;
+
+public partial class EditAlbumDialogViewModel : ObservableObject
 {
-    public partial class EditAlbumDialogViewModel : ObservableObject
+    private readonly ArtistListParentViewModel _parentVM;
+    private readonly MusicDBHelper DBHelper;
+    [ObservableProperty] private Album _album;
+    [ObservableProperty] private Bitmap? _cover;
+
+    [ObservableProperty] private string _coverURL;
+    [ObservableProperty] private bool _localRadio;
+    [ObservableProperty] private string _title;
+    [ObservableProperty] private bool _uRLRadio;
+    [ObservableProperty] private string _year;
+
+    public EditAlbumDialogViewModel(Album album, Bitmap? coverInstance)
     {
-        private ArtistListParentViewModel _parentVM;
-        public Artist Artist => _album.Artist;
-        private MusicDBHelper DBHelper;
-        private static HttpClient s_httpClient = new();
+        _album = album;
+        Title = album.Title;
+        Year = album.Year;
+        Cover = coverInstance;
+        DBHelper = App.GetDBHelper();
+        _parentVM = App.GetVM().GetParentView();
+        if (album.ArtURL != null)
+        {
+            CoverURL = album.ArtURL;
+            _uRLRadio = true;
+        }
+        else
+        {
+            _localRadio = true;
+        }
+    }
 
-        [ObservableProperty] private string _coverURL;
-        [ObservableProperty] private Album _album;
-        [ObservableProperty] private Bitmap? _cover;
-        [ObservableProperty] private string _title;
-        [ObservableProperty] private string _year;
-        [ObservableProperty] private bool _uRLRadio;
-        [ObservableProperty] private bool _localRadio;
+    public async void UpdateAlbum()
+    {
+        _album.Title = Title;
+        _album.Year = Year;
+        var success = await DBHelper.UpdateAlbum(_album);
+        if (success == 0) Debug.WriteLine(success);
+        //Refresh View
+        RefreshView();
+    }
 
-        public EditAlbumDialogViewModel(Album album, Bitmap? coverInstance)
-        {
-            _album = album;
-            Title = album.Title;
-            Year = album.Year;
-            Cover = coverInstance;
-            DBHelper = App.GetDBHelper();
-            _parentVM = App.GetVM().GetParentView();
-            if(album.ArtURL != null)
-            {
-                CoverURL = album.ArtURL;
-                _uRLRadio = true;
-            }
-            else
-            {
-                _localRadio = true;
-            }
-        }
-        public async void UpdateAlbum()
-        {
-            _album.Title = Title;
-            _album.Year = Year;
-            int success = await DBHelper.UpdateAlbum(_album);
-            if (success == 0)
-            {
-                Debug.WriteLine(success);
-            }
-            //Refresh View
-            RefreshView();
-        }
-        public async void GrabURL()
-        {
-            var data = await s_httpClient.GetByteArrayAsync(CoverURL);
-            var ms = new MemoryStream(data);
-            Cover = await Task.Run(() => Bitmap.DecodeToWidth(ms, 200));
-        }
+    public async void GrabURL()
+    {
+        var data = await App.GetHttpClient().GetByteArrayAsync(CoverURL);
+        var ms = new MemoryStream(data);
+        Cover = await Task.Run(() => Bitmap.DecodeToWidth(ms, 200));
+    }
 
-        public void DeleteAlbum()
-        {
-            DBHelper.DeleteAlbum(_album);
-            //Refresh View
-            RefreshView();
-        }
+    public void DeleteAlbum()
+    {
+        DBHelper.DeleteAlbum(_album);
+        //Refresh View
+        RefreshView();
+    }
 
-        private void RefreshView()
-        {
-            ArtistDetailsViewModel ArtistDetailsVM = (ArtistDetailsViewModel)_parentVM.CurrentContent;
-            ArtistDetailsVM.LoadAlbums();
-            App.GetVM().GetDialogManager().DismissDialog();
-        }
-        [RelayCommand]
-        public void CloseDialog()
-        {
-            App.GetVM().GetDialogManager().DismissDialog();
-        }
+    private void RefreshView()
+    {
+        var ArtistDetailsVM = (ArtistDetailsViewModel)_parentVM.CurrentContent;
+        ArtistDetailsVM.LoadAlbums();
+        App.GetVM().GetDialogManager().DismissDialog();
+    }
+
+    [RelayCommand]
+    public void CloseDialog()
+    {
+        App.GetVM().GetDialogManager().DismissDialog();
     }
 }

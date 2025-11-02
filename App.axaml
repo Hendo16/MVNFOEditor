@@ -9,7 +9,7 @@
         <common:ViewLocator />
     </Application.DataTemplates>
     <Application.Styles>
-        <sukiUi:SukiTheme ThemeColor="Blue"/>
+        <sukiUi:SukiTheme ThemeColor="Blue" />
         <avalonia:MaterialIconStyles />
     </Application.Styles>
 </Application>

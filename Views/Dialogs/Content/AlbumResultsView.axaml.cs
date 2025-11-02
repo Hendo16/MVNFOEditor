@@ -2,20 +2,18 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using MVNFOEditor.ViewModels;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class AlbumResultsView : UserControl
 {
-    public partial class AlbumResultsView : UserControl
+    public AlbumResultsView()
     {
-        public AlbumResultsView()
-        {
-            InitializeComponent();
-        }
-        private void SearchText_KeyPressUp(object sender, KeyEventArgs e)
-        {
-            if (DataContext is AlbumResultsViewModel viewModel && sender is TextBox textBox)
-            {
-                viewModel.SearchText = textBox.Text;
-            }
-        }
+        InitializeComponent();
+    }
+
+    private void SearchText_KeyPressUp(object sender, KeyEventArgs e)
+    {
+        if (DataContext is AlbumResultsViewModel viewModel && sender is TextBox textBox)
+            viewModel.SearchText = textBox.Text;
     }
 }

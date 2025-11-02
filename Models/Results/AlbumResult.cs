@@ -1,93 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
-namespace MVNFOEditor.Models
+namespace MVNFOEditor.Models;
+
+public class AlbumResult : Result
 {
-    public class 
-        AlbumResult
+    public AlbumResult(YtMusicNet.Models.Album ytAlbum, Artist artist) :
+        base(ytAlbum.Title, ytAlbum.Thumbnails.Last().URL, SearchSource.YouTubeMusic, ytAlbum.Id)
     {
-        public string Title { get; set; }
-        public string? Year { get; set; }
-        public string browseId { get; set; }
-        public string thumbURL { get; set; }
-        public bool? isExplicit { get; set; }
-        public Artist Artist { get; set; }
-        public SearchSource SearchSource { get; set; }
-
-        private static HttpClient s_httpClient = new();
-
-        public AlbumResult(YtMusicNet.Models.Album ytAlbum, Artist artist)
-        {
-            Artist = artist;
-            Title = ytAlbum.Title;
-            Year = ytAlbum.Year.ToString();
-            browseId = ytAlbum.Id;
-            thumbURL = ytAlbum.Thumbnails.Last().URL;
-            isExplicit = ytAlbum.IsExplicit;
-            SearchSource = SearchSource.YouTubeMusic;
-        }
-        public AlbumResult(JToken album, Artist artist)
-        {
-            Artist = artist;
-            Title = album["collectionName"].ToString();
-            Year = DateTime.Parse(album["releaseDate"].ToString()).Year.ToString();
-            browseId = album["collectionId"].ToString();
-            isExplicit = album["collectionExplicitness"].ToString() == "Explicit";
-            SearchSource = SearchSource.AppleMusic;
-        }
-        public AlbumResult() { }
-
-        public static List<AlbumResult> GetAlbumResults<T>(List<T> albums)
-        {
-            List<AlbumResult> results = new List<AlbumResult>();
-            switch (albums)
-            {
-                case List<YtMusicNet.Models.Album> ytList:
-                    for (int i = 0; i < ytList.Count; i++)
-                    {
-                        YtMusicNet.Models.Album currAlbum = ytList[i];
-                        AlbumResult newResult = new AlbumResult();
-                        
-                        newResult.Title = currAlbum.Title;
-                        newResult.Year = currAlbum.Year.ToString();
-                        newResult.browseId = currAlbum.Id;
-                        newResult.thumbURL = currAlbum.Thumbnails.Last().URL;
-                        newResult.isExplicit = currAlbum.IsExplicit;
-                        
-                        results.Add(newResult);
-                    }
-                    break;
-            }
-
-            return results;
-        }
-
-        public async Task<Stream> LoadCoverBitmapAsync()
-        {
-            if (thumbURL != "")
-            {
-                var data = await s_httpClient.GetByteArrayAsync(thumbURL);
-                return new MemoryStream(data);
-            }
-            else
-            {
-                return File.OpenRead("./Assets/tmbte-FULL.jpg");
-            }
-        }
-
-        public Stream SaveThumbnailBitmapStream(string folderPath)
-        {
-            if (!Directory.Exists(folderPath))
-            {
-                Directory.CreateDirectory(folderPath);
-            }
-            return File.OpenWrite(folderPath + $"/{Title}.jpg");
-        }
+        Artist = artist;
+        Year = ytAlbum.Year.ToString();
+        IsExplicit = ytAlbum.IsExplicit;
     }
+
+    public AlbumResult(JToken album, Artist artist, string artUrl) :
+        base(album["collectionName"].ToString(), artUrl, SearchSource.AppleMusic, album["collectionId"].ToString())
+    {
+        Artist = artist;
+        Year = DateTime.Parse(album["releaseDate"].ToString()).Year.ToString();
+        IsExplicit = album["collectionExplicitness"].ToString() == "Explicit";
+    }
+
+    public string? Year { get; set; }
+    public bool? IsExplicit { get; set; }
+    public Artist Artist { get; set; }
 }

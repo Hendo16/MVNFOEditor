@@ -3,26 +3,26 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using SukiUI.Controls;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class GroupBoxFilter : UserControl
 {
-    public partial class GroupBoxFilter : UserControl
+    public static readonly StyledProperty<object?> HeaderProperty =
+        AvaloniaProperty.Register<GroupBox, object?>(nameof(Header), "Header");
+
+    public GroupBoxFilter()
     {
-        public GroupBoxFilter()
-        {
-            InitializeComponent();
-        }
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+        InitializeComponent();
+    }
 
-        public static readonly StyledProperty<object?> HeaderProperty =
-            AvaloniaProperty.Register<GroupBox, object?>(nameof(Header), defaultValue: "Header");
+    public object? Header
+    {
+        get => GetValue(HeaderProperty);
+        set => SetValue(HeaderProperty, value);
+    }
 
-        public object? Header
-        {
-            get => GetValue(HeaderProperty);
-            set => SetValue(HeaderProperty, value);
-        }
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
     }
 }

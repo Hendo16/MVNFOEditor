@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class ArtistDetailsBannerView : UserControl
 {
-    public partial class ArtistDetailsBannerView : UserControl
+    public ArtistDetailsBannerView()
     {
-        public ArtistDetailsBannerView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

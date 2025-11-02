@@ -8,27 +8,28 @@
              x:Class="MVNFOEditor.Views.SingleView"
              x:DataType="vm:SingleViewModel"
              Width="240">
-  <StackPanel Spacing="5" Width="240">
-    <StackPanel.ContextMenu>
-      <ContextMenu>
-        <MenuItem Command="{Binding EditVideo}" Header="Edit Video">
-          <MenuItem.Icon>
-            <PathIcon Width="15"
-                      Height="15"
-                      Data="{x:Static sukiContent:Icons.CircleOutline}" />
-          </MenuItem.Icon>
-        </MenuItem>
-      </ContextMenu>
-    </StackPanel.ContextMenu>
-    <Border CornerRadius="10" ClipToBounds="True">
-      <Panel Background="#7FFF22DD">
-        <Image Width="240" Stretch="Uniform" Source="{Binding Thumbnail}"/>
-        <Panel Height="112" Width="240" IsVisible="{Binding Thumbnail, Converter={x:Static ObjectConverters.IsNull}}">
-          <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
-        </Panel>
-      </Panel>
-    </Border>
-    <TextBlock Classes="h4" HorizontalAlignment="Center" Text="{Binding Title}"/>
-    <TextBlock Classes="Caption" HorizontalAlignment="Center" Text="{Binding Year}"/>
-  </StackPanel>
+    <StackPanel Spacing="5" Width="240">
+        <StackPanel.ContextMenu>
+            <ContextMenu>
+                <MenuItem Command="{Binding EditVideo}" Header="Edit Video">
+                    <MenuItem.Icon>
+                        <PathIcon Width="15"
+                                  Height="15"
+                                  Data="{x:Static sukiContent:Icons.CircleOutline}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </ContextMenu>
+        </StackPanel.ContextMenu>
+        <Border CornerRadius="10" ClipToBounds="True">
+            <Panel Background="#7FFF22DD">
+                <Image Width="240" Stretch="Uniform" Source="{Binding Thumbnail}" />
+                <Panel Height="112" Width="240"
+                       IsVisible="{Binding Thumbnail, Converter={x:Static ObjectConverters.IsNull}}">
+                    <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
+                </Panel>
+            </Panel>
+        </Border>
+        <TextBlock Classes="h4" HorizontalAlignment="Center" Text="{Binding Title}" />
+        <TextBlock Classes="Caption" HorizontalAlignment="Center" Text="{Binding Year}" />
+    </StackPanel>
 </UserControl>

@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace MVNFOEditor.Views
+namespace MVNFOEditor.Views;
+
+public partial class SettingsDialogAdvancedOptionsCardView : UserControl
 {
-    public partial class SettingsDialogAdvancedOptionsCardView : UserControl
+    public SettingsDialogAdvancedOptionsCardView()
     {
-        public SettingsDialogAdvancedOptionsCardView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }
