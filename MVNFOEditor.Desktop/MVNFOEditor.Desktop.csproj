@@ -30,32 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MVNFOEditor.csproj" />
+    <ProjectReference Include="..\MVNFOEditor\MVNFOEditor.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <ReferencePathWithRefAssemblies Update="C:\Users\nathh\.nuget\packages\avalonia\11.0.9\ref\net6.0\Avalonia.dll" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Assets\FFMPEG\ffmpeg.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\FFMPEG\ffprobe.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\yt-dlp.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="..\log4net.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>log4net.config</Link>
-    </None>
-    <None Update="Assets\phantomjs.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\oauth.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 </Project>
