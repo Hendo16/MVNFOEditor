@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MVNFOEditor.ViewModels"
+             xmlns:controls="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MVNFOEditor.Views.SettingsDialogAdvancedOptionsCardView"
+             x:DataType="vm:SettingsDialogViewModel">
+
+    <UserControl.Resources>
+    </UserControl.Resources>
+
+    <WrapPanel HorizontalAlignment="Center" Classes="PageContainer" Orientation="Horizontal">
+        <controls:GlassCard Width="500">
+            <ScrollViewer>
+                <controls:PropertyGrid Item="{Binding AdvSettings}">
+                    <controls:PropertyGrid.DataTemplates>
+                        <StaticResource ResourceKey="PropertyGridTemplateSelector" />
+                    </controls:PropertyGrid.DataTemplates>
+                </controls:PropertyGrid>
+
+            </ScrollViewer>
+        </controls:GlassCard>
+        <!--
+  <controls:GroupBox BorderBrush="Black">
+    <controls:GroupBox.Header>
+      <TextBlock Classes="h3" Text="Advanced Options"/>
+    </controls:GroupBox.Header>
+    <UniformGrid Rows="3">
+      <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="Local Thumbnail Second" Text="{Binding ScreenshotSecond}"/>
+      <TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="Seconds into local video that a thumbnail will be generated"/>
+      <ComboBox VerticalAlignment="Center" HorizontalAlignment="Left" PlaceholderText="Resolution" ItemsSource="{Binding Resolutions}" SelectedItem="{Binding SelectedResolution}"/>
+      <TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="Desired Resolution for YTDL"/>
+      <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="YTDL Format Options" Name="YTDLFormat" Text="{Binding YtdlFormat}"/>
+      <TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="Outline custom settings for YouTubeDL"/>
+    </UniformGrid>
+  </controls:GroupBox>
+  -->
+    </WrapPanel>
+</UserControl>

@@ -1,0 +1,51 @@
+<suki:SukiWindow xmlns="https://github.com/avaloniaui"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:vm="using:MVNFOEditor.ViewModels"
+                 xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+                 xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+                 mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+                 x:Class="MVNFOEditor.Views.DefaultView"
+                 Icon="/Assets/avalonia-logo.ico"
+                 x:DataType="vm:DefaultViewModel"
+                 BackgroundAnimationEnabled="{Binding AnimationsEnabled}"
+                 CanMinimize="{Binding !WindowLocked}"
+                 CanMove="{Binding !WindowLocked}"
+                 CanResize="{Binding !WindowLocked}"
+                 Title="MVNFOEditor">
+    <suki:SukiWindow.Hosts>
+        <suki:SukiToastHost Manager="{Binding ToastManager}" />
+        <suki:SukiDialogHost Manager="{Binding DialogManager}" />
+    </suki:SukiWindow.Hosts>
+    <Design.DataContext>
+        <vm:DefaultViewModel />
+    </Design.DataContext>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="../ResourceDictionary.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <suki:SukiSideMenu
+        ItemsSource="{Binding Pages}"
+        SelectedItem="{Binding ActivePage}">
+        <suki:SukiSideMenu.HeaderContent>
+            <Image Width="80"
+                   Height="80"
+                   Margin="30,10,30,30"
+                   Source="/Assets/OIG.N5o-removebg-preview.png"
+                   ToolTip.Tip="Side Menu Icon" />
+        </suki:SukiSideMenu.HeaderContent>
+        <suki:SukiSideMenu.ItemTemplate>
+            <DataTemplate>
+                <suki:SukiSideMenuItem Header="{Binding DisplayName}">
+                    <suki:SukiSideMenuItem.Icon>
+                        <material:MaterialIcon Kind="{Binding Icon}" />
+                    </suki:SukiSideMenuItem.Icon>
+                </suki:SukiSideMenuItem>
+            </DataTemplate>
+        </suki:SukiSideMenu.ItemTemplate>
+    </suki:SukiSideMenu>  <!---->
+</suki:SukiWindow>
