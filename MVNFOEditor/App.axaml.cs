@@ -44,7 +44,7 @@ public class App : Application
     private static ISukiToastManager _toastManager;
     private static ISukiDialogManager _dialogManager;
     private static ISettings _settings;
-    private readonly bool _enableAppleMusic = true;
+    private bool _enableAppleMusic = true;
     private IServiceProvider? _provider;
 
     public override void Initialize()
@@ -185,6 +185,11 @@ public class App : Application
     public static AppleResultFactory GetAppleFactory()
     {
         return _amResultFactory;
+    }
+
+    public void SetAMEnabled(bool enbVal)
+    {
+        _enableAppleMusic = enbVal;
     }
 
     public static async void RefreshYTMusicHelper()

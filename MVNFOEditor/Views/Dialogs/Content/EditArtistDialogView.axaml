@@ -8,25 +8,26 @@
              x:Class="MVNFOEditor.Views.EditArtistDialogView"
              xmlns:content="clr-namespace:SukiUI.Content;assembly=SukiUI"
              xmlns:theme="clr-namespace:SukiUI.Theme;assembly=SukiUI"
-             x:DataType="vm:EditArtistDialogViewModel">
+             x:DataType="vm:EditArtistDialogViewModel"
+             >
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Grid.Row="0" ColumnDefinitions="Auto,2*,Auto">
             <Grid Grid.Column="0" RowDefinitions="Auto, Auto, Auto, Auto">
                 <TextBox Grid.Row="0" theme:TextBoxExtensions.Prefix="Artist Name:  " Text="{Binding Name}" />
-                <TextBox Grid.Row="1" theme:TextBoxExtensions.Prefix="Description:  " Text="{Binding Description}" />
-                <StackPanel Orientation="Horizontal" Grid.Row="2">
+                <TextBox MaxWidth="450" TextWrapping="WrapWithOverflow" Grid.Row="1" theme:TextBoxExtensions.Prefix="Description:  " Text="{Binding Description}" />
+                <StackPanel IsVisible="{Binding ShowMetadata}" Orientation="Horizontal" Grid.Row="2">
                     <Button IsEnabled="{Binding YtEnabled}" Command="{Binding PullYoutubeInfo}"
                             Content="Pull YouTube Music" />
                     <Button IsEnabled="{Binding AmEnabled}" Command="{Binding PullAMInfo}" Content="Pull Apple Music" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Grid.Row="3">
+                <StackPanel IsVisible="{Binding ShowMetadata}" Orientation="Horizontal" Grid.Row="3">
                     <Button IsEnabled="{Binding YtEnabled}" Command="{Binding RemoveYoutubeMetadata}"
                             Content="Unlink YouTube Music" />
                     <Button IsEnabled="{Binding AmEnabled}" Command="{Binding RemoveAMMetadata}"
                             Content="Unlink Apple Music" />
                 </StackPanel>
             </Grid>
-            <suki:GroupBox Margin="10 10 10 0" Grid.Column="1" Header="Banner Source">
+            <suki:GroupBox IsVisible="{Binding ShowMetadata}" Margin="10 10 10 0" Grid.Column="1" Header="Banner Source">
                 <Panel Margin="5, 5, 5, 5">
                     <Carousel Name="Banners" SelectedItem="{Binding SelectedBanner}" ItemsSource="{Binding Banners}">
                         <Carousel.PageTransition>

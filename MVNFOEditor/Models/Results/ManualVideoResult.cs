@@ -6,8 +6,8 @@ namespace MVNFOEditor.Models;
 
 public class ManualVideoResult : Result
 {
-    public ManualVideoResult(string name, string year, string artUrl, string id, Artist currArt, Album? currAlb = null, VideoData? vidData = null) :
-        base(name, artUrl, SearchSource.Manual, id)
+    public ManualVideoResult(string name, string year, string artUrl, string id, Artist currArt, Album? currAlb = null, VideoData? vidData = null, SearchSource source = SearchSource.Manual) :
+        base(name, artUrl, source, id)
     {
         Artist = currArt;
         Album = currAlb;

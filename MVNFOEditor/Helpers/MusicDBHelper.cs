@@ -104,6 +104,7 @@ public class MusicDBHelper
             if (el.Name == "year" && vid.year != el.Value) el.Value = vid.year;
             if (el.Name == "artist" && vid.artist.Name != el.Value) el.Value = vid.artist.Name;
             if (el.Name == "thumb" && vid.thumb != el.Value) el.Value = vid.thumb;
+            if (el.Name == "source" && vid.source.ToString() != el.Value) el.Value = vid.source.ToString();
             if (el.Name == "album" && vid.album == null)
                 el.Value = "";
             else if (el.Name == "album" && vid.album.Title != el.Value) el.Value = vid.album.Title;
@@ -119,7 +120,6 @@ public class MusicDBHelper
         x.Save(path);
 
         var updatedVid = _db.MusicVideos.SingleOrDefault(e => e.Id == vid.Id);
-        updatedVid.studio = vid.studio;
         return await _db.SaveChangesAsync();
     }
 

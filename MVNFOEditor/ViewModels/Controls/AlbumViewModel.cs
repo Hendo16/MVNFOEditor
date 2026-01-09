@@ -47,7 +47,7 @@ public partial class AlbumViewModel : ObservableObject
                               am.SourceId is SearchSource.YouTubeMusic or SearchSource.AppleMusic) == 1;
         foreach (var metadata in album.Metadata)
         {
-            var path = metadata.SourceIconPath;
+            var path = metadata.SourceId.GetSourceIconPath();
             SourceIcons.Add(new Bitmap(path));
             if (metadata.SourceId == SearchSource.YouTubeMusic) HasYTMusic = true;
             if (metadata.SourceId == SearchSource.AppleMusic) HasAppleMusic = true;
@@ -154,7 +154,7 @@ public partial class AlbumViewModel : ObservableObject
     }
 
     public void AddVideo()
-    {        
+    {
         NewResultDialogViewModel parentVm = NewResultDialogViewModel.CreateResultSearch(typeof(VideoResult), Artist, _album);
         //Open Dialog
         App.GetVM().GetDialogManager().CreateDialog()

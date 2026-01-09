@@ -7,60 +7,66 @@
              x:Class="MVNFOEditor.Views.AlbumView"
              xmlns:vm="using:MVNFOEditor.ViewModels"
              xmlns:views="clr-namespace:MVNFOEditor.Views"
-             x:DataType="vm:AlbumViewModel"
-             Width="400">
-    <StackPanel Spacing="5" Width="400">
-        <StackPanel.ContextMenu>
-            <ContextMenu>
-                <MenuItem Command="{Binding AddVideo}"
-                          Header="Get Videos">
-                    <MenuItem.Icon>
-                        <PathIcon Width="15"
-                                  Height="15"
-                                  Data="{x:Static sukiContent:Icons.CircleInformation}" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem IsVisible="{Binding SourceAvailable}" Command="{Binding AddSource}"
-                          Header="Add Another Source">
-                    <MenuItem.Icon>
-                        <PathIcon Width="15"
-                                  Height="15"
-                                  Data="{x:Static sukiContent:Icons.Plus}" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Command="{Binding EditAlbum}" Header="Edit Album">
-                    <MenuItem.Icon>
-                        <PathIcon Width="15"
-                                  Height="15"
-                                  Data="{x:Static sukiContent:Icons.CircleOutline}" />
-                    </MenuItem.Icon>
-                </MenuItem>
-            </ContextMenu>
-        </StackPanel.ContextMenu>
-        <Border CornerRadius="10" ClipToBounds="True">
-            <Panel Background="#7FFF22DD" PointerPressed="TriggerSongList">
-                <Image Width="400" Stretch="Uniform" Source="{Binding Cover}" />
-                <Panel Height="400" IsVisible="{Binding Cover, Converter={x:Static ObjectConverters.IsNull}}">
-                    <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
+             x:DataType="vm:AlbumViewModel">
+    <StackPanel Spacing="5">
+        <StackPanel Width="400" Orientation="Vertical">
+            <StackPanel.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Command="{Binding AddVideo}"
+                              Header="Get Videos">
+                        <MenuItem.Icon>
+                            <PathIcon Width="15"
+                                      Height="15"
+                                      Data="{x:Static sukiContent:Icons.CircleInformation}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem IsVisible="{Binding SourceAvailable}" Command="{Binding AddSource}"
+                              Header="Add Another Source">
+                        <MenuItem.Icon>
+                            <PathIcon Width="15"
+                                      Height="15"
+                                      Data="{x:Static sukiContent:Icons.Plus}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding EditAlbum}" Header="Edit Album">
+                        <MenuItem.Icon>
+                            <PathIcon Width="15"
+                                      Height="15"
+                                      Data="{x:Static sukiContent:Icons.CircleOutline}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </StackPanel.ContextMenu>
+            <Border CornerRadius="10" ClipToBounds="True">
+                <Panel Background="#7FFF22DD" PointerPressed="TriggerSongList">
+                    <Image Width="400" Stretch="Uniform" Source="{Binding Cover}" />
+                    <Panel Height="400" IsVisible="{Binding Cover, Converter={x:Static ObjectConverters.IsNull}}">
+                        <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
+                    </Panel>
+                    <ItemsControl ItemsSource="{Binding SourceIcons}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Image Source="{Binding}" Width="48" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </Panel>
-                <ItemsControl ItemsSource="{Binding SourceIcons}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Image Source="{Binding}" Width="48" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Panel>
-        </Border>
-        <TextBlock HorizontalAlignment="Center" Text="{Binding Title}" />
-        <TextBlock HorizontalAlignment="Center" Text="{Binding Year}" />
-        <StackPanel x:Name="songList" IsVisible="False" Orientation="Horizontal">
+            </Border>
+            <TextBlock HorizontalAlignment="Center" Text="{Binding Title}" />
+            <TextBlock HorizontalAlignment="Center" Text="{Binding Year}" />
+            </StackPanel>
+        <StackPanel x:Name="VideoList" IsVisible="False">
             <ItemsControl ItemsSource="{Binding Songs}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <!--

@@ -116,7 +116,8 @@ public class AppleMusicDLHelper
     public async Task<bool> UpdateUserToken(string newToken)
     {
         _settings.AM_UserToken = newToken;
-        return await ValidUserToken();
+        _isValidUserToken = await ValidUserToken();
+        return _isValidUserToken;
     }
 
     private string GetAccessToken()
@@ -218,7 +219,8 @@ public class AppleMusicDLHelper
             !File.Exists(_settings.AM_DeviceKey))
             return AppleMusicDownloadResponse.InvalidDeviceFiles;
 
-        var id = int.Parse(videoResult.VideoURL.Split('/')[^1]);
+        //var id = int.Parse(videoResult.VideoURL.Split('/')[^1]);
+        int id = int.Parse(videoResult.GetResult().SourceId);
         //Get Video Metadata
         var data = _db.AppleMusicVideoMetadata.FirstOrDefault(am => am.id == id);
         wavevm.HeaderText = "Getting Video Metadata...";
@@ -366,26 +368,13 @@ public class AppleMusicDLHelper
         return (streams, psshs);
     }
 
-    private async Task<long> GetTotalFileSize(List<string> uris, string baseUrl)
-    {
-        using var client = new HttpClient();
-        long totalSize = 0;
-
-        // Get total size
-        foreach (var url in uris)
-        {
-            var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, $"{baseUrl}/{url}"));
-            if (response.Content.Headers.ContentLength.HasValue)
-                totalSize += response.Content.Headers.ContentLength.Value;
-        }
-
-        return totalSize;
-    }
-
     private async Task<AppleMusicDownloadResponse> DownloadVideo(AppleMusicStreamList vidStream,
         AppleMusicStreamList audStream, List<PsshKey> keys, VideoResultViewModel videoResult,
         WaveProgressViewModel wavevm)
     {
+        var decryptToolFileName = Path.GetFullPath("./Assets/mp4decrypt.exe");
+        var decryptWorking = Path.GetDirectoryName(decryptToolFileName);
+        
         var enc_v = Path.GetFullPath("./Cache/enc_v.mp4");
         var dec_v = Path.GetFullPath("./Cache/dec_v.mp4");
         var enc_a = Path.GetFullPath("./Cache/enc_a.mp4");
@@ -398,129 +387,43 @@ public class AppleMusicDLHelper
         if (File.Exists(dec_a)) File.Delete(dec_a);
 
         //Calculate file size
-        var vidSize = await GetTotalFileSize(vidStream.Uris, vidStream.BaseUri);
-        var audSize = await GetTotalFileSize(audStream.Uris, audStream.BaseUri);
+        var vidSize = await NetworkHandler.GetTotalFileSize(vidStream.Uris, vidStream.BaseUri);
+        var audSize = await NetworkHandler.GetTotalFileSize(audStream.Uris, audStream.BaseUri);
+        var totalSize = vidSize + audSize;
 
         Console.WriteLine($"Video Size: {vidSize / 1024 / 1024} MB");
         Console.WriteLine($"Audio Size: {audSize / 1024 / 1024} MB");
-
-        var totalSize = vidSize + audSize;
         Console.WriteLine($"Total Size: {totalSize / 1024 / 1024} MB");
 
-        var decryptToolFileName = Path.GetFullPath("./Assets/mp4decrypt.exe");
-        var decryptWorking = Path.GetDirectoryName(decryptToolFileName);
         wavevm.HeaderText = $"Downloading {videoResult.Title} {totalSize / 1024 / 1024} MB - ";
-        await DownloadWithProgressAsync(vidStream.Uris, vidStream.BaseUri, enc_v, wavevm, totalSize);
-
-        var decKey_v = keys.Where(vk => vk.pssh == vidStream.Key).First().key;
-        var arg_v = "--key 1:" + decKey_v + " \"" + enc_v + "\" \"" + dec_v + "\"";
-
-        var decryptv = new Process
-        {
-            StartInfo =
-            {
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                Arguments = arg_v,
-                FileName = decryptToolFileName,
-                WorkingDirectory = decryptWorking
-            }
-        };
-
-        decryptv.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
-        decryptv.ErrorDataReceived += (sender, e) => Console.WriteLine(e.Data);
+        await NetworkHandler.DownloadWithProgressAsync(vidStream.Uris, vidStream.BaseUri, enc_v, wavevm, totalSize);
+        
+        var decKey_v = keys.First(vk => vk.pssh == vidStream.Key).key;
         wavevm.HeaderText = $"Decrypting {videoResult.Title}...";
-        decryptv.Start();
-        decryptv.BeginOutputReadLine();
-        decryptv.BeginErrorReadLine();
-        decryptv.WaitForExit();
-
+        await VideoHandler.DecryptStream(decKey_v, enc_v, dec_v);
+        
         Console.WriteLine($"Decrypt with this {decKey_v}");
         Console.WriteLine("-----------------------------------------------------------------");
-        await DownloadWithProgressAsync(audStream.Uris, audStream.BaseUri, enc_a, wavevm, totalSize, vidSize);
+        await NetworkHandler.DownloadWithProgressAsync(audStream.Uris, audStream.BaseUri, enc_a, wavevm, totalSize, vidSize);
 
-        var decKey_a = keys.Where(vk => vk.pssh == audStream.Key).First().key;
-
-        var decrypta = new Process
-        {
-            StartInfo =
-            {
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                Arguments = "--key 1:" + decKey_a + " \"" + enc_a + "\" \"" + dec_a + "\"",
-                FileName = decryptToolFileName,
-                WorkingDirectory = decryptWorking
-            }
-        };
-
-        decrypta.OutputDataReceived += (sender, e) =>
-        {
-            Console.WriteLine(e.Data);
-            wavevm.UpdateProgress(0.5);
-        };
-        decrypta.ErrorDataReceived += (sender, e) => Console.WriteLine(e.Data);
-        decrypta.Start();
-        decrypta.BeginOutputReadLine();
-        decrypta.BeginErrorReadLine();
-        decrypta.WaitForExit();
+        var decKey_a = keys.First(vk => vk.pssh == audStream.Key).key;
+        await VideoHandler.DecryptStream(decKey_a, enc_a, dec_a);
         Console.WriteLine($"Decrypt with this {decKey_a}");
 
-        var muxed = Path.GetFullPath($"{_settings.RootFolder}/{videoResult.Artist.Name}/{videoResult.Title}.mp4");
-        await FFMpegArguments
-            .FromFileInput(dec_v)
-            .AddFileInput(dec_a)
-            .OutputToFile(muxed, true, options => options
-                .CopyChannel(Channel.Video)
-                .CopyChannel(Channel.Audio)
-            )
-            .ProcessAsynchronously();
-
         wavevm.HeaderText = "Creating final output...";
-
+        var finalOutput = Path.GetFullPath($"{_settings.RootFolder}/{videoResult.Artist.Name}/{videoResult.Title}-{SearchSource.AppleMusic.ToString()}.mp4");
+        bool combined = await VideoHandler.AddAudioToVideo(dec_v, dec_a, finalOutput);
+        if (!combined)
+        {
+            ToastHelper.ShowError("FFMPEG Error", "Failure while trying to combine video and audio, please check logs.");
+            return AppleMusicDownloadResponse.Failure;
+        }
         //Clear out cached files
         File.Delete(enc_v);
         File.Delete(dec_v);
         File.Delete(enc_a);
         File.Delete(dec_a);
         return AppleMusicDownloadResponse.Success;
-    }
-
-    private static async Task DownloadWithProgressAsync(List<string>? urls, string baseUrl, string filename,
-        WaveProgressViewModel wavevm, long totalSize, long alreadyDownloadedBytes = 0)
-    {
-        using var client = new HttpClient();
-
-        using var fileStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.None);
-        var downloaded = alreadyDownloadedBytes != 0 ? alreadyDownloadedBytes : 0;
-        var stopwatch = Stopwatch.StartNew();
-
-        foreach (var url in urls)
-        {
-            using var response = await client.GetAsync($"{baseUrl}/{url}", HttpCompletionOption.ResponseHeadersRead);
-            using var stream = await response.Content.ReadAsStreamAsync();
-
-            var buffer = new byte[32768];
-            int bytesRead;
-            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-            {
-                fileStream.Write(buffer, 0, bytesRead);
-                downloaded += bytesRead;
-
-                // Progress update
-                var percent = (double)downloaded / totalSize * 100;
-                var speed = downloaded / (stopwatch.Elapsed.TotalSeconds + 1); // Bytes per second
-                var speedStr = speed >= 1_048_576 // 1MB = 1,048,576 bytes
-                    ? $"{speed / 1_048_576:0.0} MB/s"
-                    : $"{speed / 1024:0.0} KB/s";
-                Console.Write($"\rProgress: {percent:0.0}% | Speed: {speedStr}  ");
-                wavevm.UpdateProgress(percent);
-                wavevm.UpdateDownloadSpeed(speedStr);
-            }
-        }
     }
 
     private async Task<string> getMVKeys(string pssh, string id)

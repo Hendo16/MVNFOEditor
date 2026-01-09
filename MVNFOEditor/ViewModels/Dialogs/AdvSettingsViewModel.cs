@@ -2,6 +2,7 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Resolution = MVNFOEditor.Models.Resolution;
 
+#pragma warning disable CS0657 // Not a valid attribute location for this declaration
 namespace MVNFOEditor.ViewModels;
 
 public partial class AdvSettingsViewModel : ObservableObject

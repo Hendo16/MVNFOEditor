@@ -122,6 +122,12 @@ public class Artist
                 return null;
         }
     }
+    
+    //Sometimes, the initial source will yield no results so we need to get the next source
+    public SearchSource? GetNextSource(List<SearchSource> checkedSources)
+    {
+        return Metadata.FirstOrDefault(am => am.SourceId != SearchSource.Manual && !checkedSources.Contains(am.SourceId))?.SourceId;
+    }
 
     public bool IsCardSaved()
     {

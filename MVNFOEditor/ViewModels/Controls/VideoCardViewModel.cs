@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -10,15 +11,17 @@ using SukiUI.Toasts;
 
 namespace MVNFOEditor.ViewModels;
 
-public class VideoCardViewModel : ObservableObject
+public partial class VideoCardViewModel : ObservableObject
 {
     private readonly MusicVideo _video;
 
     private Bitmap? _thumbnail;
+    [ObservableProperty] private List<Bitmap> _sourceIcons = new();
 
     public VideoCardViewModel(MusicVideo video)
     {
         _video = video;
+        SourceIcons.Add(new Bitmap(video.source.GetSourceIconPath()));
     }
 
     public string Title => _video.title;
@@ -56,10 +59,7 @@ public class VideoCardViewModel : ObservableObject
     {
         if (File.Exists(_video.vidPath))
         {
-            var vidDetailsVm = new MusicVideoDetailsViewModel();
-            vidDetailsVm.SetVideo(_video);
-            vidDetailsVm.AnalyzeVideo();
-            await vidDetailsVm.LoadThumbnail();
+            var vidDetailsVm = await MusicVideoDetailsViewModel.CreateViewModel(_video);
             App.GetVM().GetParentView().CurrentContent = vidDetailsVm;
         }
         else

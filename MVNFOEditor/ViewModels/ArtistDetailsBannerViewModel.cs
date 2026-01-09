@@ -58,21 +58,6 @@ public partial class ArtistDetailsBannerViewModel : ObservableObject
         _detailsVM.AddResult(typeof(VideoResult));
     }
 
-    public void AddYTMVideo()
-    {
-        _detailsVM.AddYTMVideo();
-    }
-
-    public void AddAppleMusicVideo()
-    {
-        _detailsVM.AddAppleMusicVideo();
-    }
-
-    public void AddManualVideo()
-    {
-        _detailsVM.AddManualVideo();
-    }
-
     public void NavigateBack()
     {
         _parentVM.BackToList();

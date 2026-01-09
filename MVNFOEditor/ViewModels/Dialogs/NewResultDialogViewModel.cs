@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
@@ -35,11 +36,20 @@ public partial class NewResultDialogViewModel : ObservableObject
         SearchSource source = SearchSource.YouTubeMusic)
     {
         NewResultDialogViewModel newVm = new NewResultDialogViewModel(resultType);
-        if (currAlbum != null && currAlbum.Metadata.All(am => am.SourceId != SearchSource.YouTubeMusic))
+        if (currAlbum != null && currAlbum.Metadata.Any(am => am.SourceId != SearchSource.YouTubeMusic))
         {
-            source = SearchSource.AppleMusic;
-            newVm.YtChecked = newVm.ManualChecked = false;
-            newVm.AmChecked = true;
+            if (currAlbum.Metadata.Any(am => am.SourceId == SearchSource.Manual))
+            {
+                source = SearchSource.Manual;
+                newVm.YtChecked = newVm.AmChecked = false;
+                newVm.ManualChecked = true;
+            }
+            else
+            {
+                source = SearchSource.AppleMusic;
+                newVm.YtChecked = newVm.ManualChecked = false;
+                newVm.AmChecked = true;
+            }
         }
         newVm.SetupUi(resultType, source, currArtist, currAlbum);
         newVm.currentSource = source;
@@ -151,6 +161,7 @@ public partial class NewResultDialogViewModel : ObservableObject
                 DisableCheckers(currArtist);
                 Steps = ["Select Album", "Select Videos"];
                 SetProcessing(true, "Getting Albums...");
+                StepIndex++;
                 CurrentContent = await AlbumResultsSetup(currArtist, source);
                 //Results will be loading in
                 SetProcessing(false);
@@ -183,6 +194,7 @@ public partial class NewResultDialogViewModel : ObservableObject
                     CloseDialog();
                     return;
                 }
+                StepIndex++;
                 CurrentContent = vidResultsView;
                 //Results will be loading in
                 SetProcessing(false);
@@ -190,10 +202,6 @@ public partial class NewResultDialogViewModel : ObservableObject
         }
     }
 
-    private void SetupManualVideo()
-    {
-        
-    }
     public void ShowNav(object? sender, bool result)
     {
         NavVisible = result;
@@ -243,19 +251,29 @@ public partial class NewResultDialogViewModel : ObservableObject
 
     private void DisableCheckers(Album album)
     {
+        if (currentSource == SearchSource.Manual)
+        {
+            AmEnabled = YtEnabled = false;
+            return;
+        }
         AmEnabled = album.GetSources().Contains(SearchSource.AppleMusic);
         YtEnabled = album.GetSources().Contains(SearchSource.YouTubeMusic);
-        if (!YtEnabled)
-        {
-            YtChecked = ManualChecked = false;
-            AmEnabled = true;
-        }
     }
 
     private void DisableCheckers(Artist artist)
     {
+        if (currentSource == SearchSource.Manual)
+        {
+            AmEnabled = YtEnabled = false;
+            return;
+        }
         AmEnabled = artist.GetSources().Contains(SearchSource.AppleMusic);
         YtEnabled = artist.GetSources().Contains(SearchSource.YouTubeMusic);
+        if (AmEnabled && !YtEnabled)
+        {
+            YtChecked = false;
+            AmChecked = true;
+        }
     }
 
     private void DisableCheckers(SearchSource selectedSource)
@@ -331,13 +349,19 @@ public partial class NewResultDialogViewModel : ObservableObject
                     SetProcessing(false);
                     return;
                 }
+                else if (selectedResult.Source !=
+                         vidResultsVm.SearchResults[0].GetResult().Source)
+                {
+                    DisplayError(this, $"{selectedResult.Source.ToString()} had no videos, moved to {vidResultsVm.SearchResults[0].GetResult().Source.ToString()}");
+                    DisableCheckers(vidResultsVm.SearchResults[0].GetResult().Source);
+                }
                 CurrentContent = vidResultsVm;
                 break;
             case VideoResultsViewModel videoList:
                 //Store the current list so we can return to it later
                 var currentList = CurrentContent;
                 //Setup Loading
-                var waveVm = new WaveProgressViewModel(circleVisible: true);
+                var waveVm = new WaveProgressViewModel();
                 //Cycle Through Results
                 selectedResult = videoList.SelectedVideos[0].GetResult();
                 ShowStepper = NavVisible = false;
@@ -347,10 +371,11 @@ public partial class NewResultDialogViewModel : ObservableObject
                     case SearchSource.YouTubeMusic:
                         //YTDLSharp's download progress is broken right now so we just have to have an infinite spinning wheel
                         waveVm.IsIndeterminate = waveVm.CircleVisible = true;
-                        waveVm.WaveVisible = false;
+                        waveVm.IsTextVisible = false;
                         await DownloadYTM(videoList.SelectedVideos, waveVm);
                         break;
                     case SearchSource.AppleMusic:
+                        waveVm.WaveVisible = true;
                         await DownloadAM(videoList.SelectedVideos, waveVm);
                         break;
                 }
@@ -382,12 +407,11 @@ public partial class NewResultDialogViewModel : ObservableObject
                 CurrentContent = new ManualMusicVideoViewModel(manualAlbum);
                 break;
             case ManualMusicVideoViewModel vidAlbum:
-                /*
                 //Setup Loading
-                var ytWave = new WaveProgressViewModel(circleVisible: true);
+                var ytWave = new WaveProgressViewModel();
                 var manualList = vidAlbum.ManualItems;
                 //Cycle Through Results
-                selectedResult = manualList[0].
+                selectedResult = manualList[0].GetResult();
                 ShowStepper = NavVisible = false;
                 CurrentContent = ytWave;
                 switch (selectedResult.Source)
@@ -395,15 +419,15 @@ public partial class NewResultDialogViewModel : ObservableObject
                     case SearchSource.YouTubeMusic:
                         //YTDLSharp's download progress is broken right now so we just have to have an infinite spinning wheel
                         ytWave.IsIndeterminate = ytWave.CircleVisible = true;
-                        ytWave.WaveVisible = false;
-                        await DownloadYTM(videoList.SelectedVideos, ytWave);
+                        ytWave.IsTextVisible = false;
+                        //await DownloadYTM(vidAlbum.ManualItems, ytWave);
                         break;
-                    case SearchSource.AppleMusic:
-                        await DownloadAM(videoList.SelectedVideos, ytWave);
+                    case SearchSource.Manual:
+                        await ProcessManualVideo(manualList, ytWave);
                         break;
                 }
                 ShowStepper = NavVisible = true;
-                */
+                
                 break;
         }
         if (selectedResult != null)
@@ -418,12 +442,21 @@ public partial class NewResultDialogViewModel : ObservableObject
     {
         switch (CurrentContent)
         {
-            case ArtistResultsViewModel artistList:
+            case ArtistResultsViewModel _:
                 CurrentContent = new ManualArtistViewModel();
                 break;
             case AlbumResultsViewModel albumList:
+                CurrentContent = new ManualAlbumViewModel(albumList.CurrentArtist);
                 break;
             case VideoResultsViewModel videoList:
+                if (videoList.CurrentAlbum == null)
+                {
+                    CurrentContent = new ManualMusicVideoViewModel(videoList.CurrentArtist);
+                }
+                else
+                {
+                    CurrentContent = new ManualMusicVideoViewModel(videoList.CurrentAlbum);
+                }
                 break;
         }
     }
@@ -432,6 +465,9 @@ public partial class NewResultDialogViewModel : ObservableObject
     {
         switch (CurrentContent)
         {
+            case ManualArtistViewModel _:
+                CurrentContent = ArtistResultsSetup();
+                break;
             case ArtistResultsViewModel artistList:
                 artistList.SelectedSource = currentSource;
                 if (artistList.SearchInput != "")
@@ -452,52 +488,48 @@ public partial class NewResultDialogViewModel : ObservableObject
         }
     }
     
-    #region Download Handlers
+    #region Result Handlers
     private async Task<bool> DownloadYTM(ObservableCollection<VideoResultViewModel> videoList, WaveProgressViewModel waveVm)
     {
+        //Check that the Artist Folder exists before proceeding
+        if (!Directory.Exists($"{App.GetSettings().RootFolder}\\{videoList[0].Artist.Name}"))
+            Directory.CreateDirectory($"{App.GetSettings().RootFolder}\\{videoList[0].Artist.Name}");
         for (int i = 0; i < videoList.Count(); i++)
         {
             var selectedVideo = videoList[i];
-            //Check that the Artist Folder exists before proceeding
-            if (!Directory.Exists($"{App.GetSettings().RootFolder}\\{selectedVideo.Artist.Name}"))
-                Directory.CreateDirectory($"{App.GetSettings().RootFolder}\\{selectedVideo.Artist.Name}");
             waveVm.HeaderText =
                 $"Downloading {selectedVideo.Title} {i + 1}/{videoList.Count}";
-            //var progress = new Progress<DownloadProgress>(p => waveVm.UpdateProgress(p.Progress));
-            //var downResult = await App.GetYTDLHelper().DownloadVideo(selectedVideo, progress);
-            var downResult = await App.GetYTDLHelper().DownloadVideo(selectedVideo);
-            if (downResult.Success)
+            if (!await DownloadYT(selectedVideo, waveVm))
             {
-                await selectedVideo.GenerateNFO(downResult.Data, SearchSource.YouTubeMusic).ContinueWith(t =>
-                {
-                    if (t.IsCompletedSuccessfully)
-                    {
-                        selectedVideo.HandleDownload();
-                        waveVm.UpdateProgress(0);
-                    }
-                    else
-                    {
-                        ToastHelper.ShowError("NFO Error", $"Something went wrong with generating the NFO for {selectedVideo.Title}");
-                        Log.Error($"Error in AddMusicVideo->SaveMultipleVideos->GenerateNFO: {selectedVideo.GetResult().SourceId} failed");
-                        foreach (var err in downResult.ErrorOutput) Log.Error(err);
-                    }
-                }, TaskScheduler.FromCurrentSynchronizationContext());
-            }
-            else
-            {
-                ToastHelper.ShowError("Download Error", $"Something went wrong with downloading {selectedVideo.Title}.");
-                Log.Error($"Error in AddMusicVideo->SaveMultipleVideos: {selectedVideo.GetResult().SourceId} failed");
-                foreach (var err in downResult.ErrorOutput) Log.Error(err);
-                if (downResult.ErrorOutput.Contains("Signature extraction failed"))
-                {
-                    ToastHelper.ShowError("YT-DLP Outdated", $"Yt-dlp version may be outdated, please confirm you are using latest version.", NotificationType.Warning);
-                }
-                break;
+                return false;
             }
         }
         return true;
     }
 
+    private async Task<bool> ProcessManualVideo(ObservableCollection<VideoResultViewModel> videoList,
+        WaveProgressViewModel waveVm)
+    {
+        //Check that the Artist Folder exists before proceeding
+        if (!Directory.Exists($"{App.GetSettings().RootFolder}\\{videoList[0].Artist.Name}"))
+            Directory.CreateDirectory($"{App.GetSettings().RootFolder}\\{videoList[0].Artist.Name}");
+        for (int i = 0; i < videoList.Count(); i++)
+        {
+            var selectedVideo = videoList[i];
+            //You can manually add a YT video so we need to check for that
+            if (selectedVideo.GetResult().Source == SearchSource.YouTubeMusic)
+            {
+                await DownloadYT(selectedVideo, waveVm);
+            }
+
+            await selectedVideo.GenerateNFO(selectedVideo.GetResult().VidPath);
+        }
+
+        return true;
+    }
+    #endregion
+    
+    #region Download Handler
     private async Task<bool> DownloadAM(ObservableCollection<VideoResultViewModel> videoList, WaveProgressViewModel waveVm)
     {
         for (int i = 0; i < videoList.Count(); i++)
@@ -512,9 +544,7 @@ public partial class NewResultDialogViewModel : ObservableObject
             switch (downResult)
             {
                 case AppleMusicDownloadResponse.Success:
-                    await selectedVideo.GenerateNFO(
-                        $"{App.GetSettings().RootFolder}/{selectedVideo.Artist.Name}/{selectedVideo.Title}.mp4",
-                        SearchSource.AppleMusic);
+                    await selectedVideo.GenerateNFO($"{App.GetSettings().RootFolder}/{selectedVideo.Artist.Name}/{selectedVideo.Title}.mp4");
                     selectedVideo.HandleDownload();
                     break;
                 case AppleMusicDownloadResponse.Failure:
@@ -532,6 +562,35 @@ public partial class NewResultDialogViewModel : ObservableObject
             }
         }
 
+        return true;
+    }
+    private async Task<bool> DownloadYT(VideoResultViewModel currVid, WaveProgressViewModel waveVm)
+    {
+        var downResult = await App.GetYTDLHelper().DownloadVideo(currVid);
+        if (!downResult.Success)
+        {
+            ToastHelper.ShowError("Download Error", $"Something went wrong with downloading {currVid.Title}.");
+            Log.Error($"Error in AddMusicVideo->SaveMultipleVideos: {currVid.GetResult().SourceId} failed");
+            foreach (var err in downResult.ErrorOutput) Log.Error(err);
+            if (downResult.ErrorOutput.Contains("Signature extraction failed"))
+            {
+                ToastHelper.ShowError("YT-DLP Outdated", $"Yt-dlp version may be outdated, please confirm you are using latest version.", NotificationType.Warning);
+            }
+
+            return false;
+        }
+        await currVid.GenerateNFO(downResult.Data).ContinueWith(t =>
+        {
+            if (!t.IsCompletedSuccessfully)
+            {
+                
+                ToastHelper.ShowError("NFO Error", $"Something went wrong with generating the NFO for {currVid.Title}");
+                Log.Error($"Error in AddMusicVideo->SaveMultipleVideos->GenerateNFO: {currVid.GetResult().SourceId} failed");
+                foreach (var err in downResult.ErrorOutput) Log.Error(err);
+            }
+            currVid.HandleDownload();
+            waveVm.UpdateProgress(0);
+        }, TaskScheduler.FromCurrentSynchronizationContext());
         return true;
     }
     #endregion

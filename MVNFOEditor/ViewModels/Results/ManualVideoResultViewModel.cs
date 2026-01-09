@@ -17,29 +17,42 @@ public partial class ManualVideoResultViewModel : ObservableObject
     private static ISettings _settings;
     private readonly Album? _album;
     private readonly MusicDbContext _dbContext;
-    private readonly ManualVideoResult _result;
+    private readonly VideoResult _result;
 
     [ObservableProperty] private string _borderColor;
     [ObservableProperty] private string _downloadBtnText;
     [ObservableProperty] private bool _downloadEnabled;
     [ObservableProperty] private Bitmap? _thumbnail;
     
-    public ManualVideoResultViewModel(ManualVideoResult result)
+    public ManualVideoResultViewModel(VideoResult result)
     {
         _result = result;
         _dbContext = App.GetDBContext();
         _settings = App.GetSettings();
         _album = result.Album;
     }
+    public static async Task<ManualVideoResultViewModel> CreateViewModel(VideoResult result)
+    {
+        var newVm = new ManualVideoResultViewModel(result);
+        await newVm.LoadThumbnail();
+        return newVm;
+    }
 
     public string Title => _result.Name;
+    public string Year => _result.Year;
     public Artist Artist => _result.Artist;
     public Album? Album => _result.Album;
     public string? Duration => _result.Duration;
 
     public event EventHandler<ManualVideoResult> ProgressStarted;
+    public event EventHandler RemoveCallback;
 
-    public ManualVideoResult HandleDownload()
+    public void RemoveListing()
+    {
+        RemoveCallback?.Invoke(this, EventArgs.Empty);
+    }
+
+    public VideoResult HandleDownload()
     {
         BorderColor = "Green";
         DownloadEnabled = false;
@@ -47,7 +60,7 @@ public partial class ManualVideoResultViewModel : ObservableObject
         return _result;
     }
 
-    public ManualVideoResult GetResult()
+    public VideoResult GetResult()
     {
         return _result;
     }
@@ -58,59 +71,5 @@ public partial class ManualVideoResultViewModel : ObservableObject
         {
             Thumbnail = new Bitmap(imageStream);
         }
-    }
-
-    public async Task SaveThumbnailAsync(string folderPath)
-    {
-        var bitmap = Thumbnail;
-        await Task.Run(() =>
-        {
-            using (var fs = _result.SaveThumbnailBitmapStream(folderPath))
-            {
-                bitmap.Save(fs);
-            }
-        });
-    }
-
-    public async Task<int> GenerateNFO(string filePath, SearchSource source)
-    {
-        switch (source)
-        {
-            case SearchSource.YouTubeMusic:
-                return await GenerateNFO_YTM(filePath);
-        }
-
-        return 0;
-    }
-    private async Task<int> GenerateNFO_YTM(string filePath)
-    {
-        var newMV = new MusicVideo();
-        newMV.title = _result.Name;
-        newMV.videoID = _result.SourceId;
-        newMV.artist = _result.Artist;
-        if (_album != null)
-        {
-            newMV.album = _album;
-            newMV.year = _album.Year;
-        }
-        else if (_result.VidData != null)
-        {
-            if (_result.VidData.ReleaseYear != null)
-                newMV.year = _result.VidData.ReleaseYear;
-            else
-                newMV.year = ((DateTime)_result.VidData.UploadDate!).Year.ToString();
-        }
-
-        newMV.source = "youtube";
-        newMV.nfoPath = $"{_settings.RootFolder}/{newMV.artist.Name}/{newMV.title}.nfo";
-
-        await SaveThumbnailAsync($"{_settings.RootFolder}/{newMV.artist.Name}");
-        newMV.thumb = $"{newMV.title}.jpg";
-
-        newMV.vidPath = filePath;
-
-        newMV.SaveToNFO();
-        _dbContext.MusicVideos.Add(newMV);
-        return await _dbContext.SaveChangesAsync();
     }
 }

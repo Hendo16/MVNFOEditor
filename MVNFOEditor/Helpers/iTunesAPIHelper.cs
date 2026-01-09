@@ -174,7 +174,7 @@ public class iTunesAPIHelper
             var newVideo = new VideoResult(video, artist, artUrl);
 
             //Create the VM for the result
-            var resultVM = new VideoResultViewModel(newVideo);
+            var resultVM = await VideoResultViewModel.CreateViewModel(newVideo);
 
             //Check if the song already exists in the DataBase
             if (songs != null && songs.Exists(s =>
@@ -227,7 +227,7 @@ public class iTunesAPIHelper
                 var artUrl = GetHighQualityArt(matchedVideo);
                 var newVideo = new VideoResult(matchedVideo, album.Artist, artUrl);
                 //Create the VM for the result
-                var resultVM = new VideoResultViewModel(newVideo, album);
+                var resultVM = await VideoResultViewModel.CreateViewModel(newVideo, album);
                 var songs = App.GetDBContext().MusicVideos.Where(mv => mv.album.Id == album.Id).ToList();
 
                 //Check if the song already exists in the DataBase

@@ -82,6 +82,7 @@ public partial class SettingsViewModel : PageBase
 
     public async void AppleMusicDownloadTesting()
     {
+        /*
         var _amHelper = await AppleMusicDLHelper.CreateHelper();
         var waveVM = new WaveProgressViewModel();
         waveVM.HeaderText = "Downloading Closure - ";
@@ -92,6 +93,7 @@ public partial class SettingsViewModel : PageBase
             "https://filebrowser.hendoserver.com/api/public/dl/zZPhzoAs/b3872530-9952-47e9-924c-81170aa84382/media_server/MusicVideos/Chevelle/Closure.mkv",
             "test.mkv", waveVM);
         App.GetVM().GetDialogManager().DismissDialog();
+        */
     }
 
     public void AMNFOTest()

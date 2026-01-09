@@ -61,25 +61,6 @@ public class AlbumMetadata : IMetadata
 
     public bool? IsExplicit { get; set; }
 
-    [NotMapped]
-    public string SourceIconPath
-    {
-        get
-        {
-            switch (SourceId)
-            {
-                case SearchSource.AppleMusic:
-                    return "./Assets/am-48x48.png";
-                case SearchSource.YouTubeMusic:
-                    return "./Assets/ytm-48x48.png";
-                case SearchSource.Manual:
-                    return "./Assets/manual-48x48.png";
-                default:
-                    return "";
-            }
-        }
-    }
-
     public void GetBrowseData()
     {
         throw new NotImplementedException();

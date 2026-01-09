@@ -19,6 +19,7 @@ public partial class EditArtistDialogViewModel : ObservableObject
     [ObservableProperty] private List<Bitmap> _banners = new();
     [ObservableProperty] private Bitmap _selectedBanner;
     [ObservableProperty] private bool _showBannerButtons;
+    [ObservableProperty] private bool _showMetadata = true;
     [ObservableProperty] private bool _amEnabled;
     [ObservableProperty] private bool _ytEnabled;
     [ObservableProperty] private string _description;
@@ -32,6 +33,10 @@ public partial class EditArtistDialogViewModel : ObservableObject
         Description = artist.Description ?? "";
         YtEnabled = Artist.Metadata.Any(am => am.SourceId == SearchSource.YouTubeMusic);
         AmEnabled = Artist.Metadata.Any(am => am.SourceId == SearchSource.AppleMusic);
+        if (!YtEnabled && !AmEnabled)
+        {
+            ShowMetadata = false;
+        }
     }
 
 
@@ -39,7 +44,10 @@ public partial class EditArtistDialogViewModel : ObservableObject
     {
         Artist.Name = Name;
         Artist.Description = Description;
-        //Artist.UpdateArtistBanner(SelectedBanner);
+        if (ShowMetadata)
+        {
+            Artist.UpdateArtistBanner(SelectedBanner);
+        }
         var success = await App.GetDBHelper().UpdateArtist(Artist);
         if (success == 0) Debug.WriteLine(success);
         //Refresh View

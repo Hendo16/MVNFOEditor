@@ -5,6 +5,7 @@ namespace MVNFOEditor.ViewModels;
 
 public partial class WaveProgressViewModel : ObservableObject
 {
+    [ObservableProperty] public bool _isTextVisible;
     [ObservableProperty] private bool _circleVisible;
     private string? _headerText;
     [ObservableProperty] public bool _isIndeterminate;
@@ -14,10 +15,8 @@ public partial class WaveProgressViewModel : ObservableObject
     public WaveProgressViewModel(bool isIndeterminate = false, bool waveVisible = false, bool circleVisible = false)
     {
         IsIndeterminate = isIndeterminate;
-        CircleVisible = circleVisible && !waveVisible;
-        WaveVisible = waveVisible && !circleVisible;
-
-        if (!circleVisible && !waveVisible) WaveVisible = true;
+        CircleVisible = circleVisible;
+        WaveVisible = waveVisible;
     }
 
     public double ProgressValue

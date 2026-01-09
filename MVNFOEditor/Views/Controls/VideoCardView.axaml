@@ -27,6 +27,18 @@
                        IsVisible="{Binding Thumbnail, Converter={x:Static ObjectConverters.IsNull}}">
                     <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
                 </Panel>
+                <ItemsControl ItemsSource="{Binding SourceIcons}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Image Source="{Binding}" Width="48" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </Panel>
         </Border>
         <TextBlock Classes="h4" HorizontalAlignment="Center" Text="{Binding Title}" />

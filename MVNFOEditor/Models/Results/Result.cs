@@ -23,12 +23,12 @@ public abstract class Result(string name, string url, SearchSource source, strin
             ToastHelper.ShowError("Cover Error", "Couldn't fetch album artwork, please check logs");
         }
 
-        return File.OpenRead("./Assets/defaultBanner.jpg");
+        return File.OpenRead("./Assets/defaultBanner.png");
     }
 
-    public Stream SaveThumbnailBitmapStream(string folderPath)
+    public Stream SaveThumbnailBitmapStream(string folderPath, string source)
     {
         if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-        return File.OpenWrite(folderPath + $"/{Name}.jpg");
+        return File.OpenWrite(folderPath + $"/{Name}-{source}.jpg");
     }
 }

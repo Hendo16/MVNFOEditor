@@ -116,7 +116,7 @@ public class YTMusicHelper
                 vid.TopRes = topRes.QualityLabel;
             }
 
-            var resultVM = new VideoResultViewModel(vid, dbAlbum);
+            var resultVM = await VideoResultViewModel.CreateViewModel(vid, dbAlbum);
             var songs = App.GetDBContext().MusicVideos.Where(mv => mv.album.Id == dbAlbum.Id).ToList();
             //Check if the song already exists in the DataBase
             if (songs != null &&
@@ -163,7 +163,7 @@ public class YTMusicHelper
                 result.TopRes = topRes.QualityLabel;
             }
             */
-            var resultVM = new VideoResultViewModel(result);
+            var resultVM = await VideoResultViewModel.CreateViewModel(result);
             //Check if the song already exists in the DataBase
             if (songs != null &&
                 songs.Exists(s => s.videoID == result.SourceId || s.title.ToLower() == parsedTitle.ToLower()))

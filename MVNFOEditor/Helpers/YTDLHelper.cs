@@ -39,7 +39,7 @@ public class YTDLHelper
         if (outputFolder.Last() == '.') outputFolder = outputFolder.Remove(outputFolder.Length - 1, 1);
         _settings.RestrictFilenames = true;
         _settings.Paths = outputFolder;
-        _settings.Output = video.Title + ".%(ext)s";
+        _settings.Output = $"{video.Title}-{SearchSource.YouTubeMusic.ToString()}.%(ext)s";
         _settings.Format = GetFormat();
 
         return await ytdl.RunVideoDownload($"https://www.youtube.com/watch?v={video.GetResult().SourceId}", overrideOptions: _settings);

@@ -17,12 +17,7 @@ public class MusicVideo
     public string nfoPath { get; set; }
     public string year { get; set; }
     public string? videoID { get; set; }
-    public string? userrating { get; set; }
-    public string? track { get; set; }
-    public string? studio { get; set; }
-    public string? premiered { get; set; }
-    public string? source { get; set; }
-    public string? musicBrainzArtistID { get; set; }
+    public SearchSource source { get; set; }
     public List<Genre> Genres { get; } = [];
 
     public async Task<Stream?> LoadThumbnailBitmapAsync()
@@ -71,7 +66,7 @@ public class MusicVideo
         parentEl.Add(thumbEl);
 
         var sourceEl = new XElement("source");
-        sourceEl.Value = source;
+        sourceEl.Value = source.ToString();
         parentEl.Add(sourceEl);
 
         var videoIDEl = new XElement("videoID");

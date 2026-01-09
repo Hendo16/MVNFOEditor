@@ -9,6 +9,20 @@ namespace MVNFOEditor.Models;
 
 public class VideoResult : Result
 {
+    
+    public VideoResult(string name, string year, string artUrl, string id, string vidPath, Artist currArt, Album? currAlb = null, VideoData? vidData = null, SearchSource source = SearchSource.Manual) :
+        base(name, artUrl, source, id)
+    {
+        Artist = currArt;
+        Album = currAlb;
+        Year = year;
+        VidPath = vidPath;
+        if (vidData != null)
+        {
+            Duration = vidData.Duration.ToString();
+        }
+    }
+    
     public VideoResult(Track track, Artist artist) :
         base(track.Title, track.Thumbnails.Last().URL, SearchSource.YouTubeMusic, track.VideoId)
     {
@@ -34,9 +48,12 @@ public class VideoResult : Result
     }
 
     public Artist Artist { get; set; }
+    public Album? Album { get; set; }
+    public string VidPath { get; set; }
     public string? Year { get; set; }
     public bool? IsExplicit { get; set; }
     public string? Duration { get; set; }
     public string? TopRes { get; set; }
     public string VideoURL { get; set; }
+    public event EventHandler RemoveCallback;
 }

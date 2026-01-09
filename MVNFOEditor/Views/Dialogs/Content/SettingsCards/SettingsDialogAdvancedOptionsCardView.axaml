@@ -9,6 +9,7 @@
              x:DataType="vm:SettingsDialogViewModel">
 
     <UserControl.Resources>
+        <controls:PropertyGridTemplateSelector x:Key="PropertyGridTemplateSelector" UseSukiHost="True" />
     </UserControl.Resources>
 
     <WrapPanel HorizontalAlignment="Center" Classes="PageContainer" Orientation="Horizontal">
@@ -19,23 +20,7 @@
                         <StaticResource ResourceKey="PropertyGridTemplateSelector" />
                     </controls:PropertyGrid.DataTemplates>
                 </controls:PropertyGrid>
-
             </ScrollViewer>
         </controls:GlassCard>
-        <!--
-  <controls:GroupBox BorderBrush="Black">
-    <controls:GroupBox.Header>
-      <TextBlock Classes="h3" Text="Advanced Options"/>
-    </controls:GroupBox.Header>
-    <UniformGrid Rows="3">
-      <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="Local Thumbnail Second" Text="{Binding ScreenshotSecond}"/>
-      <TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="Seconds into local video that a thumbnail will be generated"/>
-      <ComboBox VerticalAlignment="Center" HorizontalAlignment="Left" PlaceholderText="Resolution" ItemsSource="{Binding Resolutions}" SelectedItem="{Binding SelectedResolution}"/>
-      <TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="Desired Resolution for YTDL"/>
-      <TextBox Width="200" VerticalAlignment="Center" HorizontalAlignment="Left" Watermark="YTDL Format Options" Name="YTDLFormat" Text="{Binding YtdlFormat}"/>
-      <TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="Outline custom settings for YouTubeDL"/>
-    </UniformGrid>
-  </controls:GroupBox>
-  -->
     </WrapPanel>
 </UserControl>

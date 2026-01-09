@@ -19,6 +19,7 @@
                                             Value="{Binding ProgressValue}">
                     <TextBlock Margin="0,2,0,0"
                                Classes="h3"
+                               IsVisible="{Binding IsTextVisible}"
                                Text="{Binding ProgressValue, StringFormat={}{0:#0}%}" />
                 </controls:CircleProgressBar>
 

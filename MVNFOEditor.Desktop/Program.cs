@@ -44,8 +44,6 @@ internal class Program
                 hch.UseProxy = true;
             }));
         */
-        if (OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() || OperatingSystem.IsLinux())
-            app.UseManagedSystemDialogs();
         return app;
     }
 }

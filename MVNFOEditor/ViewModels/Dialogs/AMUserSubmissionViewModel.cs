@@ -14,7 +14,10 @@ public partial class AMUserSubmissionViewModel(ISukiDialog dialog) : ObservableO
     {
         Console.WriteLine(Token);
         var valid = await App.GetAppleMusicDLHelper().UpdateUserToken(Token);
-        if (valid) dialog.Dismiss();
+        if (valid)
+        {
+            dialog.Dismiss();
+        }
     }
 
     [RelayCommand]

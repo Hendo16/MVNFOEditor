@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using M3U8Parser.Attributes.Name;
 using MVNFOEditor.ViewModels;
 
 namespace MVNFOEditor.Views;
@@ -14,8 +15,8 @@ public partial class AlbumView : UserControl
 
     public void TriggerSongList(object sender, PointerPressedEventArgs e)
     {
-        if (DataContext is AlbumViewModel viewModel && !songList.IsVisible) viewModel.GenerateSongs();
-        songList.IsVisible = !songList.IsVisible;
+        if (DataContext is AlbumViewModel viewModel && !VideoList.IsVisible) viewModel.GenerateSongs();
+        VideoList.IsVisible = !VideoList.IsVisible;
     }
 
     public void SongClick(object sender, RoutedEventArgs e)

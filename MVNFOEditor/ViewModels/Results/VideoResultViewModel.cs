@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using FFMpegCore;
 using log4net;
 using MVNFOEditor.DB;
 using MVNFOEditor.Helpers;
@@ -14,46 +16,34 @@ namespace MVNFOEditor.ViewModels;
 public partial class VideoResultViewModel : ObservableObject
 {
     private static readonly ILog Log = LogManager.GetLogger(typeof(VideoResultViewModel));
-    private static ISettings _settings;
     private readonly Album? _album;
-    private readonly MusicDbContext _dbContext;
     private readonly VideoResult _result;
-    private readonly YTDLHelper _ytDLHelper;
 
     [ObservableProperty] private string _borderColor;
     [ObservableProperty] private string _downloadBtnText;
     [ObservableProperty] private bool _downloadEnabled;
-    private iTunesAPIHelper _iTunesApiHelper;
-    private YTMusicHelper _musicHelper;
     [ObservableProperty] private Bitmap? _thumbnail;
 
-    public VideoResultViewModel(VideoResult result)
+    private VideoResultViewModel(VideoResult result, Album? album = null)
     {
         _result = result;
-        _musicHelper = App.GetYTMusicHelper();
-        _ytDLHelper = App.GetYTDLHelper();
-        _iTunesApiHelper = App.GetiTunesHelper();
-        _dbContext = App.GetDBContext();
-        _settings = App.GetSettings();
-        _album = null;
+        if (album != null)
+        {
+            _album = album;
+        }
     }
-
-    public VideoResultViewModel(VideoResult result, Album album)
+    
+    public static async Task<VideoResultViewModel> CreateViewModel(VideoResult result, Album? album = null)
     {
-        _result = result;
-        _musicHelper = App.GetYTMusicHelper();
-        _ytDLHelper = App.GetYTDLHelper();
-        _iTunesApiHelper = App.GetiTunesHelper();
-        _dbContext = App.GetDBContext();
-        _settings = App.GetSettings();
-        _album = album;
+        var newVm = new VideoResultViewModel(result, album);
+        await newVm.LoadThumbnail();
+        return newVm;
     }
 
     public string Title => _result.Name;
     public Artist Artist => _result.Artist;
     public string Duration => _result.Duration;
     public string TopRes => _result.TopRes;
-    public string VideoURL => _result.VideoURL;
 
     public event EventHandler<VideoResultViewModel> ProgressStarted;
 
@@ -83,24 +73,56 @@ public partial class VideoResultViewModel : ObservableObject
         var bitmap = Thumbnail;
         await Task.Run(() =>
         {
-            using (var fs = _result.SaveThumbnailBitmapStream(folderPath))
+            using (var fs = _result.SaveThumbnailBitmapStream(folderPath, _result.Source.ToString()))
             {
                 bitmap.Save(fs);
             }
         });
     }
 
-    public async Task<int> GenerateNFO(string filePath, SearchSource source)
+    public async Task<int> GenerateNFO(string filePath)
     {
-        switch (source)
+        switch (_result.Source)
         {
             case SearchSource.YouTubeMusic:
                 return await GenerateNFO_YTM(filePath);
             case SearchSource.AppleMusic:
                 return await GenerateNFO_AM(filePath);
+            case SearchSource.Manual:
+                return await GenerateNFO_Manual(filePath);
         }
 
         return 0;
+    }
+
+    private async Task<int> GenerateNFO_Manual(string filePath)
+    {
+        var newMV = new MusicVideo();
+        newMV.title = _result.Name;
+        newMV.artist = _result.Artist;
+        if (_album != null)
+        {
+            newMV.album = _album;
+            newMV.year = _album.Year;
+        }
+        else if (_result.Year != null)
+        {
+            newMV.year = _result.Year;
+        }
+
+        newMV.source = SearchSource.Manual;
+        newMV.nfoPath = $"{App.GetSettings().RootFolder}/{newMV.artist.Name}/{newMV.title}.nfo";
+
+        var newImagePath = $"{App.GetSettings().RootFolder}/{newMV.artist.Name}/{newMV.title}.png";
+        FFMpeg.Snapshot(filePath, newImagePath, new Size(400, 225),
+            TimeSpan.FromSeconds(App.GetSettings().ScreenshotSecond));
+        newMV.thumb = $"{newMV.title}.png";
+
+        newMV.vidPath = filePath;
+        
+        newMV.SaveToNFO();
+        App.GetDBContext().MusicVideos.Add(newMV);
+        return await App.GetDBContext().SaveChangesAsync();
     }
 
     private async Task<int> GenerateNFO_AM(string filePath)
@@ -119,32 +141,32 @@ public partial class VideoResultViewModel : ObservableObject
             newMV.year = _result.Year;
         }
 
-        newMV.source = "Apple Music";
-        newMV.nfoPath = $"{_settings.RootFolder}/{newMV.artist.Name}/{newMV.title}.nfo";
+        newMV.source = SearchSource.AppleMusic;
+        newMV.nfoPath = $"{App.GetSettings().RootFolder}/{newMV.artist.Name}/{newMV.title}-{newMV.source.ToString()}.nfo";
 
-        await SaveThumbnailAsync($"{_settings.RootFolder}/{newMV.artist.Name}");
-        newMV.thumb = $"{newMV.title}.jpg";
+        await SaveThumbnailAsync($"{App.GetSettings().RootFolder}/{newMV.artist.Name}");
+        newMV.thumb = $"{newMV.title}-{SearchSource.YouTubeMusic.ToString()}.jpg";
 
         newMV.vidPath = filePath;
 
         //Handle Genres
-        var baseGenre = _dbContext.AppleMusicVideoMetadata.First(am => am.id == int.Parse(_result.SourceId)).genre;
-        if (!_dbContext.Genres.Any(g => g.Name == baseGenre))
+        var baseGenre = App.GetDBContext().AppleMusicVideoMetadata.First(am => am.id == int.Parse(_result.SourceId)).genre;
+        if (!App.GetDBContext().Genres.Any(g => g.Name == baseGenre))
         {
             var newGenre = new Genre(baseGenre, newMV);
-            _dbContext.Genres.Add(newGenre);
+            App.GetDBContext().Genres.Add(newGenre);
         }
 
         newMV.SaveToNFO();
-        _dbContext.MusicVideos.Add(newMV);
-        return await _dbContext.SaveChangesAsync();
+        App.GetDBContext().MusicVideos.Add(newMV);
+        return await App.GetDBContext().SaveChangesAsync();
     }
 
     private async Task<int> GenerateNFO_YTM(string filePath)
     {
         var newMV = new MusicVideo();
         var vidData =
-            await _ytDLHelper.GetVideoInfo($"https://www.youtube.com/watch?v={_result.SourceId}");
+            await App.GetYTDLHelper().GetVideoInfo($"https://www.youtube.com/watch?v={_result.SourceId}");
         newMV.title = _result.Name;
         newMV.videoID = _result.SourceId;
         newMV.artist = _result.Artist;
@@ -162,17 +184,17 @@ public partial class VideoResultViewModel : ObservableObject
                 newMV.year = ((DateTime)vidData.UploadDate).Year.ToString();
         }
 
-        newMV.source = "youtube";
-        newMV.nfoPath = $"{_settings.RootFolder}/{newMV.artist.Name}/{newMV.title}.nfo";
+        newMV.source = SearchSource.YouTubeMusic;
+        newMV.nfoPath = $"{App.GetSettings().RootFolder}/{newMV.artist.Name}/{newMV.title}-{newMV.source.ToString()}.nfo";
 
-        await SaveThumbnailAsync($"{_settings.RootFolder}/{newMV.artist.Name}");
-        newMV.thumb = $"{newMV.title}.jpg";
+        await SaveThumbnailAsync($"{App.GetSettings().RootFolder}/{newMV.artist.Name}");
+        newMV.thumb = $"{newMV.title}-{SearchSource.YouTubeMusic.ToString()}.jpg";
 
         newMV.vidPath = filePath;
 
         newMV.SaveToNFO();
-        _dbContext.MusicVideos.Add(newMV);
-        return await _dbContext.SaveChangesAsync();
+        App.GetDBContext().MusicVideos.Add(newMV);
+        return await App.GetDBContext().SaveChangesAsync();
     }
 
     protected virtual void OnProgressTrigger()

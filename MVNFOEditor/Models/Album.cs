@@ -87,19 +87,22 @@ public class Album
     {
         if (File.Exists(CachePath + $"/{CleansedTitle()}.jpg"))
             return File.OpenRead(CachePath + $"/{CleansedTitle()}.jpg");
-
         if (ArtURL != null)
         {
-            var data = await NetworkHandler.GetFileData(ArtURL);
-            if (data != null)
+            //ArtURL stores URL and local path, need to check which this is
+            if (RegexHandler.IsLocalFile(ArtURL))
             {
-                return new MemoryStream(data);
+                return File.OpenRead(ArtURL);
+            }
+            
+            byte[]? imageData = await NetworkHandler.GetFileData(ArtURL);
+            if (imageData != null)
+            {
+                return new MemoryStream(imageData);
             }    
             ToastHelper.ShowError("Cover Error", "Couldn't fetch album artwork, please check logs");
-
         }
-
-        return File.OpenRead("./Assets/sddefault.jpg");
+        return File.OpenRead("./Assets/defaultCover.png");
     }
 
     public void SaveManualCover(string path)

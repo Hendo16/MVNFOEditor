@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AvaloniaProject">
+    <option name="projectPerEditor">
+      <map>
+        <entry key="MVNFOEditor/App.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/ResourceDictionary.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Controls/AlbumView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Controls/ManualMVEntry.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Controls/ManualVideoResult.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Controls/VideoCardView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Controls/VideoResultView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Controls/WaveProgressView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/DefaultView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Dialogs/Content/EditArtistDialogView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Dialogs/Content/ManualMusicVideoView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Dialogs/Content/SettingsCards/SettingsDialogAdvancedOptionsCardView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Dialogs/Parent/NewResultDialogView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/MainViews/Content/ArtistDetailsView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/MainViews/Content/MusicVideoDetailsView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+      </map>
+    </option>
+  </component>
+</project>

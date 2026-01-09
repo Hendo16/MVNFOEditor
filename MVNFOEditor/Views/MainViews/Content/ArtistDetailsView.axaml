@@ -57,20 +57,12 @@
                     </controls:GlassCard.Resources>
                     <controls:GlassCard.ContextMenu>
                         <ContextMenu>
-                            <MenuItem Command="{Binding AddYTMVideo}"
-                                      Header="Search YouTube Music">
+                            <MenuItem Command="{Binding AddVideo}"
+                                      Header="Add Video">
                                 <MenuItem.Icon>
                                     <PathIcon Width="15"
                                               Height="15"
-                                              Data="{x:Static sukiContent:Icons.Plus}" />
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Command="{Binding AddManualVideo}"
-                                      Header="Add Manual Single">
-                                <MenuItem.Icon>
-                                    <PathIcon Width="15"
-                                              Height="15"
-                                              Data="{x:Static sukiContent:Icons.CircleOutlinePlus}" />
+                                              Data="{x:Static sukiContent:Icons.ChevronDown}" />
                                 </MenuItem.Icon>
                             </MenuItem>
                         </ContextMenu>

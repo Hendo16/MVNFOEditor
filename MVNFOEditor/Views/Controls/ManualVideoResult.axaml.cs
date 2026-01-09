@@ -2,9 +2,9 @@
 
 namespace MVNFOEditor.Views;
 
-public partial class ManualMVEntry : UserControl
+public partial class ManualVideoResult : UserControl
 {
-    public ManualMVEntry()
+    public ManualVideoResult()
     {
         InitializeComponent();
     }
