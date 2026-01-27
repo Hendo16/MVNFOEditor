@@ -51,6 +51,7 @@
     <PackageReference Include="SimpleInjector" Version="5.5.0" />
     <PackageReference Include="SukiUI" Version="6.0.4-nightly20250916" />
     <PackageReference Include="YoutubeDLSharp" Version="1.1.2" />
+    <PackageReference Include="YtMusicNet" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
