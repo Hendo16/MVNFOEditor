@@ -11,8 +11,10 @@ namespace MVNFOEditor.ViewModels;
 
 public partial class ArtistViewModel : ObservableObject
 {
+    private const int Width = 540;
     private readonly Artist _artist;
     [ObservableProperty] private Bitmap? _cover;
+    [ObservableProperty] private int _coverHeight = 200;
     [ObservableProperty] private int _coverWidth;
     [ObservableProperty] private Bitmap? _largeBanner;
     [ObservableProperty] private List<Bitmap> _sourceIcons = new();
@@ -25,7 +27,7 @@ public partial class ArtistViewModel : ObservableObject
         //Bit hacky, would love something more dynamic but we're likely only ever going to have these 2 sources anyway...
         SourcesAvailable =
             artist.Metadata.Count(am => am.SourceId is SearchSource.YouTubeMusic or SearchSource.AppleMusic) == 1;
-        CoverWidth = 540 / 2;
+        CoverWidth = Width / 2;
     }
 
     public string Name => _artist.Name;
@@ -90,12 +92,12 @@ public partial class ArtistViewModel : ObservableObject
         if (_artist.CardBannerURL != null)
         {
             await using var imageStream = await _artist.LoadCardBannerBitmapAsync();
-            Cover = Bitmap.DecodeToWidth(imageStream, 540);
+            Cover = Bitmap.DecodeToWidth(imageStream, Width);
         }
         else
         {
             await using var imageStream = _artist.LoadLocalCardBannerBitmapAsync();
-            Cover = Bitmap.DecodeToWidth(imageStream, 540);
+            Cover = Bitmap.DecodeToWidth(imageStream, Width);
         }
     }
 

@@ -159,10 +159,6 @@
                     <controls:SettingsLayoutItem.Content>
                         <Grid ColumnDefinitions="*,*,*">
                             <Button Grid.Column="0" Width="100" Content="Save" Command="{Binding SaveChanges}" />
-                            <Button Grid.Column="1" Width="300" Content="Download Popup Test"
-                                    Command="{Binding AppleMusicDownloadTesting}" />
-                            <Button Grid.Column="2" Width="200" Content="AM NFO Save Test"
-                                    Command="{Binding AMNFOTest}" />
                         </Grid>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>

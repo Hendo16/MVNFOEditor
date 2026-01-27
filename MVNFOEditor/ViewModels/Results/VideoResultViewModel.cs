@@ -145,7 +145,7 @@ public partial class VideoResultViewModel : ObservableObject
         newMV.nfoPath = $"{App.GetSettings().RootFolder}/{newMV.artist.Name}/{newMV.title}-{newMV.source.ToString()}.nfo";
 
         await SaveThumbnailAsync($"{App.GetSettings().RootFolder}/{newMV.artist.Name}");
-        newMV.thumb = $"{newMV.title}-{SearchSource.YouTubeMusic.ToString()}.jpg";
+        newMV.thumb = $"{newMV.title}-{newMV.source.ToString()}.jpg";
 
         newMV.vidPath = filePath;
 
@@ -188,9 +188,9 @@ public partial class VideoResultViewModel : ObservableObject
         newMV.nfoPath = $"{App.GetSettings().RootFolder}/{newMV.artist.Name}/{newMV.title}-{newMV.source.ToString()}.nfo";
 
         await SaveThumbnailAsync($"{App.GetSettings().RootFolder}/{newMV.artist.Name}");
-        newMV.thumb = $"{newMV.title}-{SearchSource.YouTubeMusic.ToString()}.jpg";
+        newMV.thumb = $"{newMV.title}-{newMV.source.ToString()}.jpg";
 
-        newMV.vidPath = filePath;
+        newMV.vidPath = filePath.Replace(_result.Name, $"{_result.Name}-{SearchSource.YouTubeMusic.ToString()}");
 
         newMV.SaveToNFO();
         App.GetDBContext().MusicVideos.Add(newMV);

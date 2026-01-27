@@ -7,7 +7,7 @@
                  xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
                  mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
                  x:Class="MVNFOEditor.Views.DefaultView"
-                 Icon="/Assets/avalonia-logo.ico"
+                 Icon="/Assets/icons8-headphones-96.png"
                  x:DataType="vm:DefaultViewModel"
                  BackgroundAnimationEnabled="{Binding AnimationsEnabled}"
                  CanMinimize="{Binding !WindowLocked}"
@@ -35,7 +35,7 @@
             <Image Width="80"
                    Height="80"
                    Margin="30,10,30,30"
-                   Source="/Assets/OIG.N5o-removebg-preview.png"
+                   Source="/Assets/icons8-headphones-96.png"
                    ToolTip.Tip="Side Menu Icon" />
         </suki:SukiSideMenu.HeaderContent>
         <suki:SukiSideMenu.ItemTemplate>

@@ -24,6 +24,7 @@ public partial class VideoResultsViewModel : ObservableObject
     
     [ObservableProperty] private string _searchText = "";
     [ObservableProperty] private ObservableCollection<VideoResultViewModel> _selectedVideos;
+    public event EventHandler<SearchSource> ChangeSource;
     
     
     public Artist CurrentArtist;
@@ -37,7 +38,7 @@ public partial class VideoResultsViewModel : ObservableObject
         SelectedVideos = new ObservableCollection<VideoResultViewModel>();
     }
 
-    public static async Task<VideoResultsViewModel?> CreateViewModel(SearchSource source, Artist artist, Album? album = null)
+    public static async Task<VideoResultsViewModel?> CreateViewModel(SearchSource source, Artist artist, Album? album, EventHandler<SearchSource> changeSource)
     {
         List<SearchSource> checkedSources = new List<SearchSource>() { source };
         while (true)
@@ -70,6 +71,7 @@ public partial class VideoResultsViewModel : ObservableObject
                 }
                 ToastHelper.ShowError($"No Videos on {source.ToString()}", $"{source.ToString()} has no videos, checking other sources...", NotificationType.Information, 3);
                 source = (SearchSource)nextSource;
+                changeSource(null, source);
                 checkedSources.Add(source);
                 continue;
             }

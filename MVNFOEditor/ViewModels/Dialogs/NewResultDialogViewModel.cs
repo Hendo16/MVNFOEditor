@@ -21,6 +21,7 @@ public partial class NewResultDialogViewModel : ObservableObject
     private static readonly ILog Log = LogManager.GetLogger(typeof(NewResultDialogViewModel));
     private SearchSource currentSource;
     private readonly Type _currentType;
+    private bool disableAutoSearch = false;
     [ObservableProperty] private bool _amChecked;
     [ObservableProperty] private bool _manualChecked;
     [ObservableProperty] private bool _ytChecked = true;
@@ -130,7 +131,7 @@ public partial class NewResultDialogViewModel : ObservableObject
             ManualChecked = true;
             return album != null ? new ManualMusicVideoViewModel(album) : new ManualMusicVideoViewModel(artist);
         }
-        var newVm = await VideoResultsViewModel.CreateViewModel(source, artist, album);
+        var newVm = await VideoResultsViewModel.CreateViewModel(source, artist, album, ChangeSource);
         return newVm;
     }
     #endregion
@@ -200,6 +201,27 @@ public partial class NewResultDialogViewModel : ObservableObject
                 SetProcessing(false);
                 break;
         }
+    }
+
+    public void ChangeSource(object? sender, SearchSource source)
+    {
+        //We don't want to trigger another search while manually changing the UI element, so we disable that for now
+        disableAutoSearch = true;
+        switch (source)
+        {
+            case SearchSource.AppleMusic:
+                YtEnabled = false;
+                AmChecked = true;
+                break;
+            case SearchSource.YouTubeMusic:
+                AmEnabled = false;
+                YtChecked = true;
+                break;
+            case SearchSource.Manual:
+                ManualChecked = true;
+                break;
+        }
+        disableAutoSearch = false;
     }
 
     public void ShowNav(object? sender, bool result)
@@ -342,7 +364,7 @@ public partial class NewResultDialogViewModel : ObservableObject
                     return;
                 }
                 DisableCheckers(selectedAlbum.Artist);
-                var vidResultsVm = await VideoResultsViewModel.CreateViewModel(selectedResult.Source, selectedAlbum.Artist,selectedAlbum);
+                var vidResultsVm = await VideoResultsViewModel.CreateViewModel(selectedResult.Source, selectedAlbum.Artist,selectedAlbum, ChangeSource);
                 if (vidResultsVm == null)
                 {
                     DisplayError(this, "Error: Couldn't generate video results, please check logs");
@@ -463,6 +485,10 @@ public partial class NewResultDialogViewModel : ObservableObject
 
     private async void RefreshResultList()
     {
+        if (disableAutoSearch)
+        {
+            return;
+        }
         switch (CurrentContent)
         {
             case ManualArtistViewModel _:
@@ -544,7 +570,7 @@ public partial class NewResultDialogViewModel : ObservableObject
             switch (downResult)
             {
                 case AppleMusicDownloadResponse.Success:
-                    await selectedVideo.GenerateNFO($"{App.GetSettings().RootFolder}/{selectedVideo.Artist.Name}/{selectedVideo.Title}.mp4");
+                    await selectedVideo.GenerateNFO($"{App.GetSettings().RootFolder}/{selectedVideo.Artist.Name}/{selectedVideo.Title}-{SearchSource.AppleMusic.ToString()}.mp4");
                     selectedVideo.HandleDownload();
                     break;
                 case AppleMusicDownloadResponse.Failure:

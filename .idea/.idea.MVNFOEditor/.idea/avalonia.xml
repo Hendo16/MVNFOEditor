@@ -6,6 +6,7 @@
         <entry key="MVNFOEditor/App.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/ResourceDictionary.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/Controls/AlbumView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Controls/ArtistView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/Controls/ManualMVEntry.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/Controls/ManualVideoResult.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/Controls/VideoCardView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
@@ -18,6 +19,7 @@
         <entry key="MVNFOEditor/Views/Dialogs/Parent/NewResultDialogView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/MainViews/Content/ArtistDetailsView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/MainViews/Content/MusicVideoDetailsView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/MainViews/Parent/SettingsView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
       </map>
     </option>
   </component>

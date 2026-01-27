@@ -29,7 +29,7 @@
             </ContextMenu>
         </StackPanel.ContextMenu>
         <Border CornerRadius="10" ClipToBounds="True">
-            <Panel Background="#7FFF22DD">
+            <Panel>
                 <Image Width="{Binding CoverWidth}" Stretch="Uniform" Source="{Binding Cover}" />
                 <Panel Height="200" IsVisible="{Binding Cover, Converter={x:Static ObjectConverters.IsNull}}">
                     <PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
