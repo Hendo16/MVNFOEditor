@@ -12,6 +12,9 @@ Videos can be easily edited at any time, along with associated items like Artist
 - Youtube Music
 - Apple Music
 
+# Download
+Grab the latest version from the [releases](https://github.com/Hendo16/MVNFOEditor/releases) page and extract the latest beta build into a folder you have write-permissions in.
+
 # Downloading Support
 By default, anyone can download videos through YouTube Music without an account via the [YtMusicNet](https://github.com/Hendo16/YtMusicNet) library - however, to download through Apple Music you will need a valid Apple Music account.
 
