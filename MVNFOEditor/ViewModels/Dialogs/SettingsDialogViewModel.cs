@@ -46,6 +46,7 @@ public partial class SettingsDialogViewModel : ObservableObject
         if (AdvSettings.DeviceKey != null) _settings.AM_DeviceKey = AdvSettings.DeviceKey;
         if (AdvSettings.YtDLPath != null) _settings.YTDLPath = AdvSettings.YtDLPath;
         if (AdvSettings.FfmpegPath != null) _settings.FFMPEGPath = AdvSettings.FfmpegPath;
+        if (AdvSettings.FfprobePath != null) _settings.FFPROBEPath = AdvSettings.FfprobePath;
         if (AdvSettings.YtMusicAuthFile != null) _settings.YTM_AuthHeaders = AdvSettings.YtMusicAuthFile;
         if (AdvSettings.AppleMusicToken != null)
         {
