@@ -15,17 +15,7 @@ Videos can be easily edited at any time, along with associated items like Artist
 # Downloading Support
 By default, anyone can download videos through YouTube Music without an account via the [YtMusicNet](https://github.com/Hendo16/YtMusicNet) library - however, to download through Apple Music you will need a valid Apple Music account.
 
-On launch, you will need to provide your account token to the app. To find your account token:
-1. Login to Apple Music via the Browser
-2. Open the Dev Tools by pressing F12
-3. Go to 'Storage' and search for the keyword 'token'
-4. You will see a 'media-user-token', which is what you will need to provide to MVNFOEditor
-
-Beyond that you will also need Widevine device files in order to decrypt the video/audio files. The files are
-- device_client_id_blob
-- device_private_key
-
-As you can imagine, I can't give you a how-to guide on where to get these but there's some great ones out there that involve an Android Emulator via Android Studio. *wink wink*
+Please see the [wiki](https://github.com/Hendo16/MVNFOEditor/wiki) for a guide on setting up Authentication as well as a walk-through on how to use the app 
 
 # Credits
 - [SukiUI](https://github.com/kikipoulet/SukiUI) for providing an amazing Avalonia desktop UI library as well as including a fantastic demo app that provided some of the key infrastructure for this. As a Back-End oriented developer, this was a godsend!
