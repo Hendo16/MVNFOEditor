@@ -30,6 +30,7 @@ public partial class SettingsViewModel : PageBase
 
     [ObservableProperty] private SettingsItemViewModel _activeVm;
     [ObservableProperty] private string _appleMusicToken;
+    [ObservableProperty] private string _appleMusicTokenProvided;
 
     [ObservableProperty] private bool _backgroundTransitions;
     [ObservableProperty] private string _ffmpegText;
@@ -63,6 +64,7 @@ public partial class SettingsViewModel : PageBase
         YtdlFormat = _settings.YTDLFormat;
 
         AppleMusicToken = _settings.AM_AccessToken;
+        AppleMusicTokenProvided = AppleMusicToken == "n/a" ? "Not Found" : "Found!";
         UserId = _settings.AM_DeviceId;
         UserKey = _settings.AM_DeviceKey;
 

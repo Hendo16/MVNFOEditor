@@ -21,6 +21,7 @@
         <entry key="MVNFOEditor/Views/Dialogs/Parent/NewResultDialogView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/Dialogs/Parent/SettingsDialogView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/MainViews/Content/ArtistDetailsView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/MainViews/Content/ArtistListView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/MainViews/Content/MusicVideoDetailsView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/MainViews/Parent/SettingsView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
       </map>

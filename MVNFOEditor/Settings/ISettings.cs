@@ -39,10 +39,10 @@ public interface ISettings
     [Option(Alias = "AM.Language", DefaultValue = "n/a")]
     public string AM_Language { get; set; }
 
-    [Option(Alias = "AM.DeviceId", DefaultValue = "./Assets/device_client_id_blob")]
+    [Option(Alias = "AM.DeviceId", DefaultValue = "n/a")]
     public string AM_DeviceId { get; set; }
 
-    [Option(Alias = "AM.DeviceKey", DefaultValue = "./Assets/device_private_key")]
+    [Option(Alias = "AM.DeviceKey", DefaultValue = "n/a")]
     public string AM_DeviceKey { get; set; }
 
     #endregion

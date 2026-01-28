@@ -112,8 +112,8 @@
                     <controls:SettingsLayoutItem.Content>
                         <StackPanel Orientation="Vertical">
                             <UniformGrid Rows="1" Columns="2">
-                                <TextBox theme:TextBoxExtensions.Prefix="User Media Token:  "
-                                         Text="{Binding AppleMusicToken}" />
+                                <TextBox IsReadOnly="True" theme:TextBoxExtensions.Prefix="User Media Token:  "
+                                         Text="{Binding AppleMusicTokenProvided}" />
                                 <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right"
                                         Content="Update" Command="{Binding UpdateAMToken}" />
                             </UniformGrid>
@@ -122,14 +122,14 @@
                                          VerticalAlignment="Center" HorizontalAlignment="Left"
                                          Watermark="device_client_id_blob" Name="blobinput" Text="{Binding UserId}" />
                                 <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right"
-                                        Content="Save" Click="BrowseDeviceId" />
+                                        Content="Browse" Click="BrowseDeviceKey" />
                             </UniformGrid>
                             <UniformGrid Rows="1" Columns="2">
                                 <TextBox theme:TextBoxExtensions.Prefix="Device Private Key Path:  " Width="600"
                                          VerticalAlignment="Center" HorizontalAlignment="Left"
                                          Watermark="device_private_key" Name="keyinput" Text="{Binding UserKey}" />
                                 <Button Width="100" VerticalAlignment="Center" HorizontalAlignment="Right"
-                                        Content="Save" Click="BrowseDeviceKey" />
+                                        Content="Browse" Click="BrowseDeviceKey" />
                             </UniformGrid>
                         </StackPanel>
                     </controls:SettingsLayoutItem.Content>
@@ -138,12 +138,11 @@
                     <controls:SettingsLayoutItem.Content>
                         <StackPanel Orientation="Vertical">
                             <TextBox theme:TextBoxExtensions.Prefix="YTDL Options:  " Text="{Binding YtdlFormat}" />
-                            <UniformGrid Rows="1" Columns="2">
-                                <TextBlock HorizontalAlignment="Left" Text="Generate New YouTube Music Headers" />
-                                <Button Classes="Outlined" Width="100" VerticalAlignment="Center"
-                                        HorizontalAlignment="Right" Content="Save"
+                            <Grid ColumnDefinitions="2*, *" Margin="0, 15, 0, 0">
+                                <TextBlock Grid.Column="0" HorizontalAlignment="Left" Text="Generate New YouTube Music Headers" />
+                                <Button Grid.Column="1" Classes="Outlined" Width="100" HorizontalAlignment="Right" Content="Generate"
                                         Command="{Binding GenerateYTMHeaders}" />
-                            </UniformGrid>
+                            </Grid>
                         </StackPanel>
                     </controls:SettingsLayoutItem.Content>
                 </controls:SettingsLayoutItem>

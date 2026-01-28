@@ -215,8 +215,8 @@ public class AppleMusicDLHelper
             return AppleMusicDownloadResponse.InvalidUserToken;
         }
 
-        if (!File.Exists(_settings.AM_DeviceId) ||
-            !File.Exists(_settings.AM_DeviceKey))
+        if (_settings.AM_DeviceId == "n/a" || !File.Exists(_settings.AM_DeviceId) ||
+            _settings.AM_DeviceId == "n/a" || !File.Exists(_settings.AM_DeviceKey))
             return AppleMusicDownloadResponse.InvalidDeviceFiles;
 
         //var id = int.Parse(videoResult.VideoURL.Split('/')[^1]);
