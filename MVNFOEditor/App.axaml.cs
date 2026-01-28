@@ -194,6 +194,7 @@ public class App : Application
 
     public static async void RefreshYTMusicHelper()
     {
+        _settings.YTM_AuthHeaders = "./Assets/browser.json";
         _ytmHelper = await YTMusicHelper.CreateHelper("./Assets/browser.json");
     }
 

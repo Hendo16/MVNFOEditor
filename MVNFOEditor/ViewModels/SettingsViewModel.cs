@@ -82,26 +82,6 @@ public partial class SettingsViewModel : PageBase
         ToastHelper.ShowSuccess("Settings", "Successfully saved");
     }
 
-    public async void AppleMusicDownloadTesting()
-    {
-        /*
-        var _amHelper = await AppleMusicDLHelper.CreateHelper();
-        var waveVM = new WaveProgressViewModel();
-        waveVM.HeaderText = "Downloading Closure - ";
-        App.GetVM().GetDialogManager().CreateDialog()
-            .WithViewModel(dialog => waveVM)
-            .TryShow();
-        await DownloadViewTesting(
-            "https://filebrowser.hendoserver.com/api/public/dl/zZPhzoAs/b3872530-9952-47e9-924c-81170aa84382/media_server/MusicVideos/Chevelle/Closure.mkv",
-            "test.mkv", waveVM);
-        App.GetVM().GetDialogManager().DismissDialog();
-        */
-    }
-
-    public void AMNFOTest()
-    {
-    }
-
     public void UpdateAMToken()
     {
         App.GetDialogManager().CreateDialog()
@@ -114,41 +94,6 @@ public partial class SettingsViewModel : PageBase
         App.GetDialogManager().CreateDialog()
             .WithViewModel(dialog => new YTMHeaderSubmissionViewModel(dialog))
             .TryShow();
-    }
-
-    public async Task DownloadViewTesting(string url, string filename, WaveProgressViewModel wavevm)
-    {
-        using var client = new HttpClient();
-        long totalSize = 0;
-
-        var size_response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
-        if (size_response.Content.Headers.ContentLength.HasValue)
-            totalSize = size_response.Content.Headers.ContentLength.Value;
-
-        using var fileStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.None);
-        long downloaded = 0;
-        var stopwatch = Stopwatch.StartNew();
-
-        using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
-        using var stream = await response.Content.ReadAsStreamAsync();
-
-        var buffer = new byte[32768];
-        int bytesRead;
-        while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-        {
-            fileStream.Write(buffer, 0, bytesRead);
-            downloaded += bytesRead;
-
-            // Progress update
-            var percent = (double)downloaded / totalSize * 100;
-            var speed = downloaded / (stopwatch.Elapsed.TotalSeconds + 1); // Bytes per second
-            var speedStr = speed >= 1_048_576 // 1MB = 1,048,576 bytes
-                ? $"{speed / 1_048_576:0.0} MB/s"
-                : $"{speed / 1024:0.0} KB/s";
-            Console.Write($"\rProgress: {percent:0.0}% | Speed: {speedStr} ");
-            wavevm.UpdateProgress(percent);
-            wavevm.UpdateDownloadSpeed(speedStr);
-        }
     }
 
     private void OnRecurseClicked(SettingsItemViewModel newRecursiveVm)
