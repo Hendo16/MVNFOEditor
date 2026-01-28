@@ -10,27 +10,30 @@ public partial class AdvSettingsViewModel : ObservableObject
     [ObservableProperty] [property: Category("Apple Music")] [property: DisplayName("Apple Music Token")]
     private string? _appleMusicToken;
 
-    [ObservableProperty] [property: Category("Apple Music")] [property: DisplayName("Private Device ID")]
+    [ObservableProperty] [property: Category("Apple Music")] [property: DisplayName("Private Device ID Path")]
     private string? _deviceId;
 
-    [ObservableProperty] [property: Category("Apple Music")] [property: DisplayName("Private Device Key")]
+    [ObservableProperty] [property: Category("Apple Music")] [property: DisplayName("Private Device Key Path")]
     private string? _deviceKey;
 
     [ObservableProperty] [property: Category("Local")] [property: DisplayName("FFMPEG Path")]
     private string? _ffmpegPath;
+    
+    [ObservableProperty] [property: Category("Local")] [property: DisplayName("FFProbe Path")]
+    private string? _ffprobePath;
 
     [ObservableProperty] [property: Category("Download")] [property: DisplayName("Desired Resolution")]
     private Resolution _resolution;
 
-    [ObservableProperty] [property: Category("Local")] [property: DisplayName("Screenshot Timestamp")]
+    [ObservableProperty] [property: Category("Local")] [property: DisplayName("Manual Video Screenshot Timestamp")]
     private int _screenshotSecond = 20;
 
     [ObservableProperty] [property: Category("YouTube Music")] [property: DisplayName("YTDL Format")]
     private string? _ytdlFormat;
 
-    [ObservableProperty] [property: Category("YouTube Music")] [property: DisplayName("YT-DLP")]
+    [ObservableProperty] [property: Category("YouTube Music")] [property: DisplayName("YT-DLP Path")]
     private string? _ytDLPath;
 
-    [ObservableProperty] [property: Category("YouTube Music")] [property: DisplayName("Browser Headers File")]
+    [ObservableProperty] [property: Category("YouTube Music")] [property: DisplayName("Youtube Music browser.json Path")]
     private string? _ytMusicAuthFile;
 }

@@ -34,10 +34,12 @@
                 <views:SettingsDialogSetFolderCardView Name="FolderView" />
                 <views:SettingsDialogThemeCardView />
                 <views:SettingsDialogAdvancedOptionsCardView Name="AdvancedView" />
-                <Panel Height="100" Width="150">
-                    <TextBlock Width="150">Finished!</TextBlock>
-                    <Button Height="50" Width="150" Background="White" Command="{Binding HandleFinish}">Done</Button>
-                </Panel>
+                <controls:GlassCard Height="200" Width="300">
+                    <Panel>
+                            <TextBlock Width="150">Finished!</TextBlock>
+                            <Button Height="50" Width="150" Command="{Binding HandleFinish}">Done</Button>
+                    </Panel>
+                </controls:GlassCard>
             </Carousel.Items>
         </Carousel>
         <Panel Grid.Row="2" Margin="20">

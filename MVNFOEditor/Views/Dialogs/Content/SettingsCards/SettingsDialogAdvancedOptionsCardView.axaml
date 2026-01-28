@@ -11,16 +11,21 @@
     <UserControl.Resources>
         <controls:PropertyGridTemplateSelector x:Key="PropertyGridTemplateSelector" UseSukiHost="True" />
     </UserControl.Resources>
-
+    
     <WrapPanel HorizontalAlignment="Center" Classes="PageContainer" Orientation="Horizontal">
-        <controls:GlassCard Width="500">
-            <ScrollViewer>
-                <controls:PropertyGrid Item="{Binding AdvSettings}">
-                    <controls:PropertyGrid.DataTemplates>
-                        <StaticResource ResourceKey="PropertyGridTemplateSelector" />
-                    </controls:PropertyGrid.DataTemplates>
-                </controls:PropertyGrid>
-            </ScrollViewer>
-        </controls:GlassCard>
+        <Grid RowDefinitions="*,2*">
+            <controls:GlassCard Grid.Row="0">
+                <TextBlock TextWrapping="Wrap">Note: Tools like FFMPEG, FFProbe and YT-DLP will automatically download if you don't provide a path in the 'Assets' folder local to the program. Only provide a tool if you prefer to use a pre-downloaded binary.</TextBlock>
+            </controls:GlassCard>
+            <controls:GlassCard Grid.Row="1" Width="500" Margin="0,2, 0, 0">
+                <ScrollViewer>
+                    <controls:PropertyGrid Item="{Binding AdvSettings}">
+                        <controls:PropertyGrid.DataTemplates>
+                            <StaticResource ResourceKey="PropertyGridTemplateSelector" />
+                        </controls:PropertyGrid.DataTemplates>
+                    </controls:PropertyGrid>
+                </ScrollViewer>
+            </controls:GlassCard>
+        </Grid>
     </WrapPanel>
 </UserControl>

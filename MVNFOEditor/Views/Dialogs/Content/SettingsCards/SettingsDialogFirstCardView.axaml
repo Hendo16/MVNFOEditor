@@ -10,7 +10,9 @@
             <TextBlock Classes="h3" Text="Welcome!" />
         </controls:GroupBox.Header>
         <Grid Height="100" MaxWidth="600">
-            <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center">Thank you for using MVNFOEditor! Before we get started, let's get go over a couple of settings</TextBlock>
+            <controls:GlassCard>
+                <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center">Thank you for using MVNFOEditor! Before we get started, let's get go over a couple of settings</TextBlock>
+            </controls:GlassCard>
         </Grid>
     </controls:GroupBox>
 </UserControl>

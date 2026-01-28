@@ -16,7 +16,10 @@
         <entry key="MVNFOEditor/Views/Dialogs/Content/EditArtistDialogView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/Dialogs/Content/ManualMusicVideoView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/Dialogs/Content/SettingsCards/SettingsDialogAdvancedOptionsCardView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Dialogs/Content/SettingsCards/SettingsDialogFirstCardView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Dialogs/Content/SettingsCards/SettingsDialogSetFolderCardView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/Dialogs/Parent/NewResultDialogView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
+        <entry key="MVNFOEditor/Views/Dialogs/Parent/SettingsDialogView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/MainViews/Content/ArtistDetailsView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/MainViews/Content/MusicVideoDetailsView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
         <entry key="MVNFOEditor/Views/MainViews/Parent/SettingsView.axaml" value="MVNFOEditor.Desktop/MVNFOEditor.Desktop.csproj" />
